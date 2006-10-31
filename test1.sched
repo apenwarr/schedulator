@@ -1,0 +1,65 @@
+
+Loadfactor 1.0
+Workinghours 0 8 8 8 8 8 0
+Alignday 2006-10-10
+Today 2006-10-10
+
+# External bug, and bug without a fixfor.   When the external doesn't match
+# anything, they're *both* bugs without fixfors.
+! t:2
+** Bug without fixfor
+
+# leading/trailing spaces, quotes, and release date setting
+  Milestone    "Weaver:Wv 1.0" 2007-01-01  
+
+#multiple dates in one line, duplicate date, a tab separator,
+#no space after "#"
+Bounce	2006-10-15 2006-11-01 2006-12-01 2007-01-01
+
+# putting the priority string first
+* [P2] Do some stuff
+
+# child tasks, estimates, priority boost from parent, done bug
+** [P7] First [5.5d 4.33h]
+** [P7] Second [6d 8h]
+** [P7] Third [4h 4h]
+
+# changing to a new toplevel task, priority after title, priority w/ estimate
+* Do "more stuff" [P3] [10d]
+
+# inheriting priority from parent
+** One
+** Two [P2]
+
+# duplicate task names with and without identical estimates, default
+# estimate should be in hours, two-level priority inheritence
+** Three [1]
+** Three [2h]
+** Three [1]
+
+# referring to a task produced by another source, but overriding its estimate
+* bug:983 [3d 4h]
+
+# creating subtasks of a task from another source, inheriting priority from
+# parent in another source
+** Sub-bug one [1d]
+
+# using square brackets inside a word - should prevent parsing
+** Sub-bug two estimate "in title [1d]"
+*** Sub-bug two and a half [1d] [P6]
+
+# priority setting in the same word as the estimate
+** Sub-bug three [P3 1d]
+
+# a milestone created by a different source, but we didn't assign it a date
+# on the milestone line, but then we add one in the bounce line, and then
+# we don't add any tasks to it.
+Milestone "Wv 1.5"
+Bounce 1999-06-06
+
+# a milestone with no dates or estimates assigned at all.
+Milestone "Wv 2.0"
+* Unestimated "Wv 2.0" stuff
+** Unestimated one
+** Unestimated two
+* More Unestimated Wv "2.0" stuff

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#echo "Content-type: text/html"
+#echo
+#exec 2>&1
+
+N="$(basename "$0")"
+N="$(basename "$N" .cgi)"
+
+if [ -f Makefile ]; then
+	make -q "$N".exe || echo "<b>WARNING: $N is out of date!</b><p>"
+fi
+
+export HOME=/home/apenwarr
+exec ./"$N".exe "$@"
+#exec strace -s 10240 -o /tmp/xx.$$.out ./"$N".exe "$@"
+

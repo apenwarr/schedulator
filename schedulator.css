@@ -1,0 +1,36 @@
+
+table tbody tr {
+  background: #eeeeff;
+}
+
+table tbody tr.comment {
+  font-style: italic;
+  text-align: center;
+  color: #888888;
+}
+
+table tbody tr.title {
+  background: #ffeeff;
+}
+table tbody tr.title td:first-child {
+  font-weight: bold;
+  background: #ffeeff;
+}
+
+table tbody tr.done td {
+  color: #666666;
+  font-style: italic;
+//  display: none;
+}
+table tbody tr.done td.name {
+  text-decoration: line-through;
+}
+
+table tbody tr.notdone td.late , table tbody tr.title td.late {
+  color: red;
+}
+
+.showhidelink a {
+  text-decoration: none;
+  font-family: monospace;
+}

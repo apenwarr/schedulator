@@ -1,0 +1,33 @@
+/*
+ul {
+  display: table;
+}
+
+ul>li {
+  background-color: yellow;
+  font-size: 10pt;
+  display: table;
+}
+
+ul>li>ul>li {
+  display: table;
+}
+*/
+
+/*
+table {
+  background: red;
+}
+
+table>tbody {
+  background: orange;
+}
+
+table>tbody>tbody {
+  background: blue;
+}
+*/
+
+table>tbody>tr {
+  background: #eeeeff;
+}

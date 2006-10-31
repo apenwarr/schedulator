@@ -1,0 +1,52 @@
+
+Alignday 2006-10-10
+Today 2006-10-10
+
+import t test:
+
+* defaults [1d]
+* myvacation [start 2006-10-4 end 2006-10-10]
+* mydue [1d] [end 2006-10-11]
+* mystart [1d] [start 2006-10-15]
+
+loadfactor 2
+* u1 [5h]
+loadfactor 3
+* u2 [6h 6h]
+
+loadfactor 4
+
+Milestone "proj1:ff1" 2006-01-01
+* a [6h] [P5]
+* b [5h 3h] [P4]
+* c [1h 1h] [P6]
+* d [2h 2h] [P2]
+
+Milestone "proj1:ff2" 2006-02-02
+* Schedulator [P2]
+** a [5h]
+** b [1d]
+** c [5d]
+** d [4h]
+** e [2h]
+* Monkeys
+** a [5h]
+** b [1d]
+** c [5d]
+** d [6d]
+
+# default for Wv 1.0 bugs
+Milestone "Weaver:Wv 1.0"
+loadfactor .88
+workinghours 1 1 1 1 1 1 1
+
+# the last Weaver project entry, so the default for all other Weaver releases
+Milestone "Weaver:"
+loadfactor .77
+workinghours 2 2 2 2 2 2 2
+
+# because it's last, this will be the default for all bugs that didn't get
+# one assigned, and whose fixfor/project have no defaults.  That includes
+# the "default" bug at the top of this file!
+Release ":"
+loadfactor .99

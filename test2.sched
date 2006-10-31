@@ -1,0 +1,12 @@
+
+Loadfactor 1.0
+Workinghours 0 8 8 8 8 8 0
+Alignday 2006-10-10
+Today 2006-10-10
+
+import file2a file:test2a.sched
+import t test:
+
+! t:2 [P7]
+** child1 [P1]
+** child2 [5h]
