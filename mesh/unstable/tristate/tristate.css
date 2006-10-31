@@ -1,0 +1,9 @@
+.triStateDiv{
+    padding: 0;
+    position: absolute;
+    z-index: 1;
+    background-color: white;
+    filter: alpha(opacity=0); /* Internet Explorer       */
+    -moz-opacity: 0;          /* Mozilla 1.6 and below   */
+    opacity: 0;               /* newer Mozilla and CSS-3 */
+}

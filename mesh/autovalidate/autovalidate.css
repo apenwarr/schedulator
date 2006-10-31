@@ -1,0 +1,13 @@
+/* AutoValidate styles */
+.spinButtonPushed {
+    border-top: solid 2px black;
+    border-left: solid 2px black;
+    border-bottom: solid 2px #ddd;
+    border-right: solid 2px #ddd;
+}
+.spinButtonReleased {
+    border-top: solid 2px #ddd;
+    border-left: solid 2px #ddd;
+    border-bottom: solid 2px black;
+    border-right: solid 2px black;
+}

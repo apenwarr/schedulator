@@ -1,0 +1,23 @@
+light1:red
+light2:off
+light3:off
+gauge1:55
+gauge2:74
+gauge3:110
+text1:Dynamic text #1
+text2:Dynamic text #2, including <font color="red">html tags</font>
+bar1:99:ninety nine percent
+bar2:42:42%
+field1:nitix.com
+field2:larger text field2
+field3:foo
+field4:qux
+field5:foo,bar,foo\,bar,baz
+field6:foo\,bar
+field7:bar
+field8:bar
+field9:baz
+field10:nitix.com
+field11:qux
+field12:qux a
+field13:qux b

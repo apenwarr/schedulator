@@ -1,0 +1,204 @@
+Crazy Table
+===========
+
+basic functionnality
+
+    prototype
+        create a prototyte to emulate a server response
+            for hierarchy data
+done
+            for sorted data
+done
+            for expired data
+        use the json lightweight data-interchange format, http://www.crockford.com/JSON/index.html
+done
+
+
+    data handling
+        define how the nodes and the hierarchy are stored
+done
+        define how the data is accessed
+done
+        define the required node properties (id, name, values, nodes, nodescount, isexpanded, etc.)
+done
+        allow nodes to show up multiple times in thread mode
+done
+        get ids to be treated like strings, "1.2.3" shouldn't be treated like a float
+            and get ids to be valid when containing " or ' or , or other special chars...
+        add a way to specify the initial state of expand state of nodes
+done
+        define how to handle the data for: replace, expand, update, expire
+
+
+    requests
+        create functions to request data along the way and add it to the stored data
+done
+        create functions for expand/collapse requests, will connect to the server when required
+done
+        allow requests to be sent in parallel, i.e. clicking rapidly on many "+" will expand all
+            of those branches as the data is received done, seems to be working, needs investigation
+done
+        change the server answer to always send an array of nodes
+done
+        define a header for answers: replace, expand, update, expire
+
+
+    gui
+        create graphics
+done
+        function to render the hierarchy lines
+done
+        create function to render a row, using the hierarchy lines
+done
+        present the rows with alternating colors
+done
+        re-expand sub nodes when isexpanded is true, try to avoid recursivity
+done
+        support click on nodes
+done
+        highlight row on rollover
+done
+        get the graphics to glue in a nice way
+        get the text to align with the graphics
+        handle text wrapping
+        get the cols/rows to have cellpadding/cellspacing without screwing the graphics
+        have custom css for color, size, etc.
+
+
+    performance
+        gets super slow with tons of data, find and fix bottelnecks
+        try new ways to build the hierarchy tables, make it fast
+        find a way to auto purge old data when cache becomes too big
+
+
+    other
+        convert js into a class
+done
+        standardize location of images, use widgetsImgBasePath from shared.js
+done
+        allow multiple xmlhttp requests to be sent and handled in parallel
+            for node requests (increase sleep time in getdata.php)
+            for different crazytable spans
+done
+        get multiple hierarchies to work on a same page
+done
+        a > b > c, b is expanded, expand on c and collapse b before c's request is received
+            c's subnodes appear at the end of the table
+            they should not appear at all and simply be kept in the cache
+done
+        generalize support for xmlhttp
+            use addEventHandler for setting window.onunload to abort any pending request objects
+            update dynamicstatus.js at the same time
+            catch errors with XmlHttp.open and send
+done
+        update documentation for dynamicstatus.js
+done
+        scrap addEvent in favor of addEventHandler
+done
+        test and fix every functionnalities in IE
+done
+        fix and remove any remaining fixme
+done
+        put a hourglass icon when expanding nodes requesting a server request
+done
+        update documentation for shared.js, about xmlhttp support
+done
+        set window.status to something intelligible
+done
+        fix mouse rollover background color in IE
+done
+        add error checking
+            returned js badly formatted, use json.js
+            requested parent node is missing
+            missing nodes
+            missing or bad nodes attributes
+done
+        prevent hierarchy recursion, especially combined with autoexpand
+done
+        find every recursive function and make sure it is well controlled
+done
+        get the configuration params to come from somewhere else than the .js file itself
+            think about a common configuration system for all packages
+            config stuff to add: content for when a crazytable cannot initialize
+        make sure special chars in the variable/parameter "source" will not screw up things
+            like when setting the rowClick function in createRow
+        evaluate if trashing xmlhttp objects at every request is not inefficient
+        find a way to replace eval calls with something secure
+        put a hourglass icon on heavy node expand/collapse
+        use JSON.parse in dynamicstatus.js instead of eval
+
+
+
+sorting
+
+    when sorting, show the nodes name and forget about the hierarchy
+
+    create function to request a certain page of data sorted by a certain column
+
+    add a way to specify the initial state of
+        sorting cols
+        page number
+
+    store the sorting column and order in a cookie
+
+    add a way for backend to signal that the data has changed
+        added or removed nodes
+        nodes to update
+        other?
+
+
+
+auto-completion widget
+
+    adapt the code that already exists to the hierarchy system instead of an html table
+        populate the list from the hierarchy data
+    add an onBlur event handler on the box so the complete value of the box is used instead of the highlighted one
+
+    the way results are presented depends on the current display mode
+        sorting mode
+            the results simply show only the nodes matching the search string
+        hierarchy mode
+            The results show the nodes matching the search string and their parents.
+            If a parent is not expanded, it stays collapsed.
+            Expanding this parent will show the subnodes matching the search string or
+            leading to a subnodes matching the search string.
+
+
+
+columns toggling
+
+    define the columns visible status in the data structure, so columns can be disabled by default
+    adapt the code that already exists to the hierarchy system instead of an html table
+        get the columns headers from the hierarchy data instead of the table
+        remove anything that plays directly with the html table
+        create functions to update the rows
+            maybe play directly with the cached rows, will it update the rows being displayed?
+
+    make sure missing columns will not screw up things
+    test with tons of expandes nodes
+    could auto collapse nodes when too many are expanded in order to improve speed
+
+
+
+edit-in-place
+
+
+
+multiple rows operations
+
+    edit
+    delete
+    other?
+    maybe think about a general abstracted system
+
+
+
+when crazytable is complete
+
+    write documentation in crazytable.js
+
+
+
+later
+
+    use JSMin and/or obfuscator when compiling webconfig

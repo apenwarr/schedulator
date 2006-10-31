@@ -1,0 +1,59 @@
+cache variables
+---------------
+data        array of node
+totalcount  numeric
+pagelength  numeric
+index       array of [col][order][page][row] = node id
+
+
+sort column
+-----------
+-1          name
+0, 1, 2...  column
+
+
+order
+-----
+1   ascending
+-1  descending
+
+
+node
+----
+id              numeric
+name            string
+values          list
+nodes           array of node
+nodescount      numeric
+isexpanded      boolean (set by client)
+hinfo           string (set by client)
+
+
+thread protocol
+---------------
+request
+    request     string 'getsubnodes'
+    id          numeric
+
+answer
+    request     string 'getsubnodes'
+    id          numeric
+    nodes       array of node
+
+
+non thread protocol
+-------------------
+request
+    request     string 'getpage'
+    page        numeric
+    sortcol     numeric
+    sortorder   numeric
+
+answer
+    request     string 'getpage'
+    page        numeric
+    sortcol     numeric
+    sortorder   numeric
+    pagelength  numeric
+    totalcount  numeric
+    nodes       array of node

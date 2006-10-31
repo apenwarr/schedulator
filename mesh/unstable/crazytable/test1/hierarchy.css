@@ -1,0 +1,15 @@
+tr.hierarchytableheaderrow {
+    background-color: #bfb;
+}
+tr.hierarchytableevenrow {
+    background-color: #fff;
+}
+tr.hierarchytableevenrow:hover {
+    background-color: #dbe8ff;
+}
+tr.hierarchytableoddrow {
+    background-color: #eee;
+}
+tr.hierarchytableoddrow:hover {
+    background-color: #d4e1f8;
+}

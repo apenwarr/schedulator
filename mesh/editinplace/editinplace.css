@@ -1,0 +1,7 @@
+table.editinplace {
+    border: 1px dashed green;
+    padding: 1px;
+}
+table.editinplace:hover {
+    background-color: #EEF;
+}

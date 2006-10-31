@@ -1,0 +1,33 @@
+.pwrsrch-list {
+    background-color: white;
+    border-bottom: black 1px solid;
+    border-left: black 1px solid;
+    border-right: black 1px solid;
+    border-top: black 1px solid;
+    font-family: arial,sans-serif;
+    font-size: 13px;
+    padding: 0;
+    position: absolute;
+    visibility: hidden;
+    word-wrap: break-word;
+    z-index: 1;
+}
+.pwrsrch-item1 {
+    background-color: #3366cc;
+    color: white;
+}
+.pwrsrch-item0 {
+    background-color: white;
+    color: black;
+}
+.pwrsrch-span1 {
+    display: block;
+    padding-left: 3;
+    padding-right: 3;
+    height: 16px;
+    overflow: hidden;
+}
+.pwrsrch-span2 {
+    width: 100%;
+    css-float: left;
+}

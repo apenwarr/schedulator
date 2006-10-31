@@ -1,0 +1,16 @@
+tr.crazytableheaderrow {
+    background-color: #07b;
+    color: white;
+}
+tr.crazytableevenrow {
+    background-color: #fff;
+}
+tr.crazytableevenrowhover {
+    background-color: #dbe8ff;
+}
+tr.crazytableoddrow {
+    background-color: #eee;
+}
+tr.crazytableoddrowhover {
+    background-color: #d4e1f8;
+}

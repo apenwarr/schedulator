@@ -1,0 +1,6 @@
+span.tooltip,div.tooltip {
+    font-size: 9pt;
+    border: 1px solid #000;
+    padding: 2px;
+    -moz-border-radius: 3px;
+}
