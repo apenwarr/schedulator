@@ -70,7 +70,11 @@ namespace Wv.Schedulator
 	
 	public enum Phase
 	{
-	    None = 0, Basic, Tasks, Sort1, Cleanup, Sort2, Schedule, Done
+	    None = 0,
+		Basic, Tasks, Sort1, 
+		Cleanup, Sort2,
+		Schedule, PostSchedule,
+		Done
 	}
 	
 	public Phase ran_phase = Phase.None;
@@ -104,10 +108,15 @@ namespace Wv.Schedulator
 			s.cleanup_tasks();
 		    break;
 		    
-		// Note: Sort2 actually happens here
+		// Note: Sort2 actually happens HERE, not above!
 		    
 		case Phase.Schedule:
 		    do_schedule();
+		    break;
+		    
+		case Phase.PostSchedule:
+		    foreach (Source s in sources)
+			s.post_schedule();
 		    break;
 		    
 		case Phase.Done:

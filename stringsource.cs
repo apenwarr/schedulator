@@ -25,11 +25,11 @@ namespace Wv.Schedulator
 		string[] args = word_split(line.Trim());
 		string cmd = wv.shift(ref args).ToLower();
 		
-		if (cmd == "import")
+		if (cmd == "import" || cmd == "plugin")
 		{
-		    log.log("Processing import line: '{0}'", line);
+		    log.log("Creating plugin from line: '{0}'", line);
 		    if (args.Length < 2)
-			err(0, "Not enough parameters to 'import'");
+			err(0, "Not enough parameters to '{0}'", cmd);
 		    else
 		    {
 			SourceRegistry reg = new SourceRegistry();
@@ -445,6 +445,7 @@ namespace Wv.Schedulator
 		switch (cmd)
 		{
 		case "import":
+		case "plugin":
 		    // already handled earlier
 		    break;
 		    

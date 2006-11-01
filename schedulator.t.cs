@@ -345,4 +345,12 @@ public class SchedTests
 	// make sure all the unfinished bugs add up correctly
 	WVPASSEQ(slots[total-1].end, wv.date("2006-10-12 18:00:00"));
     }
+    
+    [Test] [Category("result")] public void result_test()
+    {
+	reg.create(s, "t", "file:test10.sched");
+	reg.create(s, "result",
+		   "result:dsn=schedulator;uid=root;pwd=scs:test");
+	s.run();
+    }
 }

@@ -6,7 +6,7 @@ PKGS=-pkg:nunit -r:System.Data -r:System.Web
 all: schedulator.exe webtest.exe
 
 LIBFILES= \
-	wvutils.cs wvtest.cs wvweb.cs \
+	wvutils.cs wvtest.cs wvweb.cs wvdbi.cs \
 	wvtest.t.cs.E wvutils.t.cs.E \
 
 webtest.exe: webtest.cs $(LIBFILES)
@@ -14,6 +14,7 @@ webtest.exe: webtest.cs $(LIBFILES)
 schedulator.exe: schedulator.cs webui.cs $(LIBFILES) \
 	source.cs person.cs project.cs fixfor.cs task.cs dateslider.cs \
 	testsource.cs stringsource.cs logsource.cs fogbugz.cs mantis.cs \
+	resultsource.cs \
 	$(addsuffix .E,$(wildcard *.t.cs))
 
 test: schedulator.exe

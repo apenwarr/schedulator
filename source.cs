@@ -50,6 +50,13 @@ namespace Wv.Schedulator
 	public virtual void cleanup_tasks()
 	{
 	}
+	
+	// Called after the scheduling phase has run.  If your plugin wants
+	// to look at the finished schedule or task list and record or
+	// analyze information, do it here.
+	public virtual void post_schedule()
+	{
+	}
     }
     
     
@@ -70,6 +77,8 @@ namespace Wv.Schedulator
 	    register("mantis", MantisSource.create);
 	    register("logstr", LogSource.create);
 	    register("log", LogSource.create_from_file_id);
+	    register("results", ResultSource.create);
+	    register("result", ResultSource.create);
 	}
 	
 	public void register(string prefix, Creator create)
