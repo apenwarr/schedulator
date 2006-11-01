@@ -190,7 +190,7 @@ namespace Wv.Schedulator
 	
 	string schedname()
 	{
-	    if (cgi.request["sid"] != null && cgi.request["sid"] != "")
+	    if (!wv.isempty(cgi.request["sid"]))
 	    {
 		string s = cgi.request["sid"];
 		string s2 = "";
@@ -247,30 +247,67 @@ namespace Wv.Schedulator
 	    g.header("Status", "301 Moved Permanently");
 	}
 	
-	void page_list_schedules()
+	string[] all_schedules()
 	{
-	    g.send(g.title("Available Schedules - Schedulator"));
-	    
-	    g.send(g.h1("Schedulator: Available Schedules"));
-	    
-	    g.send(g.start_ul());
-	    foreach (string file
-		     in Directory.GetFiles("schedules/", "*.sched"))
+	    string[] files = Directory.GetFiles("schedules/", "*.sched");
+	    string[] names = new string[files.Length];
+	    int i = 0;
+	    foreach (string file in files)
 	    {
 		wv.assert(file.Substring(0, 10) == "schedules/");
 		wv.assert(file.Substring(file.Length-6) == ".sched");
-		string id = file.Substring(10, file.Length-6-10);
+		names[i++] = file.Substring(10, file.Length-6-10);
+	    }
+	    return names;
+	}
+	
+	void page_list_schedules()
+	{
+	    g.send(g.title("Available Schedules - Schedulator"));
+	    g.send(g.start_form(new Attr("action", base_url(),
+					 "method", "GET")));
+	    g.send(g.h1("Schedulator: Available Schedules"));
+	    
+	    g.send(g.start_ul());
+	    foreach (string name in all_schedules())
+	    {
 		g.send(g.li(g.a(new Attr("href",
-					 base_url() + "?sid=" + id),
-				g.text(id))));
+					 base_url() + "?sid=" + name),
+				g.text(name))));
+	    }
+	    g.send(g.li(g.input("sid"), g.submit("Create New")));
+	    g.send(g.end_ul());
+	    
+	    g.send(g.end_form());
+	    
+	    g.send(g.start_form(new Attr("action", base_url(),
+					 "method", "POST")));
+	    g.send(g.submit("Update All"));
+	    g.send(g.end_form());
+	}
+	
+	void page_update_all()
+	{
+	    g.send(g.title("Update All - Schedulator"));
+	    g.send(g.start_form(new Attr("action", base_url(),
+					 "method", "GET")));
+	    g.send(g.h1("Schedulator: Updating All Schedules"));
+	    
+	    g.send(g.start_ul());
+	    foreach (string name in all_schedules())
+	    {
+		g.send(g.li(g.text(name)));
+		
+		Schedulator s = new Schedulator();
+		reg.create(s, "f", "file:schedules/" + name + ".sched");
+		s.run();
 	    }
 	    g.send(g.end_ul());
 	    
-	    g.send(g.start_form(new Attr("action", base_url(),
-					 "method", "GET")),
-		   g.input("sid"),
-		   g.submit("Create New"),
-		   g.end_form());
+	    g.send(g.h2("Done."));
+	    g.send(g.a(new Attr("href", base_url()), g.text("<<back")));
+	    
+	    g.send(g.end_form());
 	}
 	
 	void page_show_schedule()
@@ -396,7 +433,9 @@ namespace Wv.Schedulator
 	    
 	    // HTTP redirect if it was a POST, so pressing the back
 	    // button doesn't automatically repost the form
-	    if (cgi.method == Cgi.Method.Post)
+	    if (!wv.isempty(cgi.request["Update All"]))
+		page_update_all();
+	    else if (cgi.method == Cgi.Method.Post)
 		http_redirect(base_url());
 	    else // normal page
 	    {
