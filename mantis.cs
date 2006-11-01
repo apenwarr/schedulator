@@ -111,6 +111,26 @@ namespace Wv.Schedulator
 			mantisfixfors.Add(ix, f);
 		}
 	    }
+	    
+	    log.log("Reading mantis_project_version_table.");
+	    r = select("select project_id, version, date_order "
+		       + " from mantis_project_version_table ");
+	    while (r.Read())
+	    {
+		int projix = r.GetInt32(0);
+		string name = r.GetString(1);
+		DateTime date = r.GetDateTime(2);
+		string ix = projix.ToString() + "." + name;
+		
+		Project project = (Project)mantisprojects[projix];
+		if (project == null)
+		    project = s.projects.Add("UNKNOWN");
+		
+		FixFor f = s.fixfors.Add(project, name);
+		if (!mantisfixfors.Contains(ix))
+		    mantisfixfors.Add(ix, f);
+		f.add_release(date);
+	    }
 	}
 	
 	string bug_str(ICollection list)
