@@ -124,7 +124,7 @@ namespace Wv.Schedulator
 	}
 	
 	Task add_task(string ixstr, string title, FixFor fixfor, int pri,
-		      bool done, DateTime donedate)
+		      bool done, bool halfdone, DateTime donedate)
 	{
 	    Task t = s.tasks.Add(this, ixstr,
 				 String.Format("({0}) {1}", ixstr, title));
@@ -135,6 +135,7 @@ namespace Wv.Schedulator
 		t.done = true;
 		t.donedate = donedate;
 	    }
+	    t.halfdone = halfdone;
 	    return t;
 	}
 
@@ -268,7 +269,7 @@ namespace Wv.Schedulator
 		if (abugs.Contains(ix))
 		{
 		    Task t = add_task(ixstr, title, fixfor, pri,
-				      false, resolvedate);
+				      false, false, resolvedate);
 			
 		    // FIXME: we ignore estimates on all non-active bugs,
 		    // because the estimate field is used for the person
@@ -280,9 +281,11 @@ namespace Wv.Schedulator
 		    if (elapsed > 0) t.elapsed = TimeSpan.FromHours(elapsed);
 		}
 		else if (rbugs.Contains(ix))
-		    add_task(ixstr, title, fixfor, pri, true, resolvedate);
+		    add_task(ixstr, title, fixfor, pri, true, true,
+			     resolvedate);
 		else if (sbugs.Contains(ix))
-		    add_task(ixstr, title, fixfor, pri, true, resolvedate);
+		    add_task(ixstr, title, fixfor, pri, true, true,
+			     resolvedate);
 		
 		// a bug can be *both* active and needing verification, if the
 		// same person opened it and resolved it.
@@ -294,7 +297,7 @@ namespace Wv.Schedulator
 		{
 		    string x = abugs.Contains(ix) ? "v"+ixstr : ixstr;
 		    add_task(x, "VERIFY: " + title, fixfor, pri,
-			     false, resolvedate);
+			     false, true, resolvedate);
 		}
 	    }
 	    

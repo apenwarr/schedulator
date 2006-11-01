@@ -254,6 +254,15 @@ namespace Wv.Web
 	    }
 	}
 	
+	public Html[] htmlarray(ICollection keys)
+	{
+	    Html[] a = new Html[keys.Count];
+	    int i = 0;
+	    foreach (object o in keys)
+		a[i++] = (Html)o;
+	    return a;
+	}
+	
 	public string fmt(string fmt, params object[] args)
 	{
 	    return String.Format(fmt, args);
@@ -279,7 +288,7 @@ namespace Wv.Web
 	    return new Html(Context.Body, s);
 	}
 	
-	Html v(params object[] ha)
+	public Html v(params object[] ha)
 	{
 	    return new Html(Context.Body, ha);
 	}
@@ -292,6 +301,11 @@ namespace Wv.Web
 	public Html head_text(string s)
 	{
 	    return head_v(HttpUtility.HtmlEncode(s));
+	}
+	
+	public Html text(string fmt, params object[] args)
+	{
+	    return v(HttpUtility.HtmlEncode(String.Format(fmt, args)));
 	}
 	
 	public Html text(string s)
@@ -360,6 +374,11 @@ namespace Wv.Web
 	    return vfmt("<h2>{0}</h2>\n", text(s));
 	}
 	
+	public Html h3(string s)
+	{
+	    return vfmt("<h3>{0}</h3>\n", text(s));
+	}
+	
 	public Html start_ul(Attr at)
 	{
 	    return vfmt("<ul{0}>", at);
@@ -380,9 +399,21 @@ namespace Wv.Web
 	    return v(start_ul(), ha, end_ul());
 	}
 	
+	public Html start_li()
+	{
+	    return v("<li>");
+	}
+	
+	public Html end_li()
+	{
+	    return v("</li>\n");
+	}
+	
 	public Html li(params Html[] ha)
 	{
-	    return v(v("<li>"), ha, v("</li>\n"));
+	    return v(start_li(),
+		     ha,
+		     end_li());
 	}
 	
 	public Html li(string s)
@@ -407,18 +438,17 @@ namespace Wv.Web
 	
 	public Html table(params Html[] ha)
 	{
-	    return new Html(Context.Body,
-			    start_table(),
-			    ha,
-			    end_table());
+	    return v(start_table(),
+		     ha,
+		     end_table());
 	}
 	
 	public Html tr(Attr at, params Html[] ha)
 	{
 	    return new Html(Context.Body,
-			    vfmt("<tr{0}>", at),
+			    start_tr(at),
 			    ha,
-			    v("</tr>\n"));
+			    end_tr());
 	}
 	
 	public Html tr(params Html[] ha)
@@ -426,9 +456,24 @@ namespace Wv.Web
 	    return tr(Attr.none, ha);
 	}
 	
+	public Html start_tr(Attr at)
+	{
+	    return new Html(Context.Body, vfmt("<tr{0}>", at));
+	}
+	
+	public Html start_tr()
+	{
+	    return start_tr(Attr.none);
+	}
+	
+	public Html end_tr()
+	{
+	    return new Html(Context.Body, vfmt("</tr>\n"));
+	}
+	
 	public Html td(Attr at, string s)
 	{
-	    return vfmt("<td{0}>{1}</td>", at, text(s));
+	    return td(at, text(s));
 	}
 	
 	public Html td(string s)
@@ -438,12 +483,29 @@ namespace Wv.Web
 	
 	public Html td(Attr at, params Html[] ha)
 	{
-	    return v(vfmt("<td{0}>", at), ha, v("</td>"));
+	    return v(start_td(at),
+		     ha,
+		     end_td());
 	}
 	
 	public Html td(params Html[] ha)
 	{
 	    return td(Attr.none, ha);
+	}
+	
+	public Html start_td(Attr at)
+	{
+	    return vfmt("<td{0}>", at);
+	}
+	
+	public Html start_td()
+	{
+	    return start_td(Attr.none);
+	}
+	
+	public Html end_td()
+	{
+	    return v("</td>");
 	}
 	
 	public Html th(Attr at, string s)
@@ -546,6 +608,11 @@ namespace Wv.Web
 	public Html p()
 	{
 	    return p(Attr.none);
+	}
+	
+	public Html sup(string s)
+	{
+	    return vfmt("<sup>{0}</sup>", text(s));
 	}
 	
 	public Html nbsp()

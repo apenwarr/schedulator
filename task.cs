@@ -32,6 +32,7 @@ namespace Wv.Schedulator
 	public Person assignedto;
 	
 	public bool done;
+	public bool halfdone; // eg. "needs verification" bugs
 	public DateTime donedate;
 	
 	// set no more than two of the startdate, duedate, and work
@@ -42,6 +43,11 @@ namespace Wv.Schedulator
 	public TimeSpan remain
 	{
 	    get { return currest - elapsed; }
+	}
+	
+	public bool is_estimated()
+	{
+	    return !wv.isempty(currest) || !wv.isempty(elapsed);
 	}
 	
 	public DateSlider habits;

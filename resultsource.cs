@@ -42,6 +42,8 @@ namespace Wv.Schedulator
 			   + "sTask varchar(80) not null, "
 			   + "ixPriority int not null, "
 			   + "fDone boolean not null, "
+			   + "fHalfDone boolean not null, "
+			   + "fEstimated boolean not null, "
 			   + "dtStart datetime not null, "
 			   + "dtEnd datetime not null "
 			   + ")");
@@ -51,8 +53,8 @@ namespace Wv.Schedulator
 	    IDbCommand cmd = db.prepare
 		("insert into Schedule "
 		 + "(sUser,sProject,sFixFor,sTaskId,sTask,"
-		 + " ixPriority,fDone,dtStart,dtEnd) "
-		 + "values (?,?,?,?,?,?,?,?,?) ", 9);
+		 + " ixPriority,fDone,fHalfDone,fEstimated,dtStart,dtEnd) "
+		 + "values (?,?,?,?,?,?,?,?,?,?,?) ", 11);
 	    
 	    foreach (TimeSlot _ts in s.schedule)
 	    {
@@ -65,8 +67,11 @@ namespace Wv.Schedulator
 			ff = s.fixfors.Add(s.projects.Add("UNKNOWN"),
 					   "-Undecided-");
 		    db.execute(cmd, user, ff.project.name, ff.name,
-			       ts.task.id, ts.name, ts.task.priority,
-			       ts.done, ts.start, ts.end);
+			       ts.task.moniker, ts.name, ts.task.priority,
+			       ts.done ? 1 : 0,
+			       ts.task.halfdone ? 1 : 0,
+			       ts.task.is_estimated() ? 1 : 0,
+			       ts.start, ts.end);
 		}
 	    }
 	}

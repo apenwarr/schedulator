@@ -152,7 +152,7 @@ namespace Wv.Schedulator
 	}
 	
 	Task add_task(string ixstr, string title, FixFor fixfor, int pri,
-		      bool done, DateTime donedate)
+		      bool done, bool halfdone, DateTime donedate)
 	{
 	    Task t = s.tasks.Add(this, ixstr,
 				 String.Format("({0}) {1}", ixstr, title));
@@ -163,6 +163,7 @@ namespace Wv.Schedulator
 		t.done = true;
 		t.donedate = donedate;
 	    }
+	    t.halfdone = halfdone;
 	    return t;
 	}
 
@@ -326,12 +327,14 @@ namespace Wv.Schedulator
 		FixFor fixfor = (FixFor)mantisfixfors[ixfixfor];
 		
 		if (abugs.Contains(ix))
-		    add_task(ixstr, title, fixfor, pri, false,
+		    add_task(ixstr, title, fixfor, pri, false, false,
 			     DateTime.MinValue);
 		else if (rbugs.Contains(ix) && !vbugs.Contains(ix))
-		    add_task(ixstr, title, fixfor, pri, true, resolvedate);
+		    add_task(ixstr, title, fixfor, pri, true, true,
+			     resolvedate);
 		else if (sbugs.Contains(ix))
-		    add_task(ixstr, title, fixfor, pri, true, resolvedate);
+		    add_task(ixstr, title, fixfor, pri, true, true,
+			     resolvedate);
 		
 		// FIXME: "verify" tasks will disappear once closed,
 		// since they'll no longer be assigned to the user.
@@ -340,7 +343,7 @@ namespace Wv.Schedulator
 		{
 		    string x = abugs.Contains(ix) ? "v"+ixstr : ixstr;
 		    add_task(x, "VERIFY: " + title, fixfor, pri,
-			     false, DateTime.MinValue);
+			     false, true, DateTime.MinValue);
 		}
 	    }
 

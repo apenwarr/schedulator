@@ -14,3 +14,4 @@ Milestone "FooFixFor 2.0" 1999-09-09
 import bug fogbugz:dsn=fogbugz;uid=root;pwd=scs:apenwarr
 import mbug mantis:dsn=mantis;uid=root;pwd=scs:averyp
 import log log:averyp_fog
+plugin results results:dsn=schedulator;uid=root;pwd=scs:averyp_fog

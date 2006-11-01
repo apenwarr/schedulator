@@ -1,36 +1,100 @@
 
-table tbody tr {
-  background: #eeeeff;
+.schedule tr {
+	background: #eeeeff;
 }
 
-table tbody tr.comment {
-  font-style: italic;
-  text-align: center;
-  color: #888888;
+.schedule tr.comment {
+	font-style: italic;
+	text-align: center;
+	color: #888888;
 }
 
-table tbody tr.title {
-  background: #ffeeff;
+.schedule tr.title {
+	background: #ffeeff;
 }
-table tbody tr.title td:first-child {
-  font-weight: bold;
-  background: #ffeeff;
+.schedule tr.title td:first-child {
+	font-weight: bold;
+	background: #ffeeff;
 }
 
-table tbody tr.done td {
-  color: #666666;
-  font-style: italic;
+.schedule tr.done td {
+	color: #666666;
+	font-style: italic;
 //  display: none;
 }
-table tbody tr.done td.name {
-  text-decoration: line-through;
+.schedule tr.done td.name {
+	text-decoration: line-through;
 }
 
-table tbody tr.notdone td.late , table tbody tr.title td.late {
-  color: red;
+.schedule tr.notdone td.late , .schedule tr.title td.late {
+	color: red;
 }
 
 .showhidelink a {
-  text-decoration: none;
-  font-family: monospace;
+	text-decoration: none;
+	font-family: monospace;
+}
+
+
+.summary tr.yearheader th {
+	text-align: left;
+	font-size: larger;
+}
+
+.summary tr.monthheader th {
+	text-align: left;
+}
+
+.summary tr.dayheader th {
+	text-align: left;
+	font-size: smaller;
+	font-weight: normal;
+}
+
+.summary th.username {
+	font-size: larger;
+}
+
+.summary tr td {
+	background: white;
+}
+
+.summary tr.tasks td {
+	background: #eeeeff;
+	vertical-align: top;
+	font-size: smaller;
+}
+
+.summary th {
+	background: #cccccc;
+}
+
+.summary a {
+	text-decoration: none;
+}
+
+.summary tr.tasks td span {
+	margin-left: 5px;
+}
+
+.summary span.notdone {
+	border-style: solid;
+	border-width: 1px;
+	font-style: normal;
+}
+
+.summary span.halfdone {
+	font-style: italic;
+}
+
+.summary span.p0, .summary span.p1, .summary span.p2 {
+	font-size: 150%;
+}
+
+.summary span.p3 {
+	font-size: 125%;
+}
+
+.summary span.p6, .summary span.p7 {
+	font-size: 80%;
 }

@@ -102,6 +102,28 @@ namespace Wv.Utils
 	{
 	    return String.Format(format, args);
 	}
+	
+	public static Array sort(ICollection keys, IComparer comparer)
+	{
+	    object[] sorted = new object[keys.Count];
+	    keys.CopyTo(sorted, 0);
+	    Array.Sort(sorted, comparer);
+	    return sorted;
+	}
+	
+	public static Array sort(ICollection keys)
+	{
+	    return sort(keys, Comparer.Default);
+	}
+	
+	public static string[] stringify(ICollection keys)
+	{
+	    string[] a = new string[keys.Count];
+	    int i = 0;
+	    foreach (object o in keys)
+		a[i++] = o.ToString();
+	    return a;
+	}
     }
     
     public class Log
@@ -214,6 +236,26 @@ namespace Wv.Utils
 	public static explicit operator ArrayList(SortedHash x)
 	{
 	    return ArrayList.ReadOnly(x.array);
+	}
+    }
+    
+    public class ObjectCounter : Hashtable
+    {
+	public new virtual int this [object key]
+	{
+	    get
+	    {
+		if (!Contains(key))
+		    Add(key, 0);
+		return (int)base[key];
+	    }
+	    
+	    set
+	    {
+		if (Contains(key))
+		    Remove(key);
+		Add(key, (int)value);
+	    }
 	}
     }
 }
