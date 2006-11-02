@@ -68,6 +68,8 @@ namespace Wv.Schedulator
 		fogpersons.Add(ix, p);
 		if (!fogpersons_byname.Contains(name))
 		    fogpersons_byname.Add(name, ix);
+		if (!fogpersons_byname.Contains(fullname))
+		    fogpersons_byname.Add(fullname, ix);
 	    }
 	    
 	    log.log("Reading Project table.");

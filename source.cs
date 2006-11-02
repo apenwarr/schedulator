@@ -94,6 +94,8 @@ namespace Wv.Schedulator
 	    string prefix = list[0];
 	    string suffix = list.Length>1 ? list[1] : "";
 	    
+	    log.log("create: prefix='{0}', suffix='{1}'", prefix, suffix);
+	    
 	    if (!sources.Contains(prefix))
 		return null;
 	    else

@@ -19,12 +19,14 @@ namespace Wv.Schedulator
 			     string user)
 	    : base(s, name)
 	{
-	    if (!wv.isempty(user))
+	    // note: the null user doesn't exist, but the "" user is used
+	    // for all bugs not assigned to anyone yet.
+	    if (user != null)
 		this.user = user;
 	    else
 		this.user = s.name;
 	    
-	    log = new Log(String.Format("Mantis:{0}", name));
+	    log = new Log(wv.fmt("Mantis:{0}", name));
 	    log.log("Initializing Mantis source '{0}'.", name);
 	    log.log("Connecting to: '{0}'", odbcstring);
 	    db = new Db(odbcstring);

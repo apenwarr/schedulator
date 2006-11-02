@@ -340,7 +340,9 @@ namespace Wv.Schedulator
 		g.send(g.li(g.text(name)));
 		
 		Schedulator s = new Schedulator(name);
-		reg.create(s, "f", "file:schedules/" + name + ".sched");
+		reg.create(s, "system",
+			   "string:" + get_file("system.sched"));
+		reg.create(s, "init", "file:schedules/" + name + ".sched");
 		s.run();
 	    }
 	    g.send(g.end_ul());
@@ -375,6 +377,7 @@ namespace Wv.Schedulator
 		   g.p());
 
 	    
+	    reg.create(s, "system", "string:" + get_file("system.sched"));
 	    reg.create(s, "init", "string:" + schedtext);
 	    
 	    s.run();
@@ -665,6 +668,8 @@ namespace Wv.Schedulator
 		}
 		
 		g.send(g.done());
+	    
+		// throw new Exception();
 	    }
 	    catch (Exception e)
 	    {

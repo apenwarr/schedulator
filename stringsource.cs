@@ -33,7 +33,7 @@ namespace Wv.Schedulator
 		    else
 		    {
 			SourceRegistry reg = new SourceRegistry();
-			reg.create(s, args[0], args[1]);
+			reg.create(s, dequote(args[0]), dequote(args[1]));
 		    }
 		}
 	    }

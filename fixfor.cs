@@ -70,10 +70,10 @@ namespace Wv.Schedulator
 		return 1; // null fixfors come first in the list
 	    else if (final_release != y.final_release)
 		return DateTime.Compare(final_release, y.final_release);
-	    else if (name != y.name)
-		return name.CompareTo(y.name);
 	    else if (project != y.project)
 		return project.CompareTo(y.project);
+	    else if (name != y.name)
+		return name.CompareTo(y.name);
 	    else
 		return 0; // I give up!  They're the same!
 	}
