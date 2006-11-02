@@ -298,7 +298,7 @@ namespace Wv.Schedulator
 	    g.send(g.submit("Update All"));
 	    g.send(g.end_form());
 	    
-	    Db db = new Db("dsn=schedulator;uid=root;pwd=scs");
+	    Db db = new Db("schedulator");
 	    g.send(g.h1("Schedulator: Available Summaries"));
 	    g.send(g.start_ul());
 	    IDataReader r = db.select

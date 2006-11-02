@@ -1,16 +1,39 @@
 using System;
 using System.Data;
 using System.Data.Odbc;
+using System.Collections.Specialized;
+using Wv.Utils;
 
 namespace Wv.Dbi
 {
     public class Db
     {
 	IDbConnection db;
+	static Ini settings = new Ini("wvodbc.ini");
 	
-	public Db(string odbcstring)
+	public Db(string odbcstr)
 	{
-	    db = new OdbcConnection(odbcstring);
+	    string real;
+	    
+	    if (settings[odbcstr].Count > 0)
+	    {
+		StringDictionary sect = settings[odbcstr];
+		    
+		string s = wv.fmt("driver={{{0}}};server={1};database={2};"
+				  + "uid={3};pwd={4};",
+				  sect["driver"], sect["server"],
+				  sect["database"],
+				  sect["user"], sect["password"]);
+		real = s;
+	    }
+	    else if (String.Compare(odbcstr, 0, "dsn=", 0, 4, true) == 0)
+		real = odbcstr;
+	    else if (String.Compare(odbcstr, 0, "driver=", 0, 7, true) == 0)
+		real = odbcstr;
+	    else
+		throw new ArgumentException
+		   ("unrecognized odbc string '" + odbcstr + "'");
+	    db = new OdbcConnection(real);
 	    db.Open();
 	}
 	

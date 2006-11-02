@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Wv.Dbi;
 using Wv.Utils;
 using Wv.Schedulator;
 using System.Data;
@@ -12,7 +13,7 @@ namespace Wv.Schedulator
 	string user; // get the bugs for this username
 	Log log;
 	
-	IDbConnection db;
+	Db db;
 	
         public FogBugzSource(Schedulator s, string name, string odbcstring,
 			     string user)
@@ -22,8 +23,7 @@ namespace Wv.Schedulator
 	    log = new Log(String.Format("FogBugz:{0}", name));
 	    log.log("Initializing FogBugz source '{0}'.", name);
 	    log.log("Connecting to: '{0}'", odbcstring);
-	    db = new OdbcConnection(odbcstring);
-	    db.Open();
+	    db = new Db(odbcstring);
 	}
 	
 	public static Source create(Schedulator s, string name,
@@ -36,14 +36,6 @@ namespace Wv.Schedulator
 		throw new ArgumentException("bad moniker for FogBugzSource");
 	}
 
-	IDataReader select(string sql)
-	{
-	    IDbCommand cmd = db.CreateCommand();
-	    cmd.CommandText = sql;
-	    IDataReader reader = cmd.ExecuteReader();
-	    return reader;
-	}
-	
 	Hashtable fogpersons = new Hashtable();
 	Hashtable fogpersons_byname = new Hashtable();
 	Hashtable fogprojects = new Hashtable();
@@ -54,9 +46,9 @@ namespace Wv.Schedulator
 	    IDataReader r;
 	    
 	    log.log("Reading Person table.");
-	    r = select("select ixPerson, sFullName, sEmail "
-		       + "from Person "
-		       + "order by fDeleted, ixPerson ");
+	    r = db.select("select ixPerson, sFullName, sEmail "
+			  + "from Person "
+			  + "order by fDeleted, ixPerson ");
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);
@@ -74,7 +66,7 @@ namespace Wv.Schedulator
 	    }
 	    
 	    log.log("Reading Project table.");
-	    r = select("select ixProject, sProject from Project");
+	    r = db.select("select ixProject, sProject from Project");
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);
@@ -85,7 +77,8 @@ namespace Wv.Schedulator
 	    }
 	    
 	    log.log("Reading FixFor table.");
-	    r = select("select ixFixFor, ixProject, sFixFor, dt from FixFor");
+	    r = db.select("select ixFixFor, ixProject, sFixFor, dt "
+			  + " from FixFor ");
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);
@@ -156,10 +149,10 @@ namespace Wv.Schedulator
 	    int userix = (int)fogpersons_byname[user];
 	    
 	    log.log("Listing active bugs.");
-	    r = select(String.Format
-		       ("select ixBug, ixStatus "
-			+ "from Bug "
-			+ "where ixPersonAssignedTo={0} ", userix));
+	    r = db.select(String.Format
+			  ("select ixBug, ixStatus "
+			   + "from Bug "
+			   + "where ixPersonAssignedTo={0} ", userix));
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);
@@ -171,11 +164,11 @@ namespace Wv.Schedulator
 	    }
 	    
 	    log.log("Reading BugEvent table (1).");
-	    r = select(String.Format
-		       ("select distinct ixBug "
-			+ "   from BugEvent "
-			+ "   where ixPerson={0} "
-			+ "     and sVerb like 'Resolved %' ", userix));
+	    r = db.select(String.Format
+			  ("select distinct ixBug "
+			   + "   from BugEvent "
+			   + "   where ixPerson={0} "
+			   + "     and sVerb like 'Resolved %' ", userix));
 	    while (r.Read())
 		rbugs.Add(r.GetInt32(0), r.GetInt32(0).ToString());
 	    log.log("  {0} bugs to check.", rbugs.Count);
@@ -184,13 +177,13 @@ namespace Wv.Schedulator
 	    
 	    log.log("Reading BugEvent table (2).");
 	    rbugs.Clear();
-	    r = select(String.Format
-		       ("select ixBug, ixPerson, sVerb "
-			+ "   from BugEvent "
-			+ "   where sVerb like 'Resolved %' "
-			+ "     and ixBug in ({1}) "
-			+ "   order by ixBug, ixBugEvent ",
-			userix, rbugs_str));
+	    r = db.select(String.Format
+			  ("select ixBug, ixPerson, sVerb "
+			   + "   from BugEvent "
+			   + "   where sVerb like 'Resolved %' "
+			   + "     and ixBug in ({1}) "
+			   + "   order by ixBug, ixBugEvent ",
+			   userix, rbugs_str));
 	    int last_bug = -1;
 	    bool resolved_by_me_once = false, resolved_away = false;
 	    while (r.Read())
@@ -245,12 +238,12 @@ namespace Wv.Schedulator
 	    add_list(all_bugs, rbugs.Values);
 	    add_list(all_bugs, sbugs.Values);
 	    string all_str = bug_str(all_bugs);
-	    r = select(String.Format
-		       ("select ixBug, sTitle, ixFixFor, ixPriority, "
-			+ "   dtResolved, "
-			+ "   hrsOrigEst, hrsCurrEst, hrsElapsed "
-			+ "from Bug "
-			+ "where ixBug in ({0})", all_str));
+	    r = db.select(String.Format
+			  ("select ixBug, sTitle, ixFixFor, ixPriority, "
+			   + "   dtResolved, "
+			   + "   hrsOrigEst, hrsCurrEst, hrsElapsed "
+			   + "from Bug "
+			   + "where ixBug in ({0})", all_str));
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);

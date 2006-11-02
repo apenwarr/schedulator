@@ -15,12 +15,12 @@ import test test:
 import log log:sample
 
 # Track the ongoing output from this schedule in a database
-plugin results results:dsn=schedulator;uid=root;pwd=scs:sample
+plugin results results:schedulator:sample
 
 # Here are some examples of how to import FogBugz cases and Mantis cases,
 # respectively, for the user named "sample".
-#import bug fogbugz:dsn=fogbugz;uid=root;pwd=scs:sample
-#import mbug mantis:dsn=mantis;uid=root;pwd=scs:sample
+#import bug fogbugz:fogbugz:sample
+#import mbug mantis:mantis:sample
 
 
 # Define the default project name for milestones below

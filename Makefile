@@ -6,7 +6,7 @@ PKGS=-pkg:nunit -r:System.Data -r:System.Web
 all: schedulator.exe webtest.exe
 
 LIBFILES= \
-	wvutils.cs wvtest.cs wvweb.cs wvdbi.cs \
+	wvutils.cs wvtest.cs wvweb.cs wvdbi.cs wvini.cs \
 	wvtest.t.cs.E wvutils.t.cs.E \
 
 webtest.exe: webtest.cs $(LIBFILES)

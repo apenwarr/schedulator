@@ -11,7 +11,7 @@ Milestone "FooFixFor 2.0" 1999-09-09
 * Task 2 [2d 1d]
 ! bug:1766 [777h]
 
-import bug fogbugz:dsn=fogbugz;uid=root;pwd=scs:apenwarr
-import mbug mantis:dsn=mantis;uid=root;pwd=scs:averyp
+import bug fogbugz:fogbugz:apenwarr
+import mbug mantis:mantis:averyp
 import log log:averyp_fog
-plugin results results:dsn=schedulator;uid=root;pwd=scs:averyp_fog
+plugin results results:schedulator:averyp_fog

@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.Data.Odbc;
 using System.Collections;
+using Wv.Dbi;
 using Wv.Utils;
 using Wv.Schedulator;
 
@@ -12,7 +13,7 @@ namespace Wv.Schedulator
 	string user; // get the bugs for this username
 	Log log;
 	
-	IDbConnection db;
+	Db db;
 	
         public MantisSource(Schedulator s, string name, string odbcstring,
 			     string user)
@@ -22,8 +23,7 @@ namespace Wv.Schedulator
 	    log = new Log(String.Format("Mantis:{0}", name));
 	    log.log("Initializing Mantis source '{0}'.", name);
 	    log.log("Connecting to: '{0}'", odbcstring);
-	    db = new OdbcConnection(odbcstring);
-	    db.Open();
+	    db = new Db(odbcstring);
 	}
 	
 	public static Source create(Schedulator s, string name,
@@ -36,14 +36,6 @@ namespace Wv.Schedulator
 		throw new ArgumentException("bad moniker for MantisSource");
 	}
 
-	IDataReader select(string sql)
-	{
-	    IDbCommand cmd = db.CreateCommand();
-	    cmd.CommandText = sql;
-	    IDataReader reader = cmd.ExecuteReader();
-	    return reader;
-	}
-	
 	Hashtable mantispersons = new Hashtable();
 	Hashtable mantispersons_byname = new Hashtable();
 	Hashtable mantisprojects = new Hashtable();
@@ -54,9 +46,9 @@ namespace Wv.Schedulator
 	    IDataReader r;
 	    
 	    log.log("Reading mantis_user_table.");
-	    r = select("select id, username, realname "
-		       + "from mantis_user_table "
-		       + "order by enabled desc, id ");
+	    r = db.select("select id, username, realname "
+			  + "from mantis_user_table "
+			  + "order by enabled desc, id ");
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);
@@ -78,7 +70,7 @@ namespace Wv.Schedulator
 	    mantispersons_byname.Add("", 0);
 	    
 	    log.log("Reading mantis_project_table.");
-	    r = select("select id, name from mantis_project_table");
+	    r = db.select("select id, name from mantis_project_table");
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);
@@ -92,9 +84,9 @@ namespace Wv.Schedulator
 	    string[] cols = {"fixed_in_version", "version"};
 	    foreach (string col in cols)
 	    {
-		r = select(wv.fmt("select distinct project_id, {0} "
-				  + "from mantis_bug_table "
-				  + "order by project_id, {0} ", col));
+		r = db.select(wv.fmt("select distinct project_id, {0} "
+				     + "from mantis_bug_table "
+				     + "order by project_id, {0} ", col));
 		while (r.Read())
 		{
 		    int projix = r.GetInt32(0);
@@ -113,8 +105,8 @@ namespace Wv.Schedulator
 	    }
 	    
 	    log.log("Reading mantis_project_version_table.");
-	    r = select("select project_id, version, date_order "
-		       + " from mantis_project_version_table ");
+	    r = db.select("select project_id, version, date_order "
+			  + " from mantis_project_version_table ");
 	    while (r.Read())
 	    {
 		int projix = r.GetInt32(0);
@@ -217,11 +209,11 @@ namespace Wv.Schedulator
 	    int userix = (int)mantispersons_byname[user];
 	    
 	    log.log("Listing active bugs.");
-	    r = select(wv.fmt("select id, status "
-			      + "from mantis_bug_table "
-			      + "where handler_id={0} "
-			      + "  and status != {1} ",
-			      userix, (int)Status.Closed));
+	    r = db.select(wv.fmt("select id, status "
+				 + "from mantis_bug_table "
+				 + "where handler_id={0} "
+				 + "  and status != {1} ",
+				 userix, (int)Status.Closed));
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);
@@ -233,11 +225,11 @@ namespace Wv.Schedulator
 	    }
 	    
 	    log.log("Reading mantis_bug_history_table (1).");
-	    r = select(wv.fmt("select distinct bug_id "
-			      + "   from mantis_bug_history_table "
-			      + "   where user_id={0} "
-			      + "     and field_name='resolution' ",
-			      userix));
+	    r = db.select(wv.fmt("select distinct bug_id "
+				 + "   from mantis_bug_history_table "
+				 + "   where user_id={0} "
+				 + "     and field_name='resolution' ",
+				 userix));
 	    while (r.Read())
 		rbugs.Add(r.GetInt32(0), r.GetInt32(0).ToString());
 	    log.log("  {0} bugs to check.", rbugs.Count);
@@ -246,14 +238,14 @@ namespace Wv.Schedulator
 
 	    log.log("Reading mantis_bug_history_table (2).");
 	    rbugs.Clear();
-	    r = select(String.Format
-		       ("select bug_id, user_id, new_value "
-			+ "   from mantis_bug_history_table "
-			+ "   where field_name='resolution' "
-			+ "     and new_value is not null "
-			+ "     and bug_id in ({1}) "
-			+ "   order by bug_id, id ",
-			userix, rbugs_str));
+	    r = db.select(wv.fmt
+			  ("select bug_id, user_id, new_value "
+			   + "   from mantis_bug_history_table "
+			   + "   where field_name='resolution' "
+			   + "     and new_value is not null "
+			   + "     and bug_id in ({1}) "
+			   + "   order by bug_id, id ",
+			   userix, rbugs_str));
 	    int last_bug = -1;
 	    bool resolved_by_me_once = false, resolved_away = false;
 	    while (r.Read())
@@ -302,12 +294,12 @@ namespace Wv.Schedulator
 	    add_list(all_bugs, rbugs.Values);
 	    add_list(all_bugs, sbugs.Values);
 	    string all_str = bug_str(all_bugs);
-	    r = select(String.Format
-		       ("select id, summary, project_id, "
-			+ "   fixed_in_version, version, "
-			+ "   priority, last_updated "
-			+ "from mantis_bug_table "
-			+ "where id in ({0})", all_str));
+	    r = db.select(wv.fmt
+			  ("select id, summary, project_id, "
+			   + "   fixed_in_version, version, "
+			   + "   priority, last_updated "
+			   + "from mantis_bug_table "
+			   + "where id in ({0})", all_str));
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);

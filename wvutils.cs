@@ -161,6 +161,11 @@ namespace Wv.Utils
 	    Trace.WriteLine(String.Format("> " + format, arg));
 	    Trace.Flush();
 	}
+	
+	public void log(string s)
+	{
+	    log("{0}", s);
+	}
     }
 
     public class SilentLog : Log
