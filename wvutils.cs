@@ -132,11 +132,13 @@ namespace Wv.Utils
 	
 	static int refs = 0;
 	static TraceListener mytrace = null;
+	static bool disable_mytrace = false;
 	
 	public Log(string logname)
 	{
 	    refs++;
-	    if (mytrace == null && Trace.Listeners.Count < 2)
+	    if (mytrace == null && !disable_mytrace 
+		&& Trace.Listeners.Count < 2)
 	    {
 		mytrace = new TextWriterTraceListener(Console.Error);
 		Trace.Listeners.Add(mytrace);
@@ -152,13 +154,28 @@ namespace Wv.Utils
 	{
 	    refs--;
 	    if (refs == 0)
+	    {
+		if (mytrace != null)
+		    Trace.Listeners.Remove(mytrace);
 		mytrace = null;
+	    }
+	}
+	
+	public static void no_default_listener()
+	{
+	    disable_mytrace = true;
+	    if (mytrace != null)
+	    {
+		Trace.Listeners.Remove(mytrace);
+		mytrace = null;
+	    }
 	}
 	
 	public virtual void log(string format, params object [] arg)
 	{
 	    // Console.Error.WriteLine("<" + logname + "> " + format, arg);
-	    Trace.WriteLine(String.Format("> " + format, arg));
+	    Trace.WriteLine(String.Format
+			    ("[" + logname + "] " + format, arg));
 	    Trace.Flush();
 	}
 	

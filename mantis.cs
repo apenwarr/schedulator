@@ -19,7 +19,11 @@ namespace Wv.Schedulator
 			     string user)
 	    : base(s, name)
 	{
-	    this.user = user.ToLower();
+	    if (!wv.isempty(user))
+		this.user = user;
+	    else
+		this.user = s.name;
+	    
 	    log = new Log(String.Format("Mantis:{0}", name));
 	    log.log("Initializing Mantis source '{0}'.", name);
 	    log.log("Connecting to: '{0}'", odbcstring);
@@ -32,6 +36,8 @@ namespace Wv.Schedulator
 	    string[] bits = suffix.Split(':');
 	    if (bits.Length >= 2)
 		return new MantisSource(s, name, bits[0], bits[1]);
+	    else if (bits.Length >= 1)
+		return new MantisSource(s, name, bits[0], null);
 	    else
 		throw new ArgumentException("bad moniker for MantisSource");
 	}

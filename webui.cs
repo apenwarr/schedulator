@@ -2,7 +2,9 @@
 using System.IO;
 using System.Web;
 using System.Data;
+using System.Text;
 using System.Collections;
+using System.Diagnostics;
 using Wv.Utils;
 using Wv.Dbi;
 using Wv.Web;
@@ -14,7 +16,6 @@ namespace Wv.Schedulator
 	Cgi cgi = new Cgi();
 	HtmlGen g = new HtmlGen();
 	SourceRegistry reg = new SourceRegistry();
-	Schedulator s = new Schedulator();
 
 	Html render_est(string edit_key, TimeSpan span)
 	{
@@ -36,7 +37,7 @@ namespace Wv.Schedulator
 	    datestr = (nodate
 		       ? "(???)"
 		       : FixFor.date_string(date));
-	    bool past = date < s.now;
+	    bool past = date < now;
 	    late = past && !done && !nodate;
 	    if (!late && past && !nodate)
 		datestr = "done";
@@ -107,7 +108,7 @@ namespace Wv.Schedulator
 	}
 	
 	void taskrow(string msname, bool shown, bool done, string name,
-		     Task t, DateTime end)
+		     Task t, DateTime end, DateTime now)
 	{
 	    string id = String.Format("{0}_{1}", t.source.name, t.id);
 	    row(msname, shown, done,
@@ -117,7 +118,7 @@ namespace Wv.Schedulator
 		render_est(!done ? "currest_"+id : null, t.currest),
 		render_est(!done ? "elapsed_"+id : null, t.elapsed),
 		render_est(null, t.remain),
-		g.text(FixFor.date_string(end)), end.Date < s.now);
+		g.text(FixFor.date_string(end)), end.Date < now);
 	}
 	
 	void submit_button()
@@ -338,7 +339,7 @@ namespace Wv.Schedulator
 	    {
 		g.send(g.li(g.text(name)));
 		
-		Schedulator s = new Schedulator();
+		Schedulator s = new Schedulator(name);
 		reg.create(s, "f", "file:schedules/" + name + ".sched");
 		s.run();
 	    }
@@ -352,6 +353,8 @@ namespace Wv.Schedulator
 	
 	void page_show_schedule()
 	{
+	    Schedulator s = new Schedulator(schedname());
+	    
 	    wv.assert(schedname() != null);
 	    g.send(g.title(schedname() + " - Schedulator"));
 	    
@@ -372,7 +375,7 @@ namespace Wv.Schedulator
 		   g.p());
 
 	    
-	    reg.create(s, "main", "string:" + schedtext);
+	    reg.create(s, "init", "string:" + schedtext);
 	    
 	    s.run();
 	    //s.dump(new Log("S"));
@@ -456,7 +459,7 @@ namespace Wv.Schedulator
 		    }
 		    
 		    taskrow(msname, shown, ts.done, ts.name,
-			    ts.task, ts.end);
+			    ts.task, ts.end, s.now);
 		    if (shown)
 			shown_so_far++;
 		}
@@ -609,36 +612,75 @@ namespace Wv.Schedulator
 	    g.send(g.h2("Done."));
 	}
 	
-	public void run()
+        public class StringTraceListener : TraceListener
 	{
-	    handle_save_schedule();
-	    handle_save_estimates();
+	    StringBuilder all = new StringBuilder();
 	    
-	    // HTTP redirect if it was a POST, so pressing the back
-	    // button doesn't automatically repost the form
-	    if (!wv.isempty(cgi.request["Update All"]))
-		page_update_all();
-	    else if (cgi.method == Cgi.Method.Post)
-		http_redirect(person_url());
-	    else // normal page
+	    StringTraceListener() : base()
 	    {
-		g.send(g.include_css("schedulator.css"),
-		       g.include_js("schedulator.js"),
-		       g.use_editinplace());
-		
-		if (!wv.isempty(cgi.request["summary"]))
-		    page_show_summary();
-		else if (schedname() != null)
-		    page_show_schedule();
-		else
-		    page_list_schedules();
 	    }
 	    
-	    g.send(g.done());
+	    public override void Write(string message)
+	    {
+		all.Append(message);
+	    }
+	    
+	    public override void WriteLine(string message)
+	    {
+		all.Append(message + "\n");
+	    }
+	    
+	    public string get()
+	    {
+		return all.ToString();
+	    }
+	}
+	
+	static StringTraceListener stl;
+	
+	public void run()
+	{
+	    try {
+		handle_save_schedule();
+		handle_save_estimates();
+		
+		// HTTP redirect if it was a POST, so pressing the back
+		// button doesn't automatically repost the form
+		if (!wv.isempty(cgi.request["Update All"]))
+		    page_update_all();
+		else if (cgi.method == Cgi.Method.Post)
+		    http_redirect(person_url());
+		else // normal page
+		{
+		    g.send(g.include_css("schedulator.css"),
+			   g.include_js("schedulator.js"),
+			   g.use_editinplace());
+		    
+		    if (!wv.isempty(cgi.request["summary"]))
+			page_show_summary();
+		    else if (schedname() != null)
+			page_show_schedule();
+		    else
+			page_list_schedules();
+		}
+		
+		g.send(g.done());
+	    }
+	    catch (Exception e)
+	    {
+		Console.Write("\n\n\n</html><pre>\n");
+		Console.Write(stl.get());
+		Console.Write("\n\n");
+		Console.Write(e.ToString());
+	    }
 	}
 	
 	public static void Main()
 	{
+	    stl = new StringTraceListener();
+	    Trace.Listeners.Add(stl);
+	    Log.no_default_listener();
+	    
 	    (new WebUI()).run();
 	}
     }

@@ -55,7 +55,8 @@ namespace Wv.Schedulator
 	public static Source create_from_file_id(Schedulator s, string name,
 					      string prefix, string suffix)
 	{
-	    return new LogSource(s, name, get_file_from_id(suffix));
+	    string id = wv.isempty(suffix) ? s.name : suffix;
+	    return new LogSource(s, name, get_file_from_id(id));
 	}
 
 	public override void cleanup_tasks()

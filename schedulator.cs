@@ -52,7 +52,11 @@ namespace Wv.Schedulator
     
     public class Schedulator
     {
+	public string name;
+	
 	public DateSlider default_habits = new DateSlider();
+	public DateTime now = DateTime.Now;
+	public DateTime align = wv.date("1901-01-01");
 	
 	public PersonList persons = new PersonList();
 	public ProjectList projects = new ProjectList();
@@ -62,6 +66,11 @@ namespace Wv.Schedulator
 	public ArrayList schedule = new ArrayList(); // of TimeSlot
 	
 	ArrayList sources = new ArrayList();
+	
+	public Schedulator(string name)
+	{
+	    this.name = name;
+	}
 	
 	public void register_source(Source src)
 	{
@@ -150,9 +159,6 @@ namespace Wv.Schedulator
 	    
 	    point = end;
 	}
-	
-	public DateTime now = DateTime.Now;
-	public DateTime align = wv.date("1901-01-01");
 	
 	public void do_schedule()
 	{

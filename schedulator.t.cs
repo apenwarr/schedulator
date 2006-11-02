@@ -19,7 +19,7 @@ public class SchedTests
     {
 	log.log("Creating schedulator.");
 	reg = new SourceRegistry();
-	s = new Schedulator();
+	s = new Schedulator("test");
     }
     
     [Test] public void person_project_fixfor_test()

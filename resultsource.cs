@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using Wv.Dbi;
 using Wv.Utils;
 using Wv.Schedulator;
 
@@ -9,30 +10,21 @@ namespace Wv.Schedulator
     {
 	string user; // get the bugs for this username
 	Log log;
-	Wv.Dbi.Db db;
+	Db db;
 	
         public ResultSource(Schedulator s, string name,
 			    string odbcstring, string user)
 	    : base(s, name)
 	{
-	    this.user = user;
+	    if (!wv.isempty(user))
+		this.user = user;
+	    else
+		this.user = s.name;
 	    log = new Log(String.Format("Result:{0}", name));
 	    log.log("Initializing result plugin '{0}'.", name);
 	    log.log("Connecting to: '{0}'", odbcstring);
-	    db = new Wv.Dbi.Db (odbcstring);
-	}
-	
-	public static Source create(Schedulator s, string name,
-				    string prefix, string suffix)
-	{
-	    string[] points = suffix.Split(':');
-	    string dsn  = points[0];
-	    string user = points.Length>1 ? points[1] : "UNKNOWN";
-	    return new ResultSource(s, name, dsn, user);
-	}
-	
-	public override void post_schedule()
-	{
+	    db = new Db(odbcstring);
+	    
 	    // db.try_execute("drop table Schedule");
 	    db.try_execute("create table Schedule ("
 			   + "sUser varchar(40) not null, "
@@ -47,7 +39,19 @@ namespace Wv.Schedulator
 			   + "dtStart datetime not null, "
 			   + "dtEnd datetime not null "
 			   + ")");
-	    
+	}
+	
+	public static Source create(Schedulator s, string name,
+				    string prefix, string suffix)
+	{
+	    string[] points = suffix.Split(':');
+	    string dsn  = points[0];
+	    string user = points.Length>1 ? points[1] : null;
+	    return new ResultSource(s, name, dsn, user);
+	}
+	
+	public override void post_schedule()
+	{
 	    db.execute("delete from Schedule where sUser=?", user);
 	    
 	    IDbCommand cmd = db.prepare
