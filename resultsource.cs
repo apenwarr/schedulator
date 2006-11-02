@@ -10,7 +10,7 @@ namespace Wv.Schedulator
     {
 	string user; // get the bugs for this username
 	Log log;
-	Db db;
+	public Db db;
 	
         public ResultSource(Schedulator s, string name,
 			    string odbcstring, string user)

@@ -17,6 +17,13 @@ namespace Wv.Schedulator
 	    s.register_source(this);
 	}
 	
+	// Return the web URL, if any, to view the given task.  This can
+	// be used for hyperlinks in the web interface, and so on.
+	public virtual string view_url(string taskid)
+	{
+	    return null;
+	}
+	
 	// When this is called, you have no guarantee that any particular
 	// objects already exist except for all Sources.  Create Persons,
 	// Projects, FixFors, and (if you want) Tasks here.

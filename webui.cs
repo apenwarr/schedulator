@@ -1,4 +1,4 @@
- using System;
+using System;
 using System.IO;
 using System.Web;
 using System.Data;
@@ -46,22 +46,20 @@ namespace Wv.Schedulator
 	void titlerow(string msname, bool shown, Html text,
 		   string datestr, bool late)
 	{
-	    Attr at1
-		= new Attr("href",
-		 String.Format("javascript:hideBugs('{0}', 'schedule');",
-			       msname));
-	    Attr at2
-		= new Attr("href",
-		 String.Format("javascript:showBugs('{0}', 'schedule');",
-			       msname));
+	    string url1
+		= wv.fmt("javascript:hideBugs('{0}', 'schedule');",
+			 msname);
+	    string url2
+	        = wv.fmt("javascript:showBugs('{0}', 'schedule');",
+			 msname);
 	    Html hidestr = g.span(new Attr("id", msname + "_hidelink",
 						 "class", "showhidelink",
 				 "style", shown ? "" : "display:none"),
-				    g.a(at1, g.text("[-]")));
+				    g.ahref(url1, "[-]"));
 	    Html showstr = g.span(new Attr("id", msname + "_showlink",
 						 "class", "showhidelink",
 				 "style", shown ? "display:none" : ""),
-				  g.a(at2, g.text("[+]")));
+				  g.ahref(url2, "[+]"));
 	    g.send(g.tr(new Attr("class", "title"),
 			g.td(new Attr("colspan", 7),
 			     hidestr, showstr, g.text(" "),
@@ -89,7 +87,7 @@ namespace Wv.Schedulator
 	}
 	
 	void row(string msname, bool shown, bool done,
-		 string pri, string name,
+		 string pri, Html name,
 		 Html e1, Html e2, Html e3, Html e4,
 		 Html due, bool late)
 	{
@@ -110,10 +108,14 @@ namespace Wv.Schedulator
 	void taskrow(string msname, bool shown, bool done, string name,
 		     Task t, DateTime end, DateTime now)
 	{
+	    string url = t.source.view_url(t.id);
 	    string id = String.Format("{0}_{1}", t.source.name, t.id);
 	    row(msname, shown, done,
 		t.priority>0 ? t.priority.ToString() : "",
-		name,
+		(url != null 
+		 ? g.v(g.ahref(url, t.id),
+		       g.text(": " + name))
+		 : g.text(name)),
 		render_est(null, t.origest),
 		render_est(!done ? "currest_"+id : null, t.currest),
 		render_est(!done ? "elapsed_"+id : null, t.elapsed),
@@ -124,7 +126,7 @@ namespace Wv.Schedulator
 	void submit_button()
 	{
 	    Html e = g.text("");
-	    row("", true, false, "", "", e, e, e, e,
+	    row("", true, false, "", g.text(""), e, e, e, e,
 		g.submit("Save"), false);
 	}
 	
@@ -285,10 +287,7 @@ namespace Wv.Schedulator
 	    
 	    g.send(g.start_ul());
 	    foreach (string name in all_schedules())
-	    {
-		g.send(g.li(g.a(new Attr("href", person_url(name)),
-				g.text(name))));
-	    }
+		g.send(g.li(g.ahref(person_url(name), name)));
 	    g.send(g.li(g.input("sid"), g.submit("Create New")));
 	    g.send(g.end_ul());
 	    
@@ -299,32 +298,35 @@ namespace Wv.Schedulator
 	    g.send(g.submit("Update All"));
 	    g.send(g.end_form());
 	    
-	    Db db = new Db("schedulator");
-	    g.send(g.h1("Schedulator: Available Summaries"));
-	    g.send(g.start_ul());
-	    IDataReader r = db.select
-		("select distinct sProject, sFixfor "
-		 + " from Schedule "
-		 + " where fDone=0 "
-		 + " order by sProject, sFixFor ");
-	    string last_proj = "";
-	    while (r.Read())
+	    ResultSource results = find_result_source();
+	    if (results != null)
 	    {
-		string proj = r.GetString(0);
-		string fixfor = r.GetString(1);
-		if (last_proj != proj)
+		Db db = results.db;
+		g.send(g.h1("Schedulator: Available Summaries"));
+		g.send(g.start_ul());
+		IDataReader r = db.select
+		    ("select distinct sProject, sFixfor "
+		     + " from Schedule "
+		     + " where fDone=0 "
+		     + " order by sProject, sFixFor ");
+		string last_proj = "";
+		while (r.Read())
 		{
-		    if (last_proj != null)
-			g.send(g.end_li());
-		    g.send(g.start_li(), g.text(wv.fmt("{0}: ", proj)));
-		    last_proj = proj;
+		    string proj = r.GetString(0);
+		    string fixfor = r.GetString(1);
+		    if (last_proj != proj)
+		    {
+			if (last_proj != null)
+			    g.send(g.end_li());
+			g.send(g.start_li(), g.text(wv.fmt("{0}: ", proj)));
+			last_proj = proj;
+		    }
+		    else
+			g.send(g.text(", "));
+		    g.send(g.ahref(summary_url(proj, fixfor), fixfor));
 		}
-		else
-		    g.send(g.text(", "));
-		g.send(g.a(new Attr("href", summary_url(proj, fixfor)),
-				g.text(fixfor)));
+		g.send(g.end_ul());
 	    }
-	    g.send(g.end_ul());
 	}
 	
 	void page_update_all()
@@ -338,25 +340,19 @@ namespace Wv.Schedulator
 	    foreach (string name in all_schedules())
 	    {
 		g.send(g.li(g.text(name)));
-		
-		Schedulator s = new Schedulator(name);
-		reg.create(s, "system",
-			   "string:" + get_file("system.sched"));
-		reg.create(s, "init", "file:schedules/" + name + ".sched");
+		Schedulator s = new_web_schedulator(name);
 		s.run();
 	    }
 	    g.send(g.end_ul());
 	    
 	    g.send(g.h2("Done."));
-	    g.send(g.a(new Attr("href", base_url()), g.text("<<back")));
+	    g.send(g.ahref(base_url(), "<<back"));
 	    
 	    g.send(g.end_form());
 	}
 	
 	void page_show_schedule()
 	{
-	    Schedulator s = new Schedulator(schedname());
-	    
 	    wv.assert(schedname() != null);
 	    g.send(g.title(schedname() + " - Schedulator"));
 	    
@@ -364,7 +360,7 @@ namespace Wv.Schedulator
 					 "name", "mainform",
 					 "method", "POST")));
 	    
-	    g.send(g.a(new Attr("href", base_url()), g.text("<<back")));
+	    g.send(g.ahref(base_url(), "<<back"));
 	    g.send(g.h1(schedname() + "'s Schedulator"));
 	    
 	    string schedtext = get_file(schedfile());
@@ -375,11 +371,8 @@ namespace Wv.Schedulator
 				  "style", "display:none"),
 			 g.text(schedtext)),
 		   g.p());
-
 	    
-	    reg.create(s, "system", "string:" + get_file("system.sched"));
-	    reg.create(s, "init", "string:" + schedtext);
-	    
+	    Schedulator s = new_web_schedulator(schedname());
 	    s.run();
 	    //s.dump(new Log("S"));
 	    
@@ -438,7 +431,7 @@ namespace Wv.Schedulator
 					out datestr2, out late2);
 			    Html h = g.text("");
 			    row(msname, shown, was_done,
-				"", "RELEASE",
+				"", g.text("RELEASE"),
 				h, h, h, h,
 				g.text(datestr2), late2);
 			}
@@ -453,8 +446,8 @@ namespace Wv.Schedulator
 				    out datestr, out late);
 			titlerow(msname, shown,
 				 g.v(g.text("MILESTONE: "),
-				     g.a(new Attr("href", summary_url(ff.project.name, ff.name)),
-					 g.text(wv.fmt("{0} - {1}", ff.project.name, ff.name)))),
+				     g.ahref(summary_url(ff.project.name, ff.name),
+					     wv.fmt("{0} - {1}", ff.project.name, ff.name))),
 				 datestr, false);
 			
 			last_fixfor = ts.fixfor;
@@ -483,6 +476,27 @@ namespace Wv.Schedulator
 	    "Jan", "Feb", "Mar", "Apr", "May", "June",
 	    "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"
 	};
+	
+	Schedulator new_web_schedulator(string name)
+	{
+	    Schedulator s = new Schedulator(name);
+	    reg.create(s, "system", "string:" + get_file("system.sched"));
+	    reg.create(s, "init", "file:schedules/" + name + ".sched");
+	    return s;
+	}
+	
+	ResultSource find_result_source(Schedulator s)
+	{
+	    foreach (Source source in s.sources)
+		if (source is ResultSource)
+		    return (ResultSource)source;
+	    return null;
+	}
+	    
+	ResultSource find_result_source()
+	{
+	    return find_result_source(new_web_schedulator("NONE"));
+	}
 	    
 	public void page_show_summary()
 	{
@@ -492,10 +506,17 @@ namespace Wv.Schedulator
 	    string fixforname = (splits.Length > 1) ? splits[1] : "";
 	    
 	    g.send(g.title(wv.fmt("Summary of {0} - Schedulator", pff)));
-	    g.send(g.a(new Attr("href", base_url()), g.text("<<back")));
+	    g.send(g.ahref(base_url(), "<<back"));
 	    g.send(g.h1(wv.fmt("Schedulator: Summary of {0}", pff)));
 	    
-	    Db db = new Db("dsn=schedulator;uid=root;pwd=scs");
+	    ResultSource results = find_result_source();
+	    if (results == null)
+	    {
+		g.send(g.h2("No results plugin exists."));
+		return;
+	    }
+	    
+	    Db db = results.db;
 	    IDataReader r = db.select
 		("select sUser, sTaskId, sTask, ixPriority, "
 		 + "    fDone, fHalfDone, fEstimated, dtEnd "
@@ -512,6 +533,8 @@ namespace Wv.Schedulator
 	    ObjectCounter mcounts = new ObjectCounter();
 	    ObjectCounter dcounts = new ObjectCounter();
 	    
+	    // read all the bugs into an array so we can loop through
+	    // them several times.
 	    while (r.Read())
 	    {
 		string user = r.GetString(0);
@@ -546,14 +569,18 @@ namespace Wv.Schedulator
 		day.Add(t);
 	    }
 	    
+	    // count the number of times each month/year appears
 	    foreach (DateTime date in dcounts.Keys)
 	    {
 		ycounts[date.Year]++;
 		mcounts[new DateTime(date.Year, date.Month, 1)]++;
 	    }
 	    
+	    // actually render the table...
+	    
 	    g.send(g.start_table(new Attr("class", "summary")));
 	    
+	    // print a header row for the year(s)
 	    g.send(g.start_tr(new Attr("class", "yearheader")), g.td());
 	    for (int year = firstdate.Year; year <= lastdate.Year; year++)
 	    {
@@ -564,6 +591,7 @@ namespace Wv.Schedulator
 	    }
 	    g.send(g.end_tr());
 	    
+	    // print a header row for the month(s)
 	    g.send(g.start_tr(new Attr("class", "monthheader")), g.td());
 	    foreach (DateTime date in wv.sort(mcounts.Keys))
 	    {
@@ -572,17 +600,18 @@ namespace Wv.Schedulator
 	    }
 	    g.send(g.end_tr());
 	    
+	    // print a header row for the day(s)
 	    g.send(g.start_tr(new Attr("class", "dayheader")), g.td());
 	    foreach (DateTime date in wv.sort(dcounts.Keys))
 		g.send(g.th(g.text(date.Day.ToString())));
 	    g.send(g.end_tr());
 	    
+	    // print one row per person
 	    foreach (string user in wv.sort(people.Keys))
 	    {
 		g.send(g.start_tr(new Attr("class", "tasks")));
 		g.send(g.th(new Attr("class", "username"),
-			    g.a(new Attr("href", person_url(user)),
-				g.text(user))));
+			    g.ahref(person_url(user), user)));
 		foreach (DateTime date in wv.sort(tasks.Keys))
 		{
 		    ArrayList day = (ArrayList)tasks[date];

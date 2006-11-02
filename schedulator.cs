@@ -65,7 +65,7 @@ namespace Wv.Schedulator
 	
 	public ArrayList schedule = new ArrayList(); // of TimeSlot
 	
-	ArrayList sources = new ArrayList();
+	public ArrayList sources = new ArrayList();
 	
 	public Schedulator(string name)
 	{

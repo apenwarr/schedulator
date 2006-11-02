@@ -49,6 +49,11 @@ namespace Wv.Schedulator
 	Hashtable mantisprojects = new Hashtable();
 	Hashtable mantisfixfors = new Hashtable();
 
+	public override string view_url(string taskid)
+	{
+	    return wv.fmt("http://mantis/view.php?id={0}", taskid);
+	}
+	
 	public override void make_basic()
 	{
 	    IDataReader r;
@@ -154,8 +159,7 @@ namespace Wv.Schedulator
 	Task add_task(string ixstr, string title, FixFor fixfor, int pri,
 		      bool done, bool halfdone, DateTime donedate)
 	{
-	    Task t = s.tasks.Add(this, ixstr,
-				 String.Format("({0}) {1}", ixstr, title));
+	    Task t = s.tasks.Add(this, ixstr, title);
 	    t.fixfor = fixfor;
 	    t.priority = pri;
 	    if (done)

@@ -586,6 +586,23 @@ namespace Wv.Web
 		     v("</a>"));
 	}
 	
+	public Html ahref(Attr at, string url, params Html[] ha)
+	{
+	    return v(vfmt("<a{0}{1}>", new Attr("href", url), at),
+		     ha,
+		     v("</a>"));
+	}
+	
+	public Html ahref(string url, params Html[] ha)
+	{
+	    return ahref(Attr.none, url, ha);
+	}
+	
+	public Html ahref(string url, string s)
+	{
+	    return ahref(Attr.none, url, text(s));
+	}
+	
 	public Html span(Attr at, params Html[] ha)
 	{
 	    return v(vfmt("<span{0}>", at),

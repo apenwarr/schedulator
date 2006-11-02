@@ -46,6 +46,11 @@ namespace Wv.Schedulator
 	Hashtable fogprojects = new Hashtable();
 	Hashtable fogfixfors = new Hashtable();
 
+	public override string view_url(string taskid)
+	{
+	    return wv.fmt("http://fogbugz/?{0}", taskid);
+	}
+	
 	public override void make_basic()
 	{
 	    IDataReader r;
@@ -126,8 +131,7 @@ namespace Wv.Schedulator
 	Task add_task(string ixstr, string title, FixFor fixfor, int pri,
 		      bool done, bool halfdone, DateTime donedate)
 	{
-	    Task t = s.tasks.Add(this, ixstr,
-				 String.Format("({0}) {1}", ixstr, title));
+	    Task t = s.tasks.Add(this, ixstr, title);
 	    t.fixfor = fixfor;
 	    t.priority = pri;
 	    if (done)
@@ -159,7 +163,8 @@ namespace Wv.Schedulator
 	    r = db.select(String.Format
 			  ("select ixBug, ixStatus "
 			   + "from Bug "
-			   + "where ixPersonAssignedTo={0} ", userix));
+			   + "where ixPersonAssignedTo={0} "
+			   + "  and fOpen=1 ", userix));
 	    while (r.Read())
 	    {
 		int ix = r.GetInt32(0);
