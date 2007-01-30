@@ -83,6 +83,30 @@ namespace Wv.Schedulator
 		return fixfor;
 	}
 	
+	public bool has_ancestor(Task t)
+	{
+	    for (Task p = parent; p != null; p = p.parent)
+		if (p == t)
+		    return true;
+	    return false;
+	}
+	
+	public int depth()
+	{
+	    int depth = 0;
+	    for (Task t = parent; t != null; t = t.parent)
+		depth++;
+	    return depth;
+	}
+	
+	public Task up(int n)
+	{
+	    Task t = this;
+	    for (int i = 0; i < n; i++)
+		t = t.parent;
+	    return t;
+	}
+	
 	// Note: the duedate field doesn't affect bug comparisons, because
 	// this is really a "bug priority comparison" algorithm, and simply
 	// having a due date doesn't make a bug more important.  That said,
@@ -124,9 +148,9 @@ namespace Wv.Schedulator
 		// remind you to prioritize it ASAP.
 		return firstpriority() - y.firstpriority();
 	    }
-	    else if (this == y.parent)
+	    else if (y.has_ancestor(this))
 		return -1; // parent before child
-	    else if (parent == y)
+	    else if (has_ancestor(y))
 		return 1; // child after parent
 	    else if (parent != y.parent)
 	    {
@@ -143,10 +167,24 @@ namespace Wv.Schedulator
 		// want to group all of each parent's subtasks together
 		// in the much more common case that all the parents, and
 		// all the subtasks, have the same priority.
-		if (parent == null)
-		    return -y.parent.CompareTo(this);
-		else if (y.parent == null)
-		    return parent.CompareTo(y);
+		
+		int dx = depth(), dy = y.depth();
+		if (dx > dy)
+		{
+		    int d = -y.CompareTo(up(dx-dy));
+		    if (d == 0)
+			return 1; // I'm deeper, so I'm later
+		    else
+			return d;
+		}
+		else if (dx < dy)
+		{
+		    int d = CompareTo(y.up(dy-dx));
+		    if (d == 0)
+			return -1; // y is deeper, so I'm earlier
+		    else
+			return d;
+		}
 		else
 		    return parent.CompareTo(y.parent);
 	    }

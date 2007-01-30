@@ -454,7 +454,11 @@ namespace Wv.Schedulator
 			was_done = false;
 		    }
 		    
-		    taskrow(msname, shown, ts.done, ts.name,
+		    string prefix = "";
+		    for (Task t = ts.task.parent; t != null; t = t.parent)
+			prefix = t.name + " > " + prefix;
+		    
+		    taskrow(msname, shown, ts.done, prefix + ts.name,
 			    ts.task, ts.end, s.now);
 		    if (shown)
 			shown_so_far++;

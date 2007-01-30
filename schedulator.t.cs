@@ -61,7 +61,7 @@ public class SchedTests
 	    WVPASSEQ(correct[i].id, s.tasks[i].id);
     }
     
-    [Test] public void task_test_sensible()
+    [Test] [Category("basic")] public void task_test_sensible()
     {
 	TestSource src = new TestSource(s, "ts");
 
@@ -150,7 +150,6 @@ public class SchedTests
     
     [Test] [Category("Silly2")] public void stringsource_test()
     {
-	// new StringSource(s, "s1", );
 	reg.create(s, "s1", "file:test1.sched");
 	s.run_until(Schedulator.Phase.Sort2);
 	s.dump(log);
@@ -175,8 +174,8 @@ public class SchedTests
 	    "bug:983",
 	    "Sub-bug one",
 	    "Sub-bug two estimate \"in title [1d]\"",
-	    "Sub-bug three",
 	    "Sub-bug two and a half",
+	    "Sub-bug three",
 	    "Do some stuff",
 	    "First",
 	    "Second",
@@ -185,6 +184,8 @@ public class SchedTests
 	    "One",
 	    "Three",
 	};
+	
+	s.dump(log);
 	
 	string[][] all = {finished, undecided, v2_0, v1_0};
 	string[][] active = {undecided, v2_0, v1_0};
@@ -235,8 +236,8 @@ public class SchedTests
 	    "bug:983",
 	    "Sub-bug one",
 	    "Sub-bug two estimate \"in title [1d]\"",
-	    "Sub-bug three", // priority boost into parent
-	    "Sub-bug two and a half", // boost, but still less than three
+	    "Sub-bug two and a half",
+	    "Sub-bug three",
 	    "Do some stuff", // low priority bug
 	    "First",
 	    "Second",
@@ -276,6 +277,22 @@ public class SchedTests
 	    "child2",
 	    "t:1", "t:2",
 	    "child1b",
+	};
+	check_tasks(lookup_all(s.tasks, all));
+    }
+    
+    [Test] [Category("sort")] public void sort_test()
+    {
+	reg.create(s, "t", "file:test3.sched");
+	s.run_until(Schedulator.Phase.Sort2);
+	s.dump(log);
+	
+	string[] all = {
+	    "Top1",
+		"1.1", "1.1.1", "1.1.2",
+		"1.2", "1.2.1", "1.2.2",
+	    "Top2",
+		"2.1", "2.2",
 	};
 	check_tasks(lookup_all(s.tasks, all));
     }
