@@ -98,7 +98,10 @@ namespace Wv.Schedulator
 			g.td(""),
 			g.td(pri),
 			g.td(new Attr("class", "name"), name),
-			g.td(e1), g.td(e2), g.td(e3), g.td(e4),
+			g.td(new Attr("class", "origest"), e1),
+			g.td(new Attr("class", "currest"), e2),
+			g.td(new Attr("class", "elapsed"), e3),
+			g.td(new Attr("class", "timeleft"), e4),
 			g.td(new Attr("class", late ? "late" : "notlate"),
 			     due)
 			)

@@ -30,6 +30,15 @@
 	color: red;
 }
 
+.schedule .origest {
+    color: #666666;
+    font-style: italic;
+}
+
+.schedule .timeleft {
+    font-weight: bold;
+}
+
 .showhidelink a {
 	text-decoration: none;
 	font-family: monospace;
