@@ -113,6 +113,8 @@ namespace Wv.Schedulator
 		    t.elapsed = v.currest;
 		    break;
 		}
+		
+		t.done = (!wv.isempty(t.currest) && t.currest == t.elapsed);
 	    }
 	}
     }
