@@ -119,7 +119,7 @@ namespace Wv.Schedulator
 		 ? g.v(g.ahref(url, t.id),
 		       g.text(": " + name))
 		 : g.text(name)),
-		render_est(null, t.origest),
+		t.origest!=t.currest ? render_est(null, t.origest) : g.v(),
 		render_est(!done ? "currest_"+id : null, t.currest),
 		render_est(!done ? "elapsed_"+id : null, t.elapsed),
 		render_est(null, t.remain),
