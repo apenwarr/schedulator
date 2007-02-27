@@ -58,6 +58,12 @@ namespace Wv.Schedulator
 	    string id = wv.isempty(suffix) ? s.name : suffix;
 	    return new LogSource(s, name, get_file_from_id(id));
 	}
+	
+	class Values
+	{
+	    public TimeSpan origest = TimeSpan.Zero,
+		currest = TimeSpan.Zero;
+	}
 
 	public override void cleanup_tasks()
 	{
@@ -70,10 +76,20 @@ namespace Wv.Schedulator
 		if (words.Length != 2) continue;
 		string key = HttpUtility.UrlDecode(words[0]);
 		string value = HttpUtility.UrlDecode(words[1]);
-		TimeSpan span = StringSource.parse_estimate(0, value);
-		changes.Remove(key);
-		if (span > TimeSpan.Zero)
-		    changes.Add(key, span);
+		
+		Values v;
+		if (changes[key] != null)
+		    v = (Values)changes[key];
+		else
+		{
+		    v = new Values();
+		    changes.Add(key, v);
+		}
+		if (wv.isempty(v.origest) && !wv.isempty(v.currest))
+		    v.origest = v.currest;
+		v.currest = StringSource.parse_estimate(0, value);
+		if (wv.isempty(v.origest))
+		    v.origest = v.currest;
 	    }
 	    
 	    foreach (string key in changes.Keys)
@@ -85,13 +101,20 @@ namespace Wv.Schedulator
 		if (t == null)
 		    continue; // no longer exists, ignore
 		
-		TimeSpan span = (TimeSpan)changes[key];
+		Values v = (Values)changes[key];
 		
 		switch (words[0])
 		{
-		case "currest": t.currest = span; break;
-		case "elapsed": t.elapsed = span; break;
+		case "currest": 
+		    t.currest = v.currest;
+		    t.origest = v.origest;
+		    break;
+		case "elapsed":
+		    t.elapsed = v.currest;
+		    break;
 		}
+		
+		t.done = (!wv.isempty(t.currest) && t.currest == t.elapsed);
 	    }
 	}
     }

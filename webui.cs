@@ -98,7 +98,10 @@ namespace Wv.Schedulator
 			g.td(""),
 			g.td(pri),
 			g.td(new Attr("class", "name"), name),
-			g.td(e1), g.td(e2), g.td(e3), g.td(e4),
+			g.td(new Attr("class", "origest"), e1),
+			g.td(new Attr("class", "currest"), e2),
+			g.td(new Attr("class", "elapsed"), e3),
+			g.td(new Attr("class", "timeleft"), e4),
 			g.td(new Attr("class", late ? "late" : "notlate"),
 			     due)
 			)
@@ -116,7 +119,7 @@ namespace Wv.Schedulator
 		 ? g.v(g.ahref(url, t.id),
 		       g.text(": " + name))
 		 : g.text(name)),
-		render_est(null, t.origest),
+		t.origest!=t.currest ? render_est(null, t.origest) : g.v(),
 		render_est(!done ? "currest_"+id : null, t.currest),
 		render_est(!done ? "elapsed_"+id : null, t.elapsed),
 		render_est(null, t.remain),
@@ -454,7 +457,11 @@ namespace Wv.Schedulator
 			was_done = false;
 		    }
 		    
-		    taskrow(msname, shown, ts.done, ts.name,
+		    string prefix = "";
+		    for (Task t = ts.task.parent; t != null; t = t.parent)
+			prefix = t.name + " > " + prefix;
+		    
+		    taskrow(msname, shown, ts.done, prefix + ts.name,
 			    ts.task, ts.end, s.now);
 		    if (shown)
 			shown_so_far++;
