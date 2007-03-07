@@ -370,4 +370,16 @@ public class SchedTests
 		   "result:dsn=schedulator;uid=root;pwd=scs:test");
 	s.run();
     }
+    
+    [Test] [Category("googlecode")] public void googlecode_test()
+    {
+	//reg.create(s, "gc", "googlecode:pixeltoaster:glenn*fiedler");
+	reg.create(s, "gc", "googlecode:versabox:apenwarr");
+	s.run();
+	// s.dump(log);
+	s.dump_schedule(log);
+	
+	// not much of a test, but oh well, it proves *something* :)
+	WVPASS(s.tasks.Count > 0);
+    }
 }

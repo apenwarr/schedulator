@@ -14,7 +14,7 @@ webtest.exe: webtest.cs $(LIBFILES)
 schedulator.exe: schedulator.cs webui.cs $(LIBFILES) \
 	source.cs person.cs project.cs fixfor.cs task.cs dateslider.cs \
 	testsource.cs stringsource.cs logsource.cs fogbugz.cs mantis.cs \
-	resultsource.cs \
+	resultsource.cs googlecode.cs \
 	$(addsuffix .E,$(wildcard *.t.cs))
 
 test: schedulator.exe

@@ -655,7 +655,7 @@ namespace Wv.Schedulator
 	{
 	    StringBuilder all = new StringBuilder();
 	    
-	    StringTraceListener() : base()
+	    public StringTraceListener() : base()
 	    {
 	    }
 	    

@@ -82,6 +82,7 @@ namespace Wv.Schedulator
 	    register("file", StringSource.create_from_file);
 	    register("fogbugz", FogBugzSource.create);
 	    register("mantis", MantisSource.create);
+	    register("googlecode", GoogleCodeSource.create);
 	    register("logstr", LogSource.create);
 	    register("log", LogSource.create_from_file_id);
 	    register("results", ResultSource.create);
