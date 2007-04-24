@@ -251,10 +251,12 @@ namespace Wv.Schedulator
 		string prefix = est.Substring(0, 8);
 		if (prefix == "currest_" || prefix == "elapsed_")
 		{
+		    DateTime now = DateTime.Now;
 		    appendwhat
-		       += String.Format("{0} {1}\n",
+		       += String.Format("{0} {1} {2:d4}-{3:d2}-{4:d2}\n",
 				HttpUtility.UrlEncode(est),
-				HttpUtility.UrlEncode(cgi.request[est]));
+				HttpUtility.UrlEncode(cgi.request[est]),
+				now.Year, now.Month, now.Day);
 		}
 	    }
 	    if (schedname() != null)

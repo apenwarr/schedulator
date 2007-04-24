@@ -61,8 +61,10 @@ namespace Wv.Schedulator
 	
 	class Values
 	{
-	    public TimeSpan origest = TimeSpan.Zero,
+	    public TimeSpan 
+		origest = TimeSpan.Zero,
 		currest = TimeSpan.Zero;
+	    public DateTime date;
 	}
 
 	public override void cleanup_tasks()
@@ -73,9 +75,14 @@ namespace Wv.Schedulator
 	    foreach (string line in lines)
 	    {
 		string[] words = line.Split(" ".ToCharArray());
-		if (words.Length != 2) continue;
+		if (words.Length < 2) continue;
 		string key = HttpUtility.UrlDecode(words[0]);
 		string value = HttpUtility.UrlDecode(words[1]);
+		DateTime date;
+		if (words.Length >= 3)
+		    date = DateTime.Parse(words[2]);
+		else
+		    date = DateTime.Parse("1999-01-01");
 		
 		Values v;
 		if (changes[key] != null)
@@ -90,6 +97,7 @@ namespace Wv.Schedulator
 		v.currest = StringSource.parse_estimate(0, value);
 		if (wv.isempty(v.origest))
 		    v.origest = v.currest;
+		v.date = date;
 	    }
 	    
 	    foreach (string key in changes.Keys)
@@ -115,6 +123,7 @@ namespace Wv.Schedulator
 		}
 		
 		t.done = (!wv.isempty(t.currest) && t.currest == t.elapsed);
+		if (t.done) t.donedate = v.date;
 	    }
 	}
     }
