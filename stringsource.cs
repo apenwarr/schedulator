@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Text.RegularExpressions;
-using Wv.Utils;
+using Wv;
 using Wv.Schedulator;
 
 namespace Wv.Schedulator
@@ -10,12 +10,12 @@ namespace Wv.Schedulator
     public class StringSource : Source
     {
 	protected string[] lines;
-	Log log;
+	WvLog log;
 
 	public StringSource(Schedulator s, string name, string[] lines)
 	    : base(s, name)
 	{
-	    log = new Log(name);
+	    log = new WvLog(name);
 	    this.lines = lines;
 	    
 	    // process "import" lines right away, to create additional
@@ -27,7 +27,7 @@ namespace Wv.Schedulator
 		
 		if (cmd == "import" || cmd == "plugin")
 		{
-		    log.log("Creating plugin from line: '{0}'", line);
+		    log.print("Creating plugin from line: '{0}'", line);
 		    if (args.Length < 2)
 			err(0, "Not enough parameters to '{0}'", cmd);
 		    else
@@ -116,7 +116,7 @@ namespace Wv.Schedulator
 
 	void err(int lineno, string fmt, params object[] args)
 	{
-	    log.log(lineno.ToString() + ": " + fmt, args);
+	    log.print(lineno.ToString() + ": " + fmt, args);
 	}
 
 	static string dequote(string s, string bra, string ket)
@@ -417,7 +417,7 @@ namespace Wv.Schedulator
 		d.done = true;
 	    d.habits = habits;
 
-	    //log.log("Parent of '{0}' is '{1}'",
+	    //log.print("Parent of '{0}' is '{1}'",
 	    //	    d.name, d.dtparent==null ? "(none)" : d.dtparent.name);
 
 	    parents.Add(d);
@@ -470,7 +470,7 @@ namespace Wv.Schedulator
 		    if (args.Length > 1)
 			last_fixfor.add_release(wv.date(args[1]));
 
-		    log.log("New milestone: {0}", last_fixfor.name);
+		    log.print("New milestone: {0}", last_fixfor.name);
 		    break;
 
 		case "bounce":

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
-using Wv.Utils;
+using Wv;
+using Wv.Obsolete;
 
 namespace Wv.Schedulator
 {

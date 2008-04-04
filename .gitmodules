@@ -1,0 +1,3 @@
+[submodule "versaplex"]
+	path = versaplex
+	url = ../versaplex.git

@@ -1,15 +1,13 @@
 #include "wvtest.cs.h"
-
 using System;
-using NUnit.Framework;
 using Wv.Test;
-using Wv.Utils;
+using Wv;
 using Wv.Schedulator;
 
 [TestFixture]
 public class DateSliderTests
 {
-    Log log = new Log("log");
+    WvLog log = new WvLog("log");
     
     static DateTime date(string s)
     {
@@ -82,7 +80,7 @@ public class DateSliderTests
 	DateTime dt2 = date("1997-01-29").AddHours(0.75*24);
 	DateTime odt1 = slider.add(dt1, TimeSpan.FromHours(4));
 	DateTime odt2 = slider.add(dt2, TimeSpan.FromHours(-4));
-	log.log("Start: {0} - {1}", dt1, dt2);
+	log.print("Start: {0} - {1}", dt1, dt2);
 	WVPASSEQ(dt2.ToString(), odt1.ToString());
 	WVPASSEQ(dt1.ToString(), odt2.ToString());
     }

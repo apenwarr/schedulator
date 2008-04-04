@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
-using Wv.Utils;
-using Wv.Web;
+using Wv;
 
 namespace Wv.Schedulator
 {
@@ -233,50 +232,50 @@ namespace Wv.Schedulator
 	    }
 	}
 	
-	public void dump(Log log)
+	public void dump(WvLog log)
 	{
-	    log.log("\nPERSONS");
+	    log.print("\nPERSONS");
 	    foreach (Person p in persons)
-		log.log("  {0,-20} {1}", p.name, p.fullname);
+		log.print("  {0,-20} {1}", p.name, p.fullname);
 	    
-	    log.log("\nPROJECTS");
+	    log.print("\nPROJECTS");
 	    foreach (Project p in projects)
-		log.log("  '{0}'", p.name);
+		log.print("  '{0}'", p.name);
 	    
-	    log.log("\nFIXFORS");
+	    log.print("\nFIXFORS");
 	    foreach (FixFor f in fixfors)
 	    {
-		log.log("'{0}'.'{1}' has {2} release date(s). (final={3})",
+		log.print("'{0}'.'{1}' has {2} release date(s). (final={3})",
 			f.project.name, f.name, f.releases.Count,
 			FixFor.date_string(f.final_release));
 		foreach (DateTime d in f.releases)
-		    log.log("  {0,-30} {1}",
+		    log.print("  {0,-30} {1}",
 			    String.Format("'{0}'.'{1}'",
 					  f.project.name, f.name),
 			    FixFor.date_string(d));
 	    }
 	    
-	    log.log("\nTASKS");
+	    log.print("\nTASKS");
 	    FixFor last_ff = null;
 	    bool was_done = true;
 	    foreach (Task t in tasks)
 	    {
 		if (was_done && !t.done)
 		{
-		    log.log("END FINISHED TASKS --");
-		    log.log("");
+		    log.print("END FINISHED TASKS --");
+		    log.print("");
 		}
 		else if (!was_done && last_ff != t.fixfor)
 		{
 		    if (last_ff == null)
-			log.log("END UNDECIDED TASKS --");
+			log.print("END UNDECIDED TASKS --");
 		    else
-			log.log("END MILESTONE '{0}.{1}' --",
+			log.print("END MILESTONE '{0}.{1}' --",
 				last_ff.project.name, last_ff.name);
-		    log.log("");
+		    log.print("");
 		}
 		
-		log.log("   {0} [P{1}/{8}] {2}:{3} '{4}' ({5}/{6}/{7})",
+		log.print("   {0} [P{1}/{8}] {2}:{3} '{4}' ({5}/{6}/{7})",
 			t.done ? "X" : ".",
 			t.priority,
 			t.source.name, t.id,
@@ -289,13 +288,13 @@ namespace Wv.Schedulator
 	    }
 	    
 	    if (last_ff != null)
-		log.log("END MILESTONE '{0}.{1}' --",
+		log.print("END MILESTONE '{0}.{1}' --",
 			last_ff.project.name, last_ff.name);
 	}
 	
-	public void dump_schedule(Log log)
+	public void dump_schedule(WvLog log)
 	{
-	    log.log("\nSCHEDULE");
+	    log.print("\nSCHEDULE");
 	    FixFor last_fixfor = null;
 	    
 	    foreach (TimeSlot _ts in schedule)
@@ -303,7 +302,7 @@ namespace Wv.Schedulator
 		if (_ts is CommentTimeSlot)
 		{
 		    CommentTimeSlot ts = (CommentTimeSlot)_ts;
-		    log.log("{0}", ts.name);
+		    log.print("{0}", ts.name);
 		}
 		
 		if (_ts is TaskTimeSlot)
@@ -312,7 +311,7 @@ namespace Wv.Schedulator
 		    
 		    if (!ts.done && ts.fixfor != last_fixfor)
 		    {
-			log.log("Release {0}:{1}:",
+			log.print("Release {0}:{1}:",
 				ts.fixfor.project.name, ts.fixfor.name);
 			last_fixfor = ts.fixfor;
 		    }
@@ -329,7 +328,7 @@ namespace Wv.Schedulator
 			= (daypercent==0 
 			     ? "" 
 			     : "." + daypercent.ToString("d2"));
-		    log.log("  {0} {1}{2,3} {3,4} {4} ({5})",
+		    log.print("  {0} {1}{2,3} {3,4} {4} ({5})",
 			    ts.done ? "X" : ".",
 			    FixFor.date_string(ts.end),
 			    dayadd,

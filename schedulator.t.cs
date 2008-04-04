@@ -1,23 +1,21 @@
 #include "wvtest.cs.h"
-
 using System;
 using System.IO;
 using System.Collections;
-using NUnit.Framework;
+using Wv;
 using Wv.Test;
-using Wv.Utils;
 using Wv.Schedulator;
 
 [TestFixture]
 public class SchedTests
 {
-    Log log = new Log("Tests");
+    WvLog log = new WvLog("Tests");
     Schedulator s;
     SourceRegistry reg;
     
     [SetUp] public void Init()
     {
-	log.log("Creating schedulator.");
+	log.print("Creating schedulator.");
 	reg = new SourceRegistry();
 	s = new Schedulator("test");
     }
@@ -381,5 +379,10 @@ public class SchedTests
 	
 	// not much of a test, but oh well, it proves *something* :)
 	WVPASS(s.tasks.Count > 0);
+    }
+    
+    public static void Main()
+    {
+	WvTest.DoMain();
     }
 }

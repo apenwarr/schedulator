@@ -5,9 +5,9 @@ using System.Data;
 using System.Text;
 using System.Collections;
 using System.Diagnostics;
-using Wv.Utils;
-using Wv.Dbi;
+using Wv;
 using Wv.Web;
+using Wv.Obsolete;
 
 namespace Wv.Schedulator
 {
@@ -191,7 +191,7 @@ namespace Wv.Schedulator
 	    }
 	}
 	
-	void append_file(string filename, string content)
+	void appfile_end(string filename, string content)
 	{
 	    if (filename == null || content == null || content == "")
 		return;
@@ -260,7 +260,7 @@ namespace Wv.Schedulator
 		}
 	    }
 	    if (schedname() != null)
-		append_file(schedfile() + ".log", appendwhat);
+		appfile_end(schedfile() + ".log", appendwhat);
 	}
 	
 	void http_redirect(string url)
@@ -286,74 +286,73 @@ namespace Wv.Schedulator
 	void page_list_schedules()
 	{
 	    g.send(g.title("Available Schedules - Schedulator"));
-	    g.send(g.start_form(new Attr("action", base_url(),
+	    g.send(g.form_start(new Attr("action", base_url(),
 					 "method", "GET")));
 	    g.send(g.h1("Schedulator: Available Schedules"));
 	    
-	    g.send(g.start_ul());
+	    g.send(g.ul_start());
 	    foreach (string name in all_schedules())
 		g.send(g.li(g.ahref(person_url(name), name)));
 	    g.send(g.li(g.input("sid"), g.submit("Create New")));
-	    g.send(g.end_ul());
+	    g.send(g.ul_end());
 	    
-	    g.send(g.end_form());
+	    g.send(g.form_end());
 	    
-	    g.send(g.start_form(new Attr("action", base_url(),
+	    g.send(g.form_start(new Attr("action", base_url(),
 					 "method", "POST")));
 	    g.send(g.submit("Update All"));
-	    g.send(g.end_form());
+	    g.send(g.form_end());
 	    
 	    ResultSource results = find_result_source();
 	    if (results != null)
 	    {
-		Db db = results.db;
+		WvDbi db = results.db;
 		g.send(g.h1("Schedulator: Available Summaries"));
-		g.send(g.start_ul());
-		IDataReader r = db.select
+		g.send(g.ul_start());
+		string last_proj = "";
+		foreach (var r in db.select
 		    ("select distinct sProject, sFixfor "
 		     + " from Schedule "
 		     + " where fDone=0 "
-		     + " order by sProject, sFixFor ");
-		string last_proj = "";
-		while (r.Read())
+		     + " order by sProject, sFixFor "))
 		{
-		    string proj = r.GetString(0);
-		    string fixfor = r.GetString(1);
+		    string proj = r[0];
+		    string fixfor = r[1];
 		    if (last_proj != proj)
 		    {
 			if (last_proj != null)
-			    g.send(g.end_li());
-			g.send(g.start_li(), g.text(wv.fmt("{0}: ", proj)));
+			    g.send(g.li_end());
+			g.send(g.li_start(), g.text(wv.fmt("{0}: ", proj)));
 			last_proj = proj;
 		    }
 		    else
 			g.send(g.text(", "));
 		    g.send(g.ahref(summary_url(proj, fixfor), fixfor));
 		}
-		g.send(g.end_ul());
+		g.send(g.ul_end());
 	    }
 	}
 	
 	void page_update_all()
 	{
 	    g.send(g.title("Update All - Schedulator"));
-	    g.send(g.start_form(new Attr("action", base_url(),
+	    g.send(g.form_start(new Attr("action", base_url(),
 					 "method", "GET")));
 	    g.send(g.h1("Schedulator: Updating All Schedules"));
 	    
-	    g.send(g.start_ul());
+	    g.send(g.ul_start());
 	    foreach (string name in all_schedules())
 	    {
 		g.send(g.li(g.text(name)));
 		Schedulator s = new_web_schedulator(name);
 		s.run();
 	    }
-	    g.send(g.end_ul());
+	    g.send(g.ul_end());
 	    
 	    g.send(g.h2("Done."));
 	    g.send(g.ahref(base_url(), "<<back"));
 	    
-	    g.send(g.end_form());
+	    g.send(g.form_end());
 	}
 	
 	void page_show_schedule()
@@ -361,7 +360,7 @@ namespace Wv.Schedulator
 	    wv.assert(schedname() != null);
 	    g.send(g.title(schedname() + " - Schedulator"));
 	    
-	    g.send(g.start_form(new Attr("action", person_url(),
+	    g.send(g.form_start(new Attr("action", person_url(),
 					 "name", "mainform",
 					 "method", "POST")));
 	    
@@ -381,7 +380,7 @@ namespace Wv.Schedulator
 	    s.run();
 	    //s.dump(new Log("S"));
 	    
-	    g.send(g.start_table(new Attr("id", "schedule",
+	    g.send(g.table_start(new Attr("id", "schedule",
 					  "class", "schedule",
 					  "border", "0",
 					  "width", "95%")));
@@ -471,7 +470,7 @@ namespace Wv.Schedulator
 	    }
 	    
 	    submit_button();
-	    g.send(g.end_table());
+	    g.send(g.table_end());
 	}
 	
 	struct MiniTask
@@ -525,14 +524,7 @@ namespace Wv.Schedulator
 		return;
 	    }
 	    
-	    Db db = results.db;
-	    IDataReader r = db.select
-		("select sUser, sTaskId, sTask, ixPriority, "
-		 + "    fDone, fHalfDone, fEstimated, dtEnd "
-		 + "  from Schedule "
-		 + "  where sProject=? and sFixFor=? "
-		 + "  order by dtEnd, ixPriority, sTaskId ",
-		 projname, fixforname);
+	    WvDbi db = results.db;
 	    
 	    Hashtable tasks = new Hashtable();
 	    Hashtable people = new Hashtable();
@@ -544,16 +536,22 @@ namespace Wv.Schedulator
 	    
 	    // read all the bugs into an array so we can loop through
 	    // them several times.
-	    while (r.Read())
+	    foreach (var r in db.select
+		("select sUser, sTaskId, sTask, ixPriority, "
+		 + "    fDone, fHalfDone, fEstimated, dtEnd "
+		 + "  from Schedule "
+		 + "  where sProject=? and sFixFor=? "
+		 + "  order by dtEnd, ixPriority, sTaskId ",
+		 projname, fixforname))
 	    {
-		string user = r.GetString(0);
-		string id = r.GetString(1);
-		string task = r.GetString(2);
-		int priority = r.GetInt32(3);
-		bool done = r.GetByte(4)!=0 ? true : false;
-		bool halfdone = r.GetByte(5)!=0 ? true : false;
-		bool estimated = r.GetByte(6)!=0 ? true : false;
-		DateTime end = r.GetDateTime(7).Date;
+		string user = r[0];
+		string id = r[1];
+		string task = r[2];
+		int priority = r[3];
+		bool done = r[4];
+		bool halfdone = r[5];
+		bool estimated = r[6];
+		DateTime end = r[7];
 		
 		if (done) continue;
 		
@@ -587,10 +585,10 @@ namespace Wv.Schedulator
 	    
 	    // actually render the table...
 	    
-	    g.send(g.start_table(new Attr("class", "summary")));
+	    g.send(g.table_start(new Attr("class", "summary")));
 	    
 	    // print a header row for the year(s)
-	    g.send(g.start_tr(new Attr("class", "yearheader")), g.td());
+	    g.send(g.tr_start(new Attr("class", "yearheader")), g.td());
 	    for (int year = firstdate.Year; year <= lastdate.Year; year++)
 	    {
 		if (ycounts[year] == 0) 
@@ -598,27 +596,27 @@ namespace Wv.Schedulator
 		g.send(g.th(new Attr("colspan", ycounts[year]),
 			    g.text(year.ToString())));
 	    }
-	    g.send(g.end_tr());
+	    g.send(g.tr_end());
 	    
 	    // print a header row for the month(s)
-	    g.send(g.start_tr(new Attr("class", "monthheader")), g.td());
+	    g.send(g.tr_start(new Attr("class", "monthheader")), g.td());
 	    foreach (DateTime date in wv.sort(mcounts.Keys))
 	    {
 		g.send(g.th(new Attr("colspan", mcounts[date]),
 			    g.text(monthnames[date.Month-1])));
 	    }
-	    g.send(g.end_tr());
+	    g.send(g.tr_end());
 	    
 	    // print a header row for the day(s)
-	    g.send(g.start_tr(new Attr("class", "dayheader")), g.td());
+	    g.send(g.tr_start(new Attr("class", "dayheader")), g.td());
 	    foreach (DateTime date in wv.sort(dcounts.Keys))
 		g.send(g.th(g.text(date.Day.ToString())));
-	    g.send(g.end_tr());
+	    g.send(g.tr_end());
 	    
 	    // print one row per person
 	    foreach (string user in wv.sort(people.Keys))
 	    {
-		g.send(g.start_tr(new Attr("class", "tasks")));
+		g.send(g.tr_start(new Attr("class", "tasks")));
 		g.send(g.th(new Attr("class", "username"),
 			    g.ahref(person_url(user), user)));
 		foreach (DateTime date in wv.sort(tasks.Keys))
@@ -645,10 +643,10 @@ namespace Wv.Schedulator
 		    }
 		    g.send(g.td(g.htmlarray(html)));
 		}
-		g.send(g.end_tr());
+		g.send(g.tr_end());
 	    }
 		
-	    g.send(g.end_table());
+	    g.send(g.table_end());
 	    
 	    g.send(g.h2("Done."));
 	}
@@ -693,9 +691,9 @@ namespace Wv.Schedulator
 		    http_redirect(person_url());
 		else // normal page
 		{
-		    g.send(g.include_css("schedulator.css"),
-			   g.include_js("schedulator.js"),
-			   g.use_editinplace());
+		    g.send(g.include_css("schedulator.css"));
+		    g.send(g.include_js("schedulator.js"));
+                    g.send(g.use_editinplace());
 		    
 		    if (!wv.isempty(cgi.request["summary"]))
 			page_show_summary();

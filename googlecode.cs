@@ -4,7 +4,7 @@ using System.Net;
 using System.Web;
 using System.Collections;
 using System.Text.RegularExpressions;
-using Wv.Utils;
+using Wv;
 using Wv.Schedulator;
 
 namespace Wv.Schedulator
@@ -13,7 +13,7 @@ namespace Wv.Schedulator
     {
 	string project; // get the bugs from this googlecode project
 	string user; // get the bugs for this username
-	Log log;
+	WvLog log;
 	
 	class Row
 	{
@@ -32,8 +32,8 @@ namespace Wv.Schedulator
 	    else
 		this.user = s.name;
 	    
-	    log = new Log(wv.fmt("GoogleCode:{0}", name));
-	    log.log("Initializing GoogleCode source '{0}'.", name);
+	    log = new WvLog(wv.fmt("GoogleCode:{0}", name));
+	    log.print("Initializing GoogleCode source '{0}'.", name);
 	}
 	
 	public static Source create(Schedulator s, string name,
@@ -66,13 +66,13 @@ namespace Wv.Schedulator
 		project, user, start);
 	    
 	    HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-	    log.log("Created request (start={0}).", start);
+	    log.print("Created request (start={0}).", start);
 	    
 	    HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-	    log.log("Created response.");
+	    log.print("Created response.");
 	    
 	    StreamReader rr = new StreamReader(resp.GetResponseStream());
-	    log.log("Created reader.");
+	    log.print("Created reader.");
 	    
 	    string s = rr.ReadToEnd();
 	    
@@ -89,7 +89,7 @@ namespace Wv.Schedulator
 		if (content == "&nbsp;") continue;
 		content = HttpUtility.HtmlDecode(content);
 		
-		// log.log("Match: {0}: [{1}]", colid, content);
+		// log.print("Match: {0}: [{1}]", colid, content);
 		
 		switch (wv.atoi(colid))
 		{

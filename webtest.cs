@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Collections;
-using Wv.Utils;
+using Wv;
 using Wv.Web;
 
 public class WebTest
@@ -16,7 +16,7 @@ public class WebTest
 	       // g.use_tablesort() // incompatible with editinplace...
 	       );
 
-	g.send(g.start_form(new Attr("action", "",
+	g.send(g.form_start(new Attr("action", "",
 				     "name", "sillyform",
 				     "method", "post")));
 
@@ -27,11 +27,11 @@ public class WebTest
 	
 	g.send(g.h1("Query variables:"));
 	Cgi cgi = new Cgi();
-	g.send(g.start_table());
+	g.send(g.table_start());
 	g.send(g.tr(g.th("Key"), g.th("Value")));
 	foreach (string key in cgi.request.Keys)
 	    g.send(g.tr(g.td(key), g.td(g.pre(cgi.request[key]))));
-	g.send(g.end_table());
+	g.send(g.table_end());
 	
 	g.send(g.p(),
 	       g.editinplace("bigtext", "textarea",
@@ -48,7 +48,7 @@ public class WebTest
 			     g.text("this is the content")),
 	       g.p());
 
-	g.send(g.start_table(new Attr("id", "foo1",
+	g.send(g.table_start(new Attr("id", "foo1",
 				      "tablesort", "1",
 				      "border", "0")),
 	       g.tr(g.td("hello"),
@@ -69,9 +69,9 @@ public class WebTest
 				       new Attr("autovalidate",
 						      "integer"),
 				       g.text("7")))),
-	       g.end_table());
+	       g.table_end());
 
-	g.send(g.start_ul(new Attr("id", "foo2",
+	g.send(g.ul_start(new Attr("id", "foo2",
 					 "tablesort", "1",
 					 "border", "1")),
 	       g.li(g.text("title"),
@@ -87,18 +87,18 @@ public class WebTest
 	       g.li(g.ul(g.li("9"),
 			 g.li("8"),
 			 g.li("7 <foo>"))),
-	       g.end_ul());
+	       g.ul_end());
 	
 	g.send(g.h1("Environment variables:"));
-	g.send(g.start_table());
+	g.send(g.table_start());
 	g.send(g.tr(g.th("Key"), g.th("Value")));
 	IDictionary env = Environment.GetEnvironmentVariables();
 	foreach (string key in env.Keys)
 	    g.send(g.tr(g.td(key), g.td((string)env[key])));
-	g.send(g.end_table());
+	g.send(g.table_end());
 	
 	g.send(g.submit("Subm\"it!"),
-	       g.end_form());
+	       g.form_end());
 	g.send(g.done());
     }
 }

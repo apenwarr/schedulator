@@ -2,8 +2,7 @@ using System;
 using System.Data;
 using System.Data.Odbc;
 using System.Collections;
-using Wv.Dbi;
-using Wv.Utils;
+using Wv;
 using Wv.Schedulator;
 
 namespace Wv.Schedulator
@@ -11,9 +10,9 @@ namespace Wv.Schedulator
     public class MantisSource : Source
     {
 	string user; // get the bugs for this username
-	Log log;
+	WvLog log;
 	
-	Db db;
+	WvDbi db;
 	
         public MantisSource(Schedulator s, string name, string odbcstring,
 			     string user)
@@ -26,10 +25,10 @@ namespace Wv.Schedulator
 	    else
 		this.user = s.name;
 	    
-	    log = new Log(wv.fmt("Mantis:{0}", name));
-	    log.log("Initializing Mantis source '{0}'.", name);
-	    log.log("Connecting to: '{0}'", odbcstring);
-	    db = new Db(odbcstring);
+	    log = new WvLog(wv.fmt("Mantis:{0}", name));
+	    log.print("Initializing Mantis source '{0}'.", name);
+	    log.print("Connecting to: '{0}'", odbcstring);
+	    db = new WvDbi(odbcstring);
 	}
 	
 	public static Source create(Schedulator s, string name,
@@ -56,17 +55,14 @@ namespace Wv.Schedulator
 	
 	public override void make_basic()
 	{
-	    IDataReader r;
-	    
-	    log.log("Reading mantis_user_table.");
-	    r = db.select("select id, username, realname "
+	    log.print("Reading mantis_user_table.");
+	    foreach (var r in db.select("select id, username, realname "
 			  + "from mantis_user_table "
-			  + "order by enabled desc, id ");
-	    while (r.Read())
+			  + "order by enabled desc, id "))
 	    {
-		int ix = r.GetInt32(0);
-		string name = r.IsDBNull(1) ? "--" : r.GetString(1);
-		string fullname = r.IsDBNull(2) ? null : r.GetString(2);
+		int ix = r[0];
+		string name = r[1].IsNull ? "--" : r[1];
+		string fullname = r[2];
 		if (wv.isempty(fullname))
 		    fullname = name;
 		name = name.ToLower();
@@ -82,28 +78,26 @@ namespace Wv.Schedulator
 	    mantispersons_byname.Remove("");
 	    mantispersons_byname.Add("", 0);
 	    
-	    log.log("Reading mantis_project_table.");
-	    r = db.select("select id, name from mantis_project_table");
-	    while (r.Read())
+	    log.print("Reading mantis_project_table.");
+	    foreach (var r in db.select("select id, name from mantis_project_table"))
 	    {
-		int ix = r.GetInt32(0);
-		string name = r.IsDBNull(1) ? null : r.GetString(1);
+		int ix = r[0];
+		string name = r[1];
 		
 		Project p = s.projects.Add(name);
 		mantisprojects.Add(ix, p);
 	    }
 	    
-	    log.log("Reading list of versions.");
+	    log.print("Reading list of versions.");
 	    string[] cols = {"fixed_in_version", "version"};
 	    foreach (string col in cols)
 	    {
-		r = db.select(wv.fmt("select distinct project_id, {0} "
+		foreach (var r in db.select(wv.fmt("select distinct project_id, {0} "
 				     + "from mantis_bug_table "
-				     + "order by project_id, {0} ", col));
-		while (r.Read())
+				     + "order by project_id, {0} ", col)))
 		{
-		    int projix = r.GetInt32(0);
-		    string name = r.GetString(1);
+		    int projix = r[0];
+		    string name = r[1];
 		    if (wv.isempty(name)) name = "-Undecided-";
 		    string ix = projix.ToString() + "." + name;
 		
@@ -117,14 +111,13 @@ namespace Wv.Schedulator
 		}
 	    }
 	    
-	    log.log("Reading mantis_project_version_table.");
-	    r = db.select("select project_id, version, date_order "
-			  + " from mantis_project_version_table ");
-	    while (r.Read())
+	    log.print("Reading mantis_project_version_table.");
+	    foreach (var r in db.select("select project_id, version, date_order "
+			  + " from mantis_project_version_table "))
 	    {
-		int projix = r.GetInt32(0);
-		string name = r.GetString(1);
-		DateTime date = r.GetDateTime(2);
+		int projix = r[0];
+		string name = r[1];
+		DateTime date = r[2];
 		string ix = projix.ToString() + "." + name;
 		
 		Project project = (Project)mantisprojects[projix];
@@ -206,7 +199,6 @@ namespace Wv.Schedulator
 	
 	public override Task[] make_tasks()
 	{
-	    IDataReader r;
 	    Hashtable abugs = new Hashtable(); // active
 	    Hashtable vbugs = new Hashtable(); // needs-verify
 	    Hashtable rbugs = new Hashtable(); // resolved-by-me
@@ -214,57 +206,54 @@ namespace Wv.Schedulator
 	    
 	    if (!mantispersons_byname.Contains(user))
 	    {
-		log.log("No user '{0}' exists!", user);
+		log.print("No user '{0}' exists!", user);
 		return null;
 	    }
 	    
 	    int userix = (int)mantispersons_byname[user];
 	    
-	    log.log("Listing active bugs.");
-	    r = db.select(wv.fmt("select id, status "
+	    log.print("Listing active bugs.");
+	    foreach (var r in db.select(wv.fmt("select id, status "
 				 + "from mantis_bug_table "
 				 + "where handler_id={0} "
 				 + "  and status != {1} ",
-				 userix, (int)Status.Closed));
-	    while (r.Read())
+				 userix, (int)Status.Closed)))
 	    {
-		int ix = r.GetInt32(0);
-		int status = r.GetInt32(1);
+		int ix = r[0];
+		int status = r[1];
 		if (status >= (int)Status.Resolved)
 		    vbugs.Add(ix, ix.ToString());
 		else
 		    abugs.Add(ix, ix.ToString());
 	    }
 	    
-	    log.log("Reading mantis_bug_history_table (1).");
-	    r = db.select(wv.fmt("select distinct bug_id "
+	    log.print("Reading mantis_bug_history_table (1).");
+	    foreach (var r in db.select(wv.fmt("select distinct bug_id "
 				 + "   from mantis_bug_history_table "
 				 + "   where user_id={0} "
 				 + "     and field_name='resolution' ",
-				 userix));
-	    while (r.Read())
-		rbugs.Add(r.GetInt32(0), r.GetInt32(0).ToString());
-	    log.log("  {0} bugs to check.", rbugs.Count);
+				 userix)))
+		rbugs.Add(r[0], r[0]);
+	    log.print("  {0} bugs to check.", rbugs.Count);
 	    string rbugs_str = bug_str(rbugs.Values);
-	    // log.log("rbugs: {0}", rbugs_str);
+	    // log.print("rbugs: {0}", rbugs_str);
 
-	    log.log("Reading mantis_bug_history_table (2).");
+	    log.print("Reading mantis_bug_history_table (2).");
 	    rbugs.Clear();
-	    r = db.select(wv.fmt
+	    int last_bug = -1;
+	    bool resolved_by_me_once = false, resolved_away = false;
+	    foreach (var r in db.select(wv.fmt
 			  ("select bug_id, user_id, new_value "
 			   + "   from mantis_bug_history_table "
 			   + "   where field_name='resolution' "
 			   + "     and new_value is not null "
 			   + "     and bug_id in ({1}) "
 			   + "   order by bug_id, id ",
-			   userix, rbugs_str));
-	    int last_bug = -1;
-	    bool resolved_by_me_once = false, resolved_away = false;
-	    while (r.Read())
+			   userix, rbugs_str)))
 	    {
-		int bug = r.GetInt32(0);
-		int ixperson = r.GetInt32(1);
-		int newval = wv.atoi(r.GetString(2));
+		int bug = r[0];
+		int ixperson = r[1];
+		int newval = r[2];
 		
 		if (last_bug != bug)
 		{
@@ -296,37 +285,35 @@ namespace Wv.Schedulator
 	    else if (resolved_by_me_once)
 		rbugs.Add(last_bug, last_bug.ToString());
 	    
-	    log.log("{0} abugs, {1} vbugs, {2} rbugs and {3} sbugs.", 
+	    log.print("{0} abugs, {1} vbugs, {2} rbugs and {3} sbugs.", 
 		    abugs.Count, vbugs.Count, rbugs.Count, sbugs.Count);
 	    
-	    log.log("Reading bug details.");
+	    log.print("Reading bug details.");
 	    ArrayList all_bugs = new ArrayList();
 	    add_list(all_bugs, abugs.Values);
 	    add_list(all_bugs, vbugs.Values);
 	    add_list(all_bugs, rbugs.Values);
 	    add_list(all_bugs, sbugs.Values);
 	    string all_str = bug_str(all_bugs);
-	    r = db.select(wv.fmt
+	    foreach (var r in db.select(wv.fmt
 			  ("select id, summary, project_id, "
 			   + "   fixed_in_version, version, "
 			   + "   priority, last_updated "
 			   + "from mantis_bug_table "
-			   + "where id in ({0})", all_str));
-	    while (r.Read())
+			   + "where id in ({0})", all_str)))
 	    {
-		int ix = r.GetInt32(0);
+		int ix = r[0];
 		string ixstr = ix.ToString();
-		string title = r.IsDBNull(1) ? "--" : r.GetString(1);
-		int ixproject = r.GetInt32(2);
+		string title = r[1].IsNull ? "--" : r[1];
+		int ixproject = r[2];
 		string ffname
-		    = (r.IsDBNull(3)
-		       ? (r.IsDBNull(4) ? "" : r.GetString(4))
-		       : r.GetString(3));
+		    = (r[3].IsNull
+		       ? (r[4].IsNull ? "" : r[4])
+		       : r[3]);
 		if (wv.isempty(ffname)) ffname = "-Undecided-";
-		int pri = priority_map(r.GetInt32(5));
+		int pri = priority_map(r[5]);
 		string ixfixfor = ixproject.ToString() + "." + ffname;
-		DateTime resolvedate 
-		    = r.IsDBNull(6) ? DateTime.MinValue : r.GetDateTime(6);
+		DateTime resolvedate = r[6];
 		
 		FixFor fixfor = (FixFor)mantisfixfors[ixfixfor];
 		

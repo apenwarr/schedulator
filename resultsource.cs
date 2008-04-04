@@ -1,7 +1,6 @@
 using System;
 using System.Data;
-using Wv.Dbi;
-using Wv.Utils;
+using Wv;
 using Wv.Schedulator;
 
 namespace Wv.Schedulator
@@ -9,8 +8,8 @@ namespace Wv.Schedulator
     public class ResultSource : Source
     {
 	string user; // get the bugs for this username
-	Log log;
-	public Db db;
+	WvLog log;
+	public WvDbi db;
 	
         public ResultSource(Schedulator s, string name,
 			    string odbcstring, string user)
@@ -20,10 +19,10 @@ namespace Wv.Schedulator
 		this.user = user;
 	    else
 		this.user = s.name;
-	    log = new Log(String.Format("Result:{0}", name));
-	    log.log("Initializing result plugin '{0}'.", name);
-	    log.log("Connecting to: '{0}'", odbcstring);
-	    db = new Db(odbcstring);
+	    log = new WvLog(String.Format("Result:{0}", name));
+	    log.print("Initializing result plugin '{0}'.", name);
+	    log.print("Connecting to: '{0}'", odbcstring);
+	    db = new WvDbi(odbcstring);
 	    
 	    // db.try_execute("drop table Schedule");
 	    db.try_execute("create table Schedule ("
@@ -54,23 +53,23 @@ namespace Wv.Schedulator
 	{
 	    db.execute("delete from Schedule where sUser=?", user);
 	    
-	    IDbCommand cmd = db.prepare
-		("insert into Schedule "
+	    string q = 
+		"insert into Schedule "
 		 + "(sUser,sProject,sFixFor,sTaskId,sTask,"
 		 + " ixPriority,fDone,fHalfDone,fEstimated,dtStart,dtEnd) "
-		 + "values (?,?,?,?,?,?,?,?,?,?,?) ", 11);
+		 + "values (?,?,?,?,?,?,?,?,?,?,?) ";
 	    
 	    foreach (TimeSlot _ts in s.schedule)
 	    {
 		if (_ts is TaskTimeSlot)
 		{
 		    TaskTimeSlot ts = (TaskTimeSlot)_ts;
-		    log.log("Adding {0} - {1}", ts.start, ts.end);
+		    log.print("Adding {0} - {1}", ts.start, ts.end);
 		    FixFor ff = ts.task.fixfor;
 		    if (ff == null)
 			ff = s.fixfors.Add(s.projects.Add("UNKNOWN"),
 					   "-Undecided-");
-		    db.execute(cmd, user, ff.project.name, ff.name,
+		    db.execute(q, user, ff.project.name, ff.name,
 			       ts.task.moniker, ts.name, ts.task.priority,
 			       ts.done ? 1 : 0,
 			       ts.task.halfdone ? 1 : 0,

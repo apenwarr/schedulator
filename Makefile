@@ -1,50 +1,29 @@
+include wvdotnet/rules.mk
+include wvdotnet/monorules.mk
 
-CSFLAGS=-warn:4 -debug
-#CSFLAGS += -warnaserror
-PKGS=-pkg:nunit -r:System.Data -r:System.Web
+PKGS=-r:System.Data -r:System.Web
+CPPFLAGS=-Iwvdotnet
+DOTDIR=../$(shell basename "$$PWD")
 
 all: schedulator.exe webtest.exe
 
-LIBFILES= \
-	wvutils.cs wvtest.cs wvweb.cs wvdbi.cs wvini.cs \
-	wvtest.t.cs.E wvutils.t.cs.E \
+webtest.exe: webtest.cs $(DOTDIR)/wvdotnet/wv.dll
 
-webtest.exe: webtest.cs $(LIBFILES)
-
-schedulator.exe: schedulator.cs webui.cs $(LIBFILES) \
+SRC=schedulator.cs \
 	source.cs person.cs project.cs fixfor.cs task.cs dateslider.cs \
 	testsource.cs stringsource.cs logsource.cs fogbugz.cs mantis.cs \
 	resultsource.cs googlecode.cs \
-	$(addsuffix .E,$(wildcard *.t.cs))
+	$(DOTDIR)/wvdotnet/wv.dll
 
-test: schedulator.exe
-	nunit-console /nologo /labels $^
+schedulator.exe: webui.cs $(SRC)
 
-# you're supposed to use addsuffix() here, but it doesn't really
-# matter: if the .E file doesn't exist, we don't care that it
-# depends on a .h file.
-$(wildcard *.cs.E): $(wildcard *.h)
+schedulator.t.exe: $(SRC) \
+	$(addsuffix .E,$(wildcard *.t.cs)) \
 
-%: %.exe
-	rm -f $@ && ln -sf $< $@
-	
-%.cs.E: %.cs
-	@rm -f $@
-	cpp -C -dI $< \
-		| expand -8 \
-		| sed -e 's,^#include,//#include,' \
-		| grep -v '^# [0-9]' \
-		>$@
+tests: schedulator.t.exe
 
-define mcs_go
-	gmcs $(PKGS) $(CSFLAGS) -out:$@ $(filter %.E %.cs,$^)
-endef
+test: tests
+	mono --debug ./schedulator.t.exe
 
-%.exe: %.cs.E
-	$(mcs_go)
-
-%.exe: %.cs
-	$(mcs_go)
-
-clean:
+clean::
 	rm -f *~ *.E *.exe *.dll TestResult.xml *.mdb

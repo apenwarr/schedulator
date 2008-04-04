@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
-using Wv.Utils;
-using Wv.Web;
+using Wv;
 
 namespace Wv.Schedulator
 {
@@ -69,7 +68,7 @@ namespace Wv.Schedulator
     
     public class SourceRegistry
     {
-	Log log = new Log("SourceRegistry");
+	WvLog log = new WvLog("SourceRegistry");
 	Hashtable sources = new Hashtable();
 	
 	public delegate Source Creator(Schedulator s, string name,
@@ -91,7 +90,7 @@ namespace Wv.Schedulator
 	
 	public void register(string prefix, Creator create)
 	{
-	    log.log("registering {0}", prefix);
+	    log.print("registering {0}", prefix);
 	    sources.Add(prefix, create);
 	}
 	
@@ -102,7 +101,7 @@ namespace Wv.Schedulator
 	    string prefix = list[0];
 	    string suffix = list.Length>1 ? list[1] : "";
 	    
-	    log.log("create: prefix='{0}', suffix='{1}'", prefix, suffix);
+	    log.print("create: prefix='{0}', suffix='{1}'", prefix, suffix);
 	    
 	    if (!sources.Contains(prefix))
 		return null;

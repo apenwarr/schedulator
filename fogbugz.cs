@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
-using Wv.Dbi;
-using Wv.Utils;
+using Wv;
 using Wv.Schedulator;
 using System.Data;
 using System.Data.Odbc;
@@ -11,9 +10,9 @@ namespace Wv.Schedulator
     public class FogBugzSource : Source
     {
 	string user; // get the bugs for this username
-	Log log;
+	WvLog log;
 	
-	Db db;
+	WvDbi db;
 	
         public FogBugzSource(Schedulator s, string name, string odbcstring,
 			     string user)
@@ -23,10 +22,10 @@ namespace Wv.Schedulator
 		this.user = user;
 	    else
 		this.user = s.name;
-	    log = new Log(String.Format("FogBugz:{0}", name));
-	    log.log("Initializing FogBugz source '{0}'.", name);
-	    log.log("Connecting to: '{0}'", odbcstring);
-	    db = new Db(odbcstring);
+	    log = new WvLog(String.Format("FogBugz:{0}", name));
+	    log.print("Initializing FogBugz source '{0}'.", name);
+	    log.print("Connecting to: '{0}'", odbcstring);
+	    db = new WvDbi(odbcstring);
 	}
 	
 	public static Source create(Schedulator s, string name,
@@ -53,17 +52,14 @@ namespace Wv.Schedulator
 	
 	public override void make_basic()
 	{
-	    IDataReader r;
-	    
-	    log.log("Reading Person table.");
-	    r = db.select("select ixPerson, sFullName, sEmail "
+	    log.print("Reading Person table.");
+	    foreach (var r in db.select("select ixPerson, sFullName, sEmail "
 			  + "from Person "
-			  + "order by fDeleted, ixPerson ");
-	    while (r.Read())
+			  + "order by fDeleted, ixPerson "))
 	    {
-		int ix = r.GetInt32(0);
-		string fullname = r.IsDBNull(1) ? null : r.GetString(1);
-		string email = r.IsDBNull(2) ? "--" : r.GetString(2);
+		int ix = r[0];
+		string fullname = r[1];
+		string email = r[2].IsNull ? "--" : r[2];
 		
 		string name = email;
 		if (name.IndexOf('@') >= 0)
@@ -77,27 +73,25 @@ namespace Wv.Schedulator
 		    fogpersons_byname.Add(fullname, ix);
 	    }
 	    
-	    log.log("Reading Project table.");
-	    r = db.select("select ixProject, sProject from Project");
-	    while (r.Read())
+	    log.print("Reading Project table.");
+	    foreach (var r in db.select("select ixProject, sProject " +
+	                                "   from Project"))
 	    {
-		int ix = r.GetInt32(0);
-		string name = r.IsDBNull(1) ? null : r.GetString(1);
+		int ix = r[0];
+		string name = r[1];
 		
 		Project p = s.projects.Add(name);
 		fogprojects.Add(ix, p);
 	    }
 	    
-	    log.log("Reading FixFor table.");
-	    r = db.select("select ixFixFor, ixProject, sFixFor, dt "
-			  + " from FixFor ");
-	    while (r.Read())
+	    log.print("Reading FixFor table.");
+	    foreach (var r in db.select("select ixFixFor, ixProject, sFixFor, dt "
+			  + " from FixFor "))
 	    {
-		int ix = r.GetInt32(0);
-		int projix = r.GetInt32(1);
-		string name = r.IsDBNull(2) ? null : r.GetString(2);
-		DateTime date = 
-		    r.IsDBNull(3) ? DateTime.MinValue : r.GetDateTime(3);
+		int ix = r[0];
+		int projix = r[1];
+		string name = r[2];
+		DateTime date = r[3];
 		
 		Project project = (Project)fogprojects[projix];
 		if (project == null)
@@ -145,7 +139,6 @@ namespace Wv.Schedulator
 
 	public override Task[] make_tasks()
 	{
-	    IDataReader r;
 	    Hashtable abugs = new Hashtable(); // active
 	    Hashtable vbugs = new Hashtable(); // needs-verify
 	    Hashtable rbugs = new Hashtable(); // resolved-by-me
@@ -153,56 +146,53 @@ namespace Wv.Schedulator
 	    
 	    if (!fogpersons_byname.Contains(user))
 	    {
-		log.log("No user '{0}' exists!", user);
+		log.print("No user '{0}' exists!", user);
 		return null;
 	    }
 	    
 	    int userix = (int)fogpersons_byname[user];
 	    
-	    log.log("Listing active bugs.");
-	    r = db.select(String.Format
+	    log.print("Listing active bugs.");
+	    foreach (var r in db.select(String.Format
 			  ("select ixBug, ixStatus "
 			   + "from Bug "
 			   + "where ixPersonAssignedTo={0} "
-			   + "  and fOpen=1 ", userix));
-	    while (r.Read())
+			   + "  and fOpen=1 ", userix)))
 	    {
-		int ix = r.GetInt32(0);
-		int status = r.GetInt32(1);
+		int ix = r[0];
+		int status = r[1];
 		if (status > 1)
 		    vbugs.Add(ix, ix.ToString());
 		else
 		    abugs.Add(ix, ix.ToString());
 	    }
 	    
-	    log.log("Reading BugEvent table (1).");
-	    r = db.select(String.Format
+	    log.print("Reading BugEvent table (1).");
+	    foreach (var r in db.select(String.Format
 			  ("select distinct ixBug "
 			   + "   from BugEvent "
 			   + "   where ixPerson={0} "
-			   + "     and sVerb like 'Resolved %' ", userix));
-	    while (r.Read())
-		rbugs.Add(r.GetInt32(0), r.GetInt32(0).ToString());
-	    log.log("  {0} bugs to check.", rbugs.Count);
+			   + "     and sVerb like 'Resolved %' ", userix)))
+		rbugs.Add(r[0], r[0]);
+	    log.print("  {0} bugs to check.", rbugs.Count);
 	    string rbugs_str = bug_str(rbugs.Values);
-	    //log.log("rbugs: {0}", rbugs_str);
+	    //log.print("rbugs: {0}", rbugs_str);
 	    
-	    log.log("Reading BugEvent table (2).");
+	    log.print("Reading BugEvent table (2).");
 	    rbugs.Clear();
-	    r = db.select(String.Format
+	    int last_bug = -1;
+	    bool resolved_by_me_once = false, resolved_away = false;
+	    foreach (var r in db.select(String.Format
 			  ("select ixBug, ixPerson, sVerb "
 			   + "   from BugEvent "
 			   + "   where sVerb like 'Resolved %' "
 			   + "     and ixBug in ({1}) "
 			   + "   order by ixBug, ixBugEvent ",
-			   userix, rbugs_str));
-	    int last_bug = -1;
-	    bool resolved_by_me_once = false, resolved_away = false;
-	    while (r.Read())
+			   userix, rbugs_str)))
 	    {
-		int bug = r.GetInt32(0);
-		int ixperson = r.GetInt32(1);
-		string verb = r.GetString(2);
+		int bug = r[0];
+		int ixperson = r[1];
+		string verb = r[2];
 		
 		if (last_bug != bug)
 		{
@@ -241,33 +231,31 @@ namespace Wv.Schedulator
 	    else if (resolved_by_me_once)
 		rbugs.Add(last_bug, last_bug.ToString());
 	    
-	    log.log("{0} rbugs and {1} sbugs.", rbugs.Count, sbugs.Count);
+	    log.print("{0} rbugs and {1} sbugs.", rbugs.Count, sbugs.Count);
 	    
-	    log.log("Reading Bug details.");
+	    log.print("Reading Bug details.");
 	    ArrayList all_bugs = new ArrayList();
 	    add_list(all_bugs, abugs.Values);
 	    add_list(all_bugs, vbugs.Values);
 	    add_list(all_bugs, rbugs.Values);
 	    add_list(all_bugs, sbugs.Values);
 	    string all_str = bug_str(all_bugs);
-	    r = db.select(String.Format
+	    foreach (var r in db.select(String.Format
 			  ("select ixBug, sTitle, ixFixFor, ixPriority, "
 			   + "   dtResolved, "
 			   + "   hrsOrigEst, hrsCurrEst, hrsElapsed "
 			   + "from Bug "
-			   + "where ixBug in ({0})", all_str));
-	    while (r.Read())
+			   + "where ixBug in ({0})", all_str)))
 	    {
-		int ix = r.GetInt32(0);
+		int ix = r[0];
 		string ixstr = ix.ToString();
-		string title = r.IsDBNull(1) ? "--" : r.GetString(1);
-		int ixfixfor = r.GetInt32(2);
-		int pri = r.GetInt32(3);
-		DateTime resolvedate = 
-		    r.IsDBNull(4) ? DateTime.MinValue : r.GetDateTime(4);
-		double origest = r.GetFloat(5);
-		double currest = r.GetFloat(6);
-		double elapsed = r.GetFloat(7);
+		string title = r[1].IsNull ? "--" : r[1];
+		int ixfixfor = r[2];
+		int pri = r[3];
+		DateTime resolvedate = r[4];
+		double origest = r[5];
+		double currest = r[6];
+		double elapsed = r[7];
 		
 		FixFor fixfor = (FixFor)fogfixfors[ixfixfor];
 		
