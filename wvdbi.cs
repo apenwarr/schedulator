@@ -19,7 +19,7 @@ namespace Wv.Dbi
 	    {
 		StringDictionary sect = settings[odbcstr];
 		    
-		string s = wv.fmt("driver={{{0}}};server={1};database={2};"
+		string s = wv.fmt("driver={0};server={1};database={2};"
 				  + "uid={3};pwd={4};",
 				  sect["driver"], sect["server"],
 				  sect["database"],

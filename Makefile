@@ -37,7 +37,7 @@ $(wildcard *.cs.E): $(wildcard *.h)
 		>$@
 
 define mcs_go
-	mcs $(PKGS) $(CSFLAGS) -out:$@ $(filter %.E %.cs,$^)
+	gmcs $(PKGS) $(CSFLAGS) -out:$@ $(filter %.E %.cs,$^)
 endef
 
 %.exe: %.cs.E
