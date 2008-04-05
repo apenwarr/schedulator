@@ -7,7 +7,7 @@ using System.Data.Odbc;
 
 namespace Wv.Schedulator
 {
-    public class FogBugzSource : Source
+    public class FogBugzSource : Source, IDisposable
     {
 	string user; // get the bugs for this username
 	WvLog log;
@@ -23,9 +23,14 @@ namespace Wv.Schedulator
 	    else
 		this.user = s.name;
 	    log = new WvLog(String.Format("FogBugz:{0}", name));
-	    log.print("Initializing FogBugz source '{0}'.", name);
-	    log.print("Connecting to: '{0}'", odbcstring);
+	    log.print("Initializing FogBugz source '{0}'.\n", name);
+	    log.print("Connecting to: '{0}'\n", odbcstring);
 	    db = new WvDbi(odbcstring);
+	}
+	
+	public void Dispose()
+	{
+	    if (db != null) db.Dispose();
 	}
 	
 	public static Source create(Schedulator s, string name,
@@ -52,7 +57,7 @@ namespace Wv.Schedulator
 	
 	public override void make_basic()
 	{
-	    log.print("Reading Person table.");
+	    log.print("Reading Person table.\n");
 	    foreach (var r in db.select("select ixPerson, sFullName, sEmail "
 			  + "from Person "
 			  + "order by fDeleted, ixPerson "))
@@ -73,7 +78,7 @@ namespace Wv.Schedulator
 		    fogpersons_byname.Add(fullname, ix);
 	    }
 	    
-	    log.print("Reading Project table.");
+	    log.print("Reading Project table.\n");
 	    foreach (var r in db.select("select ixProject, sProject " +
 	                                "   from Project"))
 	    {
@@ -84,7 +89,7 @@ namespace Wv.Schedulator
 		fogprojects.Add(ix, p);
 	    }
 	    
-	    log.print("Reading FixFor table.");
+	    log.print("Reading FixFor table.\n");
 	    foreach (var r in db.select("select ixFixFor, ixProject, sFixFor, dt "
 			  + " from FixFor "))
 	    {
@@ -146,13 +151,13 @@ namespace Wv.Schedulator
 	    
 	    if (!fogpersons_byname.Contains(user))
 	    {
-		log.print("No user '{0}' exists!", user);
+		log.print("No user '{0}' exists!\n", user);
 		return null;
 	    }
 	    
 	    int userix = (int)fogpersons_byname[user];
 	    
-	    log.print("Listing active bugs.");
+	    log.print("Listing active bugs.\n");
 	    foreach (var r in db.select(String.Format
 			  ("select ixBug, ixStatus "
 			   + "from Bug "
@@ -167,18 +172,18 @@ namespace Wv.Schedulator
 		    abugs.Add(ix, ix.ToString());
 	    }
 	    
-	    log.print("Reading BugEvent table (1).");
+	    log.print("Reading BugEvent table (1).\n");
 	    foreach (var r in db.select(String.Format
 			  ("select distinct ixBug "
 			   + "   from BugEvent "
 			   + "   where ixPerson={0} "
 			   + "     and sVerb like 'Resolved %' ", userix)))
-		rbugs.Add(r[0], r[0]);
-	    log.print("  {0} bugs to check.", rbugs.Count);
+		rbugs.Add((int)r[0], (string)r[0]);
+	    log.print("  {0} bugs to check.\n", rbugs.Count);
 	    string rbugs_str = bug_str(rbugs.Values);
-	    //log.print("rbugs: {0}", rbugs_str);
+	    //log.print("rbugs: {0}\n", rbugs_str);
 	    
-	    log.print("Reading BugEvent table (2).");
+	    log.print("Reading BugEvent table (2).\n");
 	    rbugs.Clear();
 	    int last_bug = -1;
 	    bool resolved_by_me_once = false, resolved_away = false;
@@ -231,9 +236,9 @@ namespace Wv.Schedulator
 	    else if (resolved_by_me_once)
 		rbugs.Add(last_bug, last_bug.ToString());
 	    
-	    log.print("{0} rbugs and {1} sbugs.", rbugs.Count, sbugs.Count);
+	    log.print("{0} rbugs and {1} sbugs.\n", rbugs.Count, sbugs.Count);
 	    
-	    log.print("Reading Bug details.");
+	    log.print("Reading Bug details.\n");
 	    ArrayList all_bugs = new ArrayList();
 	    add_list(all_bugs, abugs.Values);
 	    add_list(all_bugs, vbugs.Values);

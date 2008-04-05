@@ -7,17 +7,22 @@ using Wv.Test;
 using Wv.Schedulator;
 
 [TestFixture]
-public class SchedTests
+public class SchedTests: IDisposable
 {
     WvLog log = new WvLog("Tests");
     Schedulator s;
     SourceRegistry reg;
     
-    [SetUp] public void Init()
+    public SchedTests()
     {
-	log.print("Creating schedulator.");
+	log.print("Creating schedulator.\n");
 	reg = new SourceRegistry();
 	s = new Schedulator("test");
+    }
+    
+    public void Dispose()
+    {
+	if (s != null) s.Dispose();
     }
     
     [Test] public void person_project_fixfor_test()
@@ -297,24 +302,14 @@ public class SchedTests
     
     [Test] public void fogbugz_test()
     {
-	string odbcstr = String.Format
-	    ("driver={{MySQL}};" +
-	     "server={0};database={1};" +
-	     "uid={2};pwd={3};",
-	     "localhost", "fogbugz", "root", "scs");
-	reg.create(s, "bug", "fogbugz:" + odbcstr + ":apenwarr");
+	reg.create(s, "bug", "fogbugz:fogbugz:apenwarr");
 	s.run_until(Schedulator.Phase.Sort2);
 	//s.dump(log);
     }
     
     [Test] [Category("mantis")] public void mantis_test()
     {
-	string odbcstr = String.Format
-	    ("driver={{MySQL}};" +
-	     "server={0};database={1};" +
-	     "uid={2};pwd={3};",
-	     "localhost", "mantis", "root", "scs");
-	reg.create(s, "bug", "mantis:" + odbcstr + ":wooi");
+	reg.create(s, "bug", "mantis:mantis:wooi");
 	s.run_until(Schedulator.Phase.Sort2);
 	s.dump(log);
     }
@@ -365,7 +360,7 @@ public class SchedTests
     {
 	reg.create(s, "t", "file:test10.sched");
 	reg.create(s, "result",
-		   "result:dsn=schedulator;uid=root;pwd=scs:test");
+		   "result:schedulator:test");
 	s.run();
     }
     

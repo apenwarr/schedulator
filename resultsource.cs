@@ -20,8 +20,8 @@ namespace Wv.Schedulator
 	    else
 		this.user = s.name;
 	    log = new WvLog(String.Format("Result:{0}", name));
-	    log.print("Initializing result plugin '{0}'.", name);
-	    log.print("Connecting to: '{0}'", odbcstring);
+	    log.print("Initializing result plugin '{0}'.\n", name);
+	    log.print("Connecting to: '{0}'\n", odbcstring);
 	    db = new WvDbi(odbcstring);
 	    
 	    // db.try_execute("drop table Schedule");
@@ -64,7 +64,7 @@ namespace Wv.Schedulator
 		if (_ts is TaskTimeSlot)
 		{
 		    TaskTimeSlot ts = (TaskTimeSlot)_ts;
-		    log.print("Adding {0} - {1}", ts.start, ts.end);
+		    log.print("Adding {0} - {1}\n", ts.start, ts.end);
 		    FixFor ff = ts.task.fixfor;
 		    if (ff == null)
 			ff = s.fixfors.Add(s.projects.Add("UNKNOWN"),

@@ -8,7 +8,7 @@ public class WebTest
 {
     public static void Main()
     {
-	HtmlGen g = new HtmlGen();
+	HtmlGen g = new HtmlGen(Console.OpenStandardOutput());
 
 	g.send(g.title("My Title"),
 	       g.include_css("webtest.css"),

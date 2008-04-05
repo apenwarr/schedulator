@@ -14,7 +14,7 @@ namespace Wv.Schedulator
     public class WebUI
     {
 	Cgi cgi = new Cgi();
-	HtmlGen g = new HtmlGen();
+	HtmlGen g = new HtmlGen(Console.OpenStandardOutput());
 	SourceRegistry reg = new SourceRegistry();
 
 	Html render_est(string edit_key, TimeSpan span)

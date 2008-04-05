@@ -33,7 +33,7 @@ namespace Wv.Schedulator
 		this.user = s.name;
 	    
 	    log = new WvLog(wv.fmt("GoogleCode:{0}", name));
-	    log.print("Initializing GoogleCode source '{0}'.", name);
+	    log.print("Initializing GoogleCode source '{0}'.\n", name);
 	}
 	
 	public static Source create(Schedulator s, string name,
@@ -66,13 +66,13 @@ namespace Wv.Schedulator
 		project, user, start);
 	    
 	    HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-	    log.print("Created request (start={0}).", start);
+	    log.print("Created request (start={0}).\n", start);
 	    
 	    HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-	    log.print("Created response.");
+	    log.print("Created response.\n");
 	    
 	    StreamReader rr = new StreamReader(resp.GetResponseStream());
-	    log.print("Created reader.");
+	    log.print("Created reader.\n");
 	    
 	    string s = rr.ReadToEnd();
 	    
@@ -89,7 +89,7 @@ namespace Wv.Schedulator
 		if (content == "&nbsp;") continue;
 		content = HttpUtility.HtmlDecode(content);
 		
-		// log.print("Match: {0}: [{1}]", colid, content);
+		// log.print("Match: {0}: [{1}]\n", colid, content);
 		
 		switch (wv.atoi(colid))
 		{

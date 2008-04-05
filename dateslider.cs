@@ -93,7 +93,7 @@ namespace Wv.Schedulator
 	public DateTime add(DateTime point, TimeSpan span)
 	{
 	    WvLog log = new WvLog("slider", WvLog.L.Debug5);
-	    log.print("* {0} + {1}", point, span.TotalHours);
+	    log.print("* {0} + {1}\n", point, span.TotalHours);
 	    
 	    int sign = (span.Ticks < 0) ? -1 : 1;
 	    bool less_one = false;
@@ -102,7 +102,7 @@ namespace Wv.Schedulator
 	    double hpw = hours_per_week / loadfactor;
 	    while (Math.Abs(span.TotalHours) >= hpw)
 	    {
-		log.print("W {0} + {1}      ({2})", point, span.TotalHours, hpw);
+		log.print("W {0} + {1}      ({2})\n", point, span.TotalHours, hpw);
 		point = point.AddDays(7*sign);
 		span = span.Add(TimeSpan.FromHours(-hpw*sign));
 	    }
@@ -140,7 +140,7 @@ namespace Wv.Schedulator
 		
 		double hpd = hours_per_day[day] * dayfraction / loadfactor;
 		
-		log.print("D {0} + {1}      ({2})", point, span.TotalHours, hpd);
+		log.print("D {0} + {1}      ({2})\n", point, span.TotalHours, hpd);
 		if (Math.Abs(span.TotalHours) >= hpd)
 		{
 		    // avoid rounding errors by forcing the date
@@ -158,7 +158,7 @@ namespace Wv.Schedulator
 		}
 	    }
 	    
-	    log.print(": {0} + {1}", point, span.TotalHours);
+	    log.print(": {0} + {1}\n", point, span.TotalHours);
 	    
 	    // ah, rounding errors.  The above should make things work out
 	    // to within the nearest minute or so, which is close enough(tm).
@@ -166,7 +166,7 @@ namespace Wv.Schedulator
 	    point = point.AddHours(Math.Round(th, 1) - th + 0.5/60.0/60.0);
 	    point = new DateTime(point.Year, point.Month, point.Day,
 				 point.Hour, point.Minute, 0, 0);
-	    log.print(". {0} + {1}    ({2})",
+	    log.print(". {0} + {1}    ({2})\n",
 		    point, span.TotalHours, Math.Round(th, 1));
 	    return point;
 	}
@@ -209,7 +209,7 @@ namespace Wv.Schedulator
 		}
 	    }
 	    
-	    log.print("result: {0} hours", result.TotalHours);
+	    log.print("result: {0} hours\n", result.TotalHours);
 	    return result;
 	}
     }

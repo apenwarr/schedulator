@@ -27,7 +27,7 @@ namespace Wv.Schedulator
 		
 		if (cmd == "import" || cmd == "plugin")
 		{
-		    log.print("Creating plugin from line: '{0}'", line);
+		    log.print("Creating plugin from line: '{0}'\n", line);
 		    if (args.Length < 2)
 			err(0, "Not enough parameters to '{0}'", cmd);
 		    else
@@ -417,7 +417,7 @@ namespace Wv.Schedulator
 		d.done = true;
 	    d.habits = habits;
 
-	    //log.print("Parent of '{0}' is '{1}'",
+	    //log.print("Parent of '{0}' is '{1}'\n",
 	    //	    d.name, d.dtparent==null ? "(none)" : d.dtparent.name);
 
 	    parents.Add(d);
@@ -470,7 +470,7 @@ namespace Wv.Schedulator
 		    if (args.Length > 1)
 			last_fixfor.add_release(wv.date(args[1]));
 
-		    log.print("New milestone: {0}", last_fixfor.name);
+		    log.print("New milestone: {0}\n", last_fixfor.name);
 		    break;
 
 		case "bounce":

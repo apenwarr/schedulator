@@ -90,7 +90,7 @@ namespace Wv.Schedulator
 	
 	public void register(string prefix, Creator create)
 	{
-	    log.print("registering {0}", prefix);
+	    log.print("registering {0}\n", prefix);
 	    sources.Add(prefix, create);
 	}
 	
@@ -101,7 +101,7 @@ namespace Wv.Schedulator
 	    string prefix = list[0];
 	    string suffix = list.Length>1 ? list[1] : "";
 	    
-	    log.print("create: prefix='{0}', suffix='{1}'", prefix, suffix);
+	    log.print("create: prefix='{0}', suffix='{1}'\n", prefix, suffix);
 	    
 	    if (!sources.Contains(prefix))
 		return null;

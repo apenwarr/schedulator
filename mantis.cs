@@ -7,11 +7,10 @@ using Wv.Schedulator;
 
 namespace Wv.Schedulator
 {
-    public class MantisSource : Source
+    public class MantisSource : Source, IDisposable
     {
 	string user; // get the bugs for this username
 	WvLog log;
-	
 	WvDbi db;
 	
         public MantisSource(Schedulator s, string name, string odbcstring,
@@ -26,9 +25,14 @@ namespace Wv.Schedulator
 		this.user = s.name;
 	    
 	    log = new WvLog(wv.fmt("Mantis:{0}", name));
-	    log.print("Initializing Mantis source '{0}'.", name);
-	    log.print("Connecting to: '{0}'", odbcstring);
+	    log.print("Initializing Mantis source '{0}'.\n", name);
+	    log.print("Connecting to: '{0}'\n", odbcstring);
 	    db = new WvDbi(odbcstring);
+	}
+	
+	public void Dispose()
+	{
+	    if (db != null) db.Dispose();
 	}
 	
 	public static Source create(Schedulator s, string name,
@@ -55,7 +59,7 @@ namespace Wv.Schedulator
 	
 	public override void make_basic()
 	{
-	    log.print("Reading mantis_user_table.");
+	    log.print("Reading mantis_user_table.\n");
 	    foreach (var r in db.select("select id, username, realname "
 			  + "from mantis_user_table "
 			  + "order by enabled desc, id "))
@@ -78,7 +82,7 @@ namespace Wv.Schedulator
 	    mantispersons_byname.Remove("");
 	    mantispersons_byname.Add("", 0);
 	    
-	    log.print("Reading mantis_project_table.");
+	    log.print("Reading mantis_project_table.\n");
 	    foreach (var r in db.select("select id, name from mantis_project_table"))
 	    {
 		int ix = r[0];
@@ -88,7 +92,7 @@ namespace Wv.Schedulator
 		mantisprojects.Add(ix, p);
 	    }
 	    
-	    log.print("Reading list of versions.");
+	    log.print("Reading list of versions.\n");
 	    string[] cols = {"fixed_in_version", "version"};
 	    foreach (string col in cols)
 	    {
@@ -111,7 +115,7 @@ namespace Wv.Schedulator
 		}
 	    }
 	    
-	    log.print("Reading mantis_project_version_table.");
+	    log.print("Reading mantis_project_version_table.\n");
 	    foreach (var r in db.select("select project_id, version, date_order "
 			  + " from mantis_project_version_table "))
 	    {
@@ -206,13 +210,13 @@ namespace Wv.Schedulator
 	    
 	    if (!mantispersons_byname.Contains(user))
 	    {
-		log.print("No user '{0}' exists!", user);
+		log.print("No user '{0}' exists!\n", user);
 		return null;
 	    }
 	    
 	    int userix = (int)mantispersons_byname[user];
 	    
-	    log.print("Listing active bugs.");
+	    log.print("Listing active bugs.\n");
 	    foreach (var r in db.select(wv.fmt("select id, status "
 				 + "from mantis_bug_table "
 				 + "where handler_id={0} "
@@ -227,18 +231,18 @@ namespace Wv.Schedulator
 		    abugs.Add(ix, ix.ToString());
 	    }
 	    
-	    log.print("Reading mantis_bug_history_table (1).");
+	    log.print("Reading mantis_bug_history_table (1).\n");
 	    foreach (var r in db.select(wv.fmt("select distinct bug_id "
 				 + "   from mantis_bug_history_table "
 				 + "   where user_id={0} "
 				 + "     and field_name='resolution' ",
 				 userix)))
-		rbugs.Add(r[0], r[0]);
-	    log.print("  {0} bugs to check.", rbugs.Count);
+		rbugs.Add((int)r[0], (string)r[0]);
+	    log.print("  {0} bugs to check.\n", rbugs.Count);
 	    string rbugs_str = bug_str(rbugs.Values);
-	    // log.print("rbugs: {0}", rbugs_str);
+	    // log.print("rbugs: {0}\n", rbugs_str);
 
-	    log.print("Reading mantis_bug_history_table (2).");
+	    log.print("Reading mantis_bug_history_table (2).\n");
 	    rbugs.Clear();
 	    int last_bug = -1;
 	    bool resolved_by_me_once = false, resolved_away = false;
@@ -285,10 +289,10 @@ namespace Wv.Schedulator
 	    else if (resolved_by_me_once)
 		rbugs.Add(last_bug, last_bug.ToString());
 	    
-	    log.print("{0} abugs, {1} vbugs, {2} rbugs and {3} sbugs.", 
+	    log.print("{0} abugs, {1} vbugs, {2} rbugs and {3} sbugs.\n", 
 		    abugs.Count, vbugs.Count, rbugs.Count, sbugs.Count);
 	    
-	    log.print("Reading bug details.");
+	    log.print("Reading bug details.\n");
 	    ArrayList all_bugs = new ArrayList();
 	    add_list(all_bugs, abugs.Values);
 	    add_list(all_bugs, vbugs.Values);
