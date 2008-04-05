@@ -1,0 +1,27 @@
+#
+# Create an instance of the "mantis" plugin talking to a database DSN
+# called "mantis_dsn" in wvodbc.ini.  Tasks imported from here will be
+# named "bug:###".
+#
+import bug mantis:mantis_dsn
+
+#
+# Create an instance of the "fogbugz" plugin talking to a database DSN
+# called "fogbugz_dsn" in wvodbc.ini.  Tasks imported from here will be
+# named "fb:###".
+#
+import fb fogbugz:fogbugz_dsn
+
+#
+# Create an instance of the "log" plugin.  You should always have one of
+# these, since it reads back estimates saved when you change them in the web
+# ui.
+#
+import log log
+
+#
+# Create an instance of the "result" plugin, talking to a database DSN
+# named "schedulator_dsn" in wvodbc.ini.  This stores a summary
+# of everyone's schedule, so that you can query it later.
+#
+plugin result result:schedulator_dsn

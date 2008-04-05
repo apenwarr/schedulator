@@ -1,0 +1,25 @@
+#
+# This file contains sample DSNs for accessing via ODBC.  See
+# system.sched.example for an example of some calls into these DSNs.
+#
+
+[fogbugz_dsn]
+driver = MySQL
+server = fogbugz
+database = fogbugz5
+user = fogbugz
+password = whatever
+
+[mantis_dsn]
+driver = MySQL
+server = mantis.example.net
+database = mantis
+user = mantis
+password = whatever
+
+[schedulator_dsn]
+driver = MySQL
+server = fogbugz
+database = schedulator
+user = fogbugz
+password = whatever

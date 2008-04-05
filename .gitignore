@@ -3,3 +3,5 @@
 *.mdb
 *~
 *.dll
+system.sched
+wvodbc.ini
