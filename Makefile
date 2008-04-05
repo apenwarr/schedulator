@@ -25,5 +25,3 @@ tests: schedulator.t.exe
 test: tests
 	mono --debug ./schedulator.t.exe
 
-clean::
-	rm -f *~ *.E *.exe *.dll TestResult.xml *.mdb
