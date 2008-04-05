@@ -5,7 +5,7 @@ PKGS=-r:System.Data -r:System.Web
 CPPFLAGS=-Iwvdotnet
 DOTDIR=../$(shell basename "$$PWD")
 
-all: schedulator.exe webtest.exe
+all: wvdotnet/all schedulator.exe webtest.exe
 
 webtest.exe: webtest.cs $(DOTDIR)/wvdotnet/wv.dll
 
@@ -20,7 +20,7 @@ schedulator.exe: webui.cs $(SRC)
 schedulator.t.exe: $(SRC) \
 	$(addsuffix .E,$(wildcard *.t.cs)) \
 
-tests: schedulator.t.exe
+tests: all schedulator.t.exe
 
 test: tests
 	mono --debug ./schedulator.t.exe
