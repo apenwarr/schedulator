@@ -361,17 +361,19 @@ namespace Wv.Schedulator
 		    for (int wi = 0; wi < words.Length; wi++)
 		    {
 			string word = words[wi].ToLower();
-			if (word == "start")
+			if (word == "start" && wi+1 < words.Length)
 			{
 			    startdate = wv.date(words[wi+1]).Date;
 			    wi++;
 			}
-			else if (word == "end" || word == "due")
+			else if ((word == "end" || word == "due")
+				 && wi+1 < words.Length)
 			{
 			    duedate = wv.date(words[wi+1]).Date;
 			    wi++;
 			}
-			else if (word == "done" || word == "finished")
+			else if ((word == "done" || word == "finished")
+				 && wi+1 < words.Length)
 			{
 			    donedate = wv.date(words[wi+1]).Date;
 			    wi++;
