@@ -6,6 +6,7 @@
 
 N="$(basename "$0")"
 N="$(basename "$N" .cgi)"
+export MONO_SHARED_DIR=/tmp
 
 if [ -f Makefile ]; then
 	make -q "$N".exe || echo "<b>WARNING: $N is out of date!</b><p>"
