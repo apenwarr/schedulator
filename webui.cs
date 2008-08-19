@@ -285,6 +285,12 @@ namespace Wv.Schedulator
 	
 	void page_list_schedules()
 	{
+	    using (Schedulator s = new_web_schedulator("NONE"))
+		_page_list_schedules(find_result_source(s));
+	}
+	
+	void _page_list_schedules(ResultSource results)
+	{
 	    g.send(g.title("Available Schedules - Schedulator"));
 	    g.send(g.form_start(new Attr("action", base_url(),
 					 "method", "GET")));
@@ -303,7 +309,6 @@ namespace Wv.Schedulator
 	    g.send(g.submit("Update All"));
 	    g.send(g.form_end());
 	    
-	    ResultSource results = find_result_source();
 	    if (results != null)
 	    {
 		WvDbi db = results.db;
@@ -344,8 +349,8 @@ namespace Wv.Schedulator
 	    foreach (string name in all_schedules())
 	    {
 		g.send(g.li(g.text(name)));
-		Schedulator s = new_web_schedulator(name);
-		s.run();
+		using (Schedulator s = new_web_schedulator(name))
+		    s.run();
 	    }
 	    g.send(g.ul_end());
 	    
@@ -358,6 +363,12 @@ namespace Wv.Schedulator
 	void page_show_schedule()
 	{
 	    wv.assert(schedname() != null);
+	    using (Schedulator s = new_web_schedulator(schedname()))
+		_page_show_schedule(s);
+	}
+	
+	void _page_show_schedule(Schedulator s)
+	{
 	    g.send(g.title(schedname() + " - Schedulator"));
 	    
 	    g.send(g.form_start(new Attr("action", person_url(),
@@ -376,7 +387,6 @@ namespace Wv.Schedulator
 			 g.text(schedtext)),
 		   g.p());
 	    
-	    Schedulator s = new_web_schedulator(schedname());
 	    s.run();
 	    //s.dump(new Log("S"));
 	    
@@ -501,12 +511,13 @@ namespace Wv.Schedulator
 	    return null;
 	}
 	    
-	ResultSource find_result_source()
+	public void page_show_summary()
 	{
-	    return find_result_source(new_web_schedulator("NONE"));
+	    using (Schedulator s = new_web_schedulator("NONE"))
+		_page_show_summary(find_result_source(s));
 	}
 	    
-	public void page_show_summary()
+	public void _page_show_summary(ResultSource results)
 	{
 	    string pff = cgi.request["summary"];
 	    string[] splits = pff.Split(new char[] {':'}, 2);
@@ -517,7 +528,6 @@ namespace Wv.Schedulator
 	    g.send(g.ahref(base_url(), "<<back"));
 	    g.send(g.h1(wv.fmt("Schedulator: Summary of {0}", pff)));
 	    
-	    ResultSource results = find_result_source();
 	    if (results == null)
 	    {
 		g.send(g.h2("No results plugin exists."));

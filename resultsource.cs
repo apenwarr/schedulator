@@ -5,7 +5,7 @@ using Wv.Schedulator;
 
 namespace Wv.Schedulator
 {
-    public class ResultSource : Source
+    public class ResultSource : Source, IDisposable
     {
 	string user; // get the bugs for this username
 	WvLog log;
@@ -38,6 +38,15 @@ namespace Wv.Schedulator
 			   + "dtStart datetime not null, "
 			   + "dtEnd datetime not null "
 			   + ")");
+	}
+	
+	public void Dispose()
+	{
+	    if (db != null) 
+	    {
+		db.Dispose();
+		db = null;
+	    }
 	}
 	
 	public static Source create(Schedulator s, string name,

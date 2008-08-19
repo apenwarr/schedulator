@@ -30,7 +30,11 @@ namespace Wv.Schedulator
 	
 	public void Dispose()
 	{
-	    if (db != null) db.Dispose();
+	    if (db != null) 
+	    {
+		db.Dispose();
+		db = null;
+	    }
 	}
 	
 	public static Source create(Schedulator s, string name,
