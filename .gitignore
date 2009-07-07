@@ -5,3 +5,4 @@
 *.dll
 system.sched
 wvodbc.ini
+schedulator.db
