@@ -300,14 +300,16 @@ public class SchedTests: IDisposable
 	check_tasks(lookup_all(s.tasks, all));
     }
     
-    [Test] public void fogbugz_test()
+    //[Test]
+    public void fogbugz_test()
     {
 	reg.create(s, "bug", "fogbugz:fogbugz:apenwarr");
 	s.run_until(Schedulator.Phase.Sort2);
 	//s.dump(log);
     }
     
-    [Test] [Category("mantis")] public void mantis_test()
+    //[Test] [Category("mantis")] 
+    public void mantis_test()
     {
 	reg.create(s, "bug", "mantis:mantis:wooi");
 	s.run_until(Schedulator.Phase.Sort2);
