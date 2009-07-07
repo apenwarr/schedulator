@@ -360,7 +360,7 @@ public class SchedTests: IDisposable
     {
 	reg.create(s, "t", "file:test10.sched");
 	reg.create(s, "result",
-		   "result:schedulator:test");
+		   "result:schedulator_dsn:test");
 	s.run();
     }
     
