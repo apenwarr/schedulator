@@ -36,7 +36,9 @@ namespace Wv
 	    {
 		var sect = settings[moniker];
 		
-		if (sect["driver"] == "SqlClient")
+		if (sect["uri"].ne())
+		    return create(sect["uri"]);
+		else if (sect["driver"] == "SqlClient")
 		    return create(wv.fmt("mssql:"
 					 + "server={0};database={1};"
 					 + "User ID={2};Password={3};",
