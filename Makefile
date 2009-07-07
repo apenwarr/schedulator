@@ -23,5 +23,4 @@ schedulator.t.exe: $(SRC) \
 tests: all schedulator.t.exe
 
 test: tests
-	mono --debug ./schedulator.t.exe
-
+	wvdotnet/wvtestrunner.pl mono --debug ./schedulator.t.exe
