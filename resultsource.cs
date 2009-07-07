@@ -22,7 +22,7 @@ namespace Wv.Schedulator
 	    log = new WvLog(String.Format("Result:{0}", name));
 	    log.print("Initializing result plugin '{0}'.\n", name);
 	    log.print("Connecting to: '{0}'\n", odbcstring);
-	    db = new WvDbi(odbcstring);
+	    db = WvDbi.create(odbcstring);
 	    
 	    // db.try_execute("drop table Schedule");
 	    db.try_execute("create table Schedule ("

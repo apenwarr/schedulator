@@ -27,7 +27,7 @@ namespace Wv.Schedulator
 	    log = new WvLog(wv.fmt("Mantis:{0}", name));
 	    log.print("Initializing Mantis source '{0}'.\n", name);
 	    log.print("Connecting to: '{0}'\n", odbcstring);
-	    db = new WvDbi(odbcstring);
+	    db = WvDbi.create(odbcstring);
 	}
 	
 	public void Dispose()
