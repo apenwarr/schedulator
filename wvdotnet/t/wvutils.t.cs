@@ -51,6 +51,27 @@ public class WvUtilsTests
 	WVPASSEQ(ini["subseCtion"]["2"], "3");
 	WVPASSEQ(ini["nonexistent"].Count, 0);
     }
+    
+    [Test] public void atoi_test()
+    {
+	WVPASSEQ("1".atoi(), 1);
+	WVPASSEQ("1000000".atoi(), 1000000);
+	WVPASSEQ("1.5".atoi(), 1);
+	WVPASSEQ("0.5".atoi(), 0);
+	WVPASSEQ(".5".atoi(), 0);
+	WVPASSEQ("-.5".atoi(), 0);
+	WVPASSEQ("-1.5".atoi(), -1);
+    }
+    
+    [Test] public void atod_test()
+    {
+	WVPASSEQ("1.5".atod(), 1.5);
+	WVPASSEQ("1000000".atod(), 1000000);
+	WVPASSEQ("0.5".atod(), 0.5);
+	WVPASSEQ(".5".atod(), 0.5);
+	WVPASSEQ("-.5".atod(), -0.5);
+	WVPASSEQ("-0.5".atod(), -0.5);
+    }
 
     [Test] [Category("add_breaks_to_newlines")] 
     public void test_add_breaks()
