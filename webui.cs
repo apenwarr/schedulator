@@ -8,6 +8,7 @@ using System.Diagnostics;
 using Wv;
 using Wv.Web;
 using Wv.Obsolete;
+using Wv.Extensions;
 
 namespace Wv.Schedulator
 {
@@ -726,8 +727,10 @@ namespace Wv.Schedulator
 	    }
 	}
 	
-	public static void Main()
+	public static void Main(string[] args)
 	{
+	    if (args.Length > 0)
+		Environment.SetEnvironmentVariable("QUERY_STRING", args.join("&"));
 	    stl = new StringTraceListener();
 	    Trace.Listeners.Add(stl);
 	    Log.no_default_listener();
