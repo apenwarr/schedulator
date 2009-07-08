@@ -26,8 +26,11 @@
 	text-decoration: line-through;
 }
 
-.schedule tr.notdone td.late , .schedule tr.title td.late {
+.schedule tr.notdone td.late, .schedule tr.title td.late {
 	color: red;
+}
+.schedule td.late, .schedule td.notlate {
+    white-space: nowrap;
 }
 
 .schedule .origest {
