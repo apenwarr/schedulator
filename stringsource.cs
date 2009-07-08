@@ -65,7 +65,7 @@ namespace Wv.Schedulator
 	    return new StringSource(s, name, get_file(suffix));
 	}
 
-	static public string[] word_split(string s)
+	public static string[] word_split(string s)
 	{
 	    string bra = "\"'([{";
 	    string ket = "\"')]}";
@@ -152,6 +152,7 @@ namespace Wv.Schedulator
 	    }
 
 	    double num = wv.atod(grp[1].ToString());
+	    // wv.printerr("parsing time '{0}' as '{1}'\n", grp[1].ToString(), num);
 	    string units = grp[3].ToString().ToLower() + " ";
 	    switch (units[0])
 	    {
@@ -380,7 +381,7 @@ namespace Wv.Schedulator
 			}
 			else if (word[0] == 'p')
 			    pri = Int32.Parse(word.Substring(1));
-			else if (Char.IsDigit(word[0]))
+			else if (Char.IsDigit(word[0]) || word[0] == '.')
 			{
 			    if (currest == TimeSpan.MaxValue)
 				currest = parse_estimate(lineno, word);
@@ -390,7 +391,7 @@ namespace Wv.Schedulator
 				err(lineno, "Extra time '{0}'", word);
 			}
 			else
-			    err(lineno, "Unknown flag '{0}' in '{1}'",
+			    err(lineno, "Unknown flag '{0}' in '{1}'\n",
 				word, a);
 		    }
 		}
