@@ -111,6 +111,9 @@ public class SchedTests: IDisposable
 	
 	dosplit("\"hello world\"", "\"hello world\"");
 	dosplit("'hello world'", "'hello world'");
+	dosplit("yankee's doodle dandy", "yankee's!doodle!dandy");
+	dosplit("a's b's \"coo 'foo'\" doo'loo'",
+	        "a's!b's!\"coo 'foo'\"!doo'loo'");
 	dosplit("[hello world]", "[hello world]");
 	dosplit("(hello world)", "(hello world)");
 	dosplit("{hello world}", "{hello world}");

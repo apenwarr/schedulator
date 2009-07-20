@@ -73,10 +73,14 @@ namespace Wv.Schedulator
 	    ArrayList list = new ArrayList();
 	    Stack nest = new Stack();
 	    string buf = ""; // even if it's empty, always add the first word
+	    bool last_was_white = true;
 	    foreach (char c in s)
 	    {
 		int is_bra = bra.IndexOf(c);
 		int is_ket = ket.IndexOf(c);
+		
+		if (c == '\'' && !last_was_white)
+		    is_bra = -1;
 
 		if (nest.Count == 0)
 		{
@@ -96,12 +100,15 @@ namespace Wv.Schedulator
 		    if (is_ket >= 0 && (char)nest.Peek() == c)
 		    {
 			nest.Pop();
+			last_was_white = true;
 			continue;
 		    }
 		}
 
 		if (is_bra >= 0)
 		    nest.Push(ket[is_bra]);
+                
+                last_was_white = (c == ' ' || c == '\t');
 	    }
 
 	    // even if it's empty, always add the last word
