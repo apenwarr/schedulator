@@ -126,13 +126,6 @@ public class BasecampManager {
                 string ErrorXml = string.Format("<error>{0}</error>", ex.ToString());
                 result.LoadXml(ErrorXml);
             }
-            finally {
-                if (webRequest != null)
-                    webRequest.GetRequestStream().Close();
-
-                if (webResponse != null)
-                    webResponse.GetResponseStream().Close();
-            }
         }
         return result;
     }
