@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
+namespace Basecamp {
+
 /*
 <project>
   <id type="integer">#{id}</id>
@@ -109,4 +111,6 @@ public class Project {
 
         return projects;
     }
+}
+
 }

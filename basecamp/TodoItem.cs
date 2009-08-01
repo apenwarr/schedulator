@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
+namespace Basecamp {
+
 /*
 <todo-item>
   <id type="integer">#{id}</id>
@@ -167,5 +169,7 @@ public class TodoItem {
 
         return items;
     }
+
+}
 
 }

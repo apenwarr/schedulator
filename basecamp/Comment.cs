@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
+namespace Basecamp {
+
 /*
 <comment id="#{id}">
   <post_id>#{post_id}</post_id>
@@ -141,4 +143,4 @@ public class Comment {
 
 }
 
-
+}

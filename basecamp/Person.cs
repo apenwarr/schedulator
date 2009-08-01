@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
+namespace Basecamp {
+
 /*
 <person>
   <id type="integer">#{id}</id>
@@ -278,5 +280,7 @@ public class Person {
 
 
 
+
+}
 
 }

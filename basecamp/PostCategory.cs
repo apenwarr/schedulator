@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
+namespace Basecamp {
+
 /*
 <post-category>
   <id type="integer">#{id}</id>
@@ -90,5 +92,7 @@ public class PostCategory {
 
         return categories;
     }
+
+}
 
 }

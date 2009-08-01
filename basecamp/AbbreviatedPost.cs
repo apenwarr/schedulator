@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
+namespace Basecamp {
+
 /*
 <post>
   <id type="integer">#{id}</id>
@@ -79,5 +81,7 @@ public class AbbreviatedPost {
 
         return abbreviatedPosts;
     }
+
+}
 
 }

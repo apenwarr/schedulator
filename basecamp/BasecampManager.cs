@@ -5,6 +5,8 @@ using System.Text;
 using System.Xml;
 using System.Collections.Generic;
 
+namespace Basecamp {
+
 public class BasecampManager {
     #region Private Variables
 
@@ -442,4 +444,6 @@ public class BasecampManager {
     }
     #endregion
     #endregion
+}
+
 }
