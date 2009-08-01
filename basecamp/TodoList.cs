@@ -132,7 +132,7 @@ public class TodoList {
             }
             catch { }
             
-            IList<TodoItem> items = TodoItem.Parse(node.SelectNodes("//todo-item"));
+            IList<TodoItem> items = TodoItem.Parse(node.SelectNodes(".//todo-item"));
             l = new TodoList(id, name, description, projectID, milestoneID, position, uncompletedcount, items);
 
             lists.Add(l);
