@@ -138,7 +138,6 @@ namespace Wv
 	    inner = null;
 	}
 	
-	static int c = 0;
 	public override bool wait(int msec_timeout,
 				  bool readable, bool writable)
 	{
