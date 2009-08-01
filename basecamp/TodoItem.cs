@@ -151,9 +151,17 @@ public class TodoItem {
             DateTime createdOn = DateTime.Parse(node.GetElementsByTagName("created-on").Item(0).InnerText);
             int createdByPersonID = int.Parse(node.GetElementsByTagName("creator-id").Item(0).InnerText);
             bool completed = bool.Parse(node.GetElementsByTagName("completed").Item(0).InnerText);
-            string responsiblePartyType = node.GetElementsByTagName("responsible-party-type").Item(0).InnerText;
-            int responsiblePartyPersonID = int.Parse(node.GetElementsByTagName("responsible-party-id").Item(0).InnerText);
-            DateTime completedOn = DateTime.Parse("1/1/1900");
+
+            string responsiblePartyType = null;
+            int responsiblePartyPersonID = 0;
+	    
+	    try {
+		responsiblePartyPersonID = int.Parse(node.GetElementsByTagName("responsible-party-id").Item(0).InnerText);
+		responsiblePartyType = node.GetElementsByTagName("responsible-party-type").Item(0).InnerText;
+	    }
+	    catch { }
+	    
+	    DateTime completedOn = DateTime.Parse("1/1/1900");
             int completedByPersonID = 0;
 
             try {
