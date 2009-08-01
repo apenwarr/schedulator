@@ -15,7 +15,7 @@ ifeq ($(OS),Windows_NT)
   SYMLINK=cp
   MONORUN=
 else
-  CSC?=gmcs -langversion:linq
+  CSC?=gmcs
   SYMLINK=ln -sf
   PKGS += /r:Mono.Posix
   MONORUN=mono --debug
