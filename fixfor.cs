@@ -11,6 +11,7 @@ namespace Wv.Schedulator
 	public string name;
 	SortedHash release_dates = new SortedHash();
 	public DateSlider default_habits;
+	public int array_index; // used by FixForList; don't touch!
 	
 	public FixFor(Project project, string name)
 	{
@@ -71,12 +72,10 @@ namespace Wv.Schedulator
 		return 1; // null fixfors come first in the list
 	    else if (final_release != y.final_release)
 		return DateTime.Compare(final_release, y.final_release);
-	    else if (project != y.project)
-		return project.CompareTo(y.project);
-	    else if (name != y.name)
-		return name.CompareTo(y.name);
+	    else if (project == y.project && name == y.name)
+		return 0;
 	    else
-		return 0; // I give up!  They're the same!
+		return array_index - y.array_index;
 	}
     }
     
@@ -96,6 +95,7 @@ namespace Wv.Schedulator
 		f = new FixFor(project, name);
 		base.Add(make_key(project, name), f);
 	    }
+	    f.array_index = Count-1;
 	    return f;
 	}
 	
@@ -103,6 +103,7 @@ namespace Wv.Schedulator
 	{
 	    FixFor f = Add(project, name);
 	    f.add_release(date);
+	    f.array_index = Count-1;
 	    return f;
 	}
 	
