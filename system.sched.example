@@ -13,6 +13,14 @@
 #import fb fogbugz:fogbugz_dsn
 
 #
+# Create an instance of the "basecamp" plugin talking to a basecamp project
+# at foocompany.basecamphq.com.  The API user account is "api" and the password
+# for "api" is "mypass".  Import tasks belonging to 'myusername'.  (If
+# myusername was omitted, it would default to your own schedulator username.)
+#
+#import bc basecamp://api:mypass@foocompany.basecamphq.com/myusername
+
+#
 # Create an instance of the "log" plugin.  You should always have one of
 # these, since it reads back estimates saved when you change them in the web
 # ui.
