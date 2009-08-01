@@ -18,8 +18,5 @@ user = mantis
 password = whatever
 
 [schedulator_dsn]
-driver = MySQL
-server = fogbugz
-database = schedulator
-user = fogbugz
-password = whatever
+driver = sqlite
+uri = sqlite:schedules/sqlite.db

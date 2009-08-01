@@ -3,14 +3,14 @@
 # called "mantis_dsn" in wvodbc.ini.  Tasks imported from here will be
 # named "bug:###".
 #
-import bug mantis:mantis_dsn
+#import bug mantis:mantis_dsn
 
 #
 # Create an instance of the "fogbugz" plugin talking to a database DSN
 # called "fogbugz_dsn" in wvodbc.ini.  Tasks imported from here will be
 # named "fb:###".
 #
-import fb fogbugz:fogbugz_dsn
+#import fb fogbugz:fogbugz_dsn
 
 #
 # Create an instance of the "log" plugin.  You should always have one of
