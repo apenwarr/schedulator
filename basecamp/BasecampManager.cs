@@ -87,13 +87,17 @@ public class BasecampManager {
     #endregion
 
     #region Generic Request
+    public XmlDocument SendRequest(string command, string request) {
+	return _SendRequest(command, request, "POST");
+    }
+    
     /// <summary>
     ///		Sends a request using the basecamp API
     /// </summary>
     /// <param name="command">Eg. /projects/list</param>
     /// <param name="request">XML data</param>
     /// <returns>XmlDocument with requested data</returns>
-    public XmlDocument SendRequest(string command, string request) {
+    public XmlDocument _SendRequest(string command, string request, string method) {
         XmlDocument result = null;
         if (IsInitialized()) {
             result = new XmlDocument();
@@ -105,17 +109,19 @@ public class BasecampManager {
                 string url = string.Concat(prefix, m_Url, command);
 
                 webRequest = (HttpWebRequest)WebRequest.Create(url);
-                webRequest.Method = "POST";
+                webRequest.Method = method;
                 webRequest.ContentType = "text/xml";
                 webRequest.ServicePoint.Expect100Continue = false;
 
                 string UsernameAndPassword = string.Concat(m_Username, ":", m_Password);
                 string EncryptedDetails = Convert.ToBase64String(Encoding.ASCII.GetBytes(UsernameAndPassword));
                 webRequest.Headers.Add("Authorization", "Basic " + EncryptedDetails);
-
-                using (StreamWriter sw = new StreamWriter(webRequest.GetRequestStream())) {
-                    sw.WriteLine(request);
-                }
+		
+		if (method == "POST") {
+		    using (StreamWriter sw = new StreamWriter(webRequest.GetRequestStream())) {
+			sw.WriteLine(request);
+		    }
+		}
                 webResponse = webRequest.GetResponse();
                 using (StreamReader sr = new StreamReader(webResponse.GetResponseStream())) {
                     result.Load(sr.BaseStream);
@@ -379,7 +385,20 @@ public class BasecampManager {
     #endregion
 
     #region Todo Lists
-    public IList<TodoList> GetToLists(int projectID) {
+    public IList<TodoList> GetAllTodoLists(int personID) {
+        string cmd = string.Format("/todo_lists.xml?responsible_party={0}", personID);
+
+        IList<TodoList> lists = null;
+        if (IsInitialized()) {
+            XmlDocument xml = _SendRequest(cmd, "", "GET");
+
+            lists = TodoList.Parse(xml.SelectNodes("//todo-list"));
+        }
+
+        return lists;
+    }
+
+    public IList<TodoList> GetTodoLists(int projectID) {
         string cmd = string.Format("/projects/{0}/todos/lists", projectID);
 
         IList<TodoList> lists = null;
