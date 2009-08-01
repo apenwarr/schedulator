@@ -19,6 +19,8 @@ schedulator.exe: webui.cs $(SRC)
 
 schedulator.t.exe: $(SRC) \
 	$(addsuffix .E,$(wildcard *.t.cs)) \
+	
+clean:: wvdotnet/clean
 
 tests: all schedulator.t.exe
 
