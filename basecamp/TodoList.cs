@@ -89,6 +89,8 @@ public class TodoList {
             _Position = value;
         }
     }
+    
+    public int UncompletedCount;
 
     private IList<TodoItem> _TodoItems;
     public IList<TodoItem> TodoItems {
@@ -100,13 +102,14 @@ public class TodoList {
         }
     }
 
-    public TodoList(int id, string name, string description, int projectID, int milestoneID, int position, IList<TodoItem> todoItems) {
+    public TodoList(int id, string name, string description, int projectID, int milestoneID, int position, int uncompletedcount, IList<TodoItem> todoItems) {
         _ID = id;
         _Name = name;
         _Description = description;
         _ProjectID = projectID;
         _MilestoneID = milestoneID;
         _Position = position;
+	UncompletedCount = uncompletedcount;
         _TodoItems = todoItems;
     }
 
@@ -120,6 +123,7 @@ public class TodoList {
             string description = node.GetElementsByTagName("description").Item(0).InnerText;
             int projectID = int.Parse(node.GetElementsByTagName("project-id").Item(0).InnerText);
             int position = int.Parse(node.GetElementsByTagName("position").Item(0).InnerText);
+	    int uncompletedcount = int.Parse(node.GetElementsByTagName("uncompleted-count").Item(0).InnerText);
 
             int milestoneID = 0;
 
@@ -129,7 +133,7 @@ public class TodoList {
             catch { }
             
             IList<TodoItem> items = TodoItem.Parse(node.SelectNodes("//todo-item"));
-            l = new TodoList(id, name, description, projectID, milestoneID, position, items);
+            l = new TodoList(id, name, description, projectID, milestoneID, position, uncompletedcount, items);
 
             lists.Add(l);
         }
