@@ -17,20 +17,11 @@ namespace Wv.Schedulator
 	WvUrl url; // auth information for this project
 	string user; // get the bugs for this username
 	Dictionary<int,bool> userids = new Dictionary<int,bool>();
+	Dictionary<int,Project> projmap = new Dictionary<int,Project>();
+	Dictionary<Project,int> projrev = new Dictionary<Project,int>();
 	WvLog log;
 	Basecamp.BasecampManager bc;
-	
-	struct TodoInfo {
-	    public FixFor fixfor;
-	    public Basecamp.TodoList list;
-	    
-	    public TodoInfo(FixFor f, Basecamp.TodoList l)
-	    { 
-		fixfor = f;
-		list = l;
-	    }
-	}
-	List<TodoInfo> todoinfo = new List<TodoInfo>();
+	List<Basecamp.TodoList> todos = new List<Basecamp.TodoList>();
 	
         public BasecampSource(Schedulator s, string name, string url)
 	    : base(s, name)
@@ -59,62 +50,70 @@ namespace Wv.Schedulator
 
 	public override string view_url(string taskid)
 	{
-	    // can't show a specific task, just the entire todo list
-	    string[] bits = taskid.split("_");
-	    return wv.fmt("http://{0}.basecamphq.com/todo_lists/{1}",
-			  url.host, bits[0]);
+	    Task t = s.tasks.Find(this, taskid);
+	    return wv.fmt("http://{0}.basecamphq.com/projects/{1}"
+			  + "/todo_items/{2}/comments",
+			  url.host, projrev[t.fixfor.project], t.id);
 	}
 	
 	public override void make_basic()
 	{
 	    log.print("make_basic\n");
 	    
-	    int companyid = 0;
+	    var done_companies = new Dictionary<int,bool>();
 	    
 	    foreach (Basecamp.Project bp in bc.GetProjects())
 	    {
 		log.print("Project: {0}\n", bp.Name);
-		companyid = bp.Company.ID;
 		Project p = s.projects.Add(bp.Name);
+		projmap[bp.ID] = p;
+		projrev[p] = bp.ID;
 		
-		foreach (Basecamp.TodoList bl in bc.GetToLists(bp.ID))
+		if (!done_companies.tryget(bp.Company.ID, false))
 		{
-		    log.print("Todo list: ..{0}-{1}\n", bl.ID, bl.Name);
-		    if (bl.UncompletedCount > 0)
+		    foreach (Basecamp.Person bpp in bc.GetPeople(bp.Company.ID))
 		    {
-			FixFor f = s.fixfors.Add(p, bl.Name);
-			todoinfo.Add(new TodoInfo(f, bc.GetTodoList(bl.ID)));
+			log.print("Person: {0}-{1}\n", bpp.ID, bpp.Email);
+			if (bpp.UserName == user 
+			    || bpp.Email.StartsWith(wv.fmt("{0}@", user)))
+			{
+			    userids[bpp.ID] = true;
+			    log.print("  -- match\n");
+			}
 		    }
+		    done_companies[bp.Company.ID] = true;
 		}
 	    }
 	    
-	    log.print("companyid={0}\n", companyid);
-	    if (companyid != 0)
+	    foreach (int i in userids.Keys)
 	    {
-		foreach (Basecamp.Person bp in bc.GetPeople(companyid))
-		{
-		    log.print("Person: {0}-{1}\n", bp.ID, bp.UserName);
-		    if (bp.UserName == user 
-			  || bp.Email.StartsWith(wv.fmt("{0}@", user)))
-			userids[bp.ID] = true;
-		}
+		var tdl = bc.GetAllTodoLists(i).ToList();
+		log.print("items for {0}: {1}\n", i, tdl.Count);
+		todos.AddRange(tdl);
+	    }
+	    
+	    foreach (Basecamp.TodoList bl in todos)
+	    {
+		log.print("TodoList: {0}\n", bl.Name);
+		Project p = projmap[bl.ProjectID];
+		s.fixfors.Add(p, bl.Name);
 	    }
 	}
 	
 	public override Task[] make_tasks()
 	{
 	    log.print("make_tasks\n");
-	    foreach (TodoInfo tdi in todoinfo)
+	    foreach (Basecamp.TodoList bl in todos)
 	    {
-		log.print("tasks for '{0}'\n", tdi.fixfor.name);
-		foreach (Basecamp.TodoItem i in tdi.list.TodoItems)
+		log.print("tasks for {0}\n", bl.Name);
+		Project p = projmap[bl.ProjectID];
+		FixFor f = s.fixfors.Find(p, bl.Name);
+		
+		foreach (Basecamp.TodoItem i in bl.TodoItems)
 		{
 		    log.print("task: '{0}'\n", i.Content);
-		    if (!userids.tryget(i.ResponsiblePartyPersonID, false))
-			continue;
-		    string tid = wv.fmt("{0}_{1}", tdi.list.ID, i.ID);
 		    Task t = s.tasks.Add(this, i.ID.ToString(), i.Content);
-		    t.fixfor = tdi.fixfor;
+		    t.fixfor = f;
 		    t.done = i.Completed;
 		    if (t.done)
 			t.donedate = i.DateCompleted;
