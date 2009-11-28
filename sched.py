@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import sys, re, time
 
-people = ['AVERY', 'LUKE', 'ZICK', 'EDUARDO',
-          'WOOI', 'HUGH', 'RODRIGO', 'BILL']
+names = ['AVERY', 'LUKE', 'ZICK', 'EDUARDO',
+         'WOOI', 'HUGH', 'RODRIGO', 'BILL', 'DEPOSITS']
 unitmap = dict(w=40, d=8, h=1, m=1./60, s=1./60/60)
 
 
@@ -12,7 +12,7 @@ today = _today()
 
 
 def _render_time(t):
-    return time.strftime('%Y-%m-%d', time.gmtime(t))
+    return time.strftime('%Y-%m-%d', time.localtime(t))
 
 
 def _render_est(e):
@@ -20,6 +20,31 @@ def _render_est(e):
         return '%gd' % (e/8.0)
     else:
         return '%gh' % e
+
+
+class Person:
+    def __init__(self, name):
+        self.name = name
+        self.date = time.mktime(time.strptime('1970-01-01', '%Y-%m-%d'))
+        self.time_queued = 0
+        self.time_done = 0
+
+    def __str__(self):
+        return self.name
+
+    def addtime(self, t):
+        self.time_queued += t
+        # FIXME: update date
+
+    def addcompleted(self, t):
+        # FIXME: this isn't what we'll do eventually
+        self.time_done += t
+
+    def remain(self):
+        return self.time_queued - self.time_done
+
+nobody = Person('-Unassigned-')
+people = {nobody.name: nobody}
 
 
 class Task:
@@ -62,6 +87,12 @@ class Task:
             return self.parent.depth() + 1
         return 0
 
+    def linearize(self):
+        for t in self.subtasks:
+            yield t
+            for tt in t.linearize():
+                yield tt
+
 
 def read_tasks(prefix, lines):
     out = []
@@ -95,8 +126,12 @@ def read_tasks(prefix, lines):
             t = Task()
             words = text.split()
             for (i,word) in enumerate(words):
-                if word in people:
-                    t.owner = word
+                if word in names:
+                    o = people.get(word)
+                    if not o:
+                        o = Person(word.lower())
+                        people[word] = o
+                    t.owner = o
                     words[i] = ''
                 elif word == 'DONE':
                     t.donedate = today
@@ -114,6 +149,8 @@ def read_tasks(prefix, lines):
                             t.estimate = float(estnum)*unitmap[estunit]
                         words[i] = ''
             t.title = ' '.join(words).strip()
+            if t.donedate:
+                t.elapsed = t.estimate
             out.append(t)
     return out
 
@@ -126,6 +163,30 @@ def dump(prefix, t):
 
 lines = sys.stdin.readlines()
 lines.reverse()
+root = Task()
 tasks = read_tasks('', lines)
 for t in tasks:
+    root.add(t)
+
+for t in tasks:
     dump('', t)
+
+for t in root.linearize():
+    if (t.elapsed or t.estimate) and not t.owner:
+        t.owner = nobody
+    if t.elapsed:
+        t.owner.addcompleted(t.elapsed)
+    if t.estimate:
+        t.owner.addtime(t.estimate)
+
+print '%-40s %10s %10s %10s' % ('', 'Estimate', 'Elapsed', 'Remain')
+mr = 0
+mrn = 'None'
+for p in sorted(people.values(), cmp = lambda a,b: int(b.remain() - a.remain())):
+    if p.remain() > mr:
+        mr = p.remain()
+        mrn = p.name
+    print '%-40s %10.2f %10.2f %10.2f' % \
+        (p.name, p.time_queued/8, p.time_done/8, p.remain()/8)
+
+print '\nCritical path: %s (%.2f days)' % (mrn, mr/8)
