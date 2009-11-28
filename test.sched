@@ -2,7 +2,9 @@
 EFT
 	talk to customer
 	test import file
-	import cheque thingy
+	import cheque thingy [5d]
+		this is a sub note.
+			what do you think about it?
 	generate EFT thingy
 	acceptance testing
 

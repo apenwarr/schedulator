@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import sys, re, time
 
-people = ['AVERY', 'LUKE', 'ZICK', 'EDUARDO', 'WOOI', 'HUGH', 'RODRIGO', 'BILL']
+people = ['AVERY', 'LUKE', 'ZICK', 'EDUARDO',
+          'WOOI', 'HUGH', 'RODRIGO', 'BILL']
 unitmap = dict(w=40, d=8, h=1, m=1./60, s=1./60/60)
 
 
@@ -25,6 +26,7 @@ class Task:
     def __init__(self):
         self.parent = None
         self.title = None
+        self.note = None
         self.owner = None
         self.estimate = None
         self.elapsed = 0
@@ -44,6 +46,8 @@ class Task:
             s += ' (est:%s)' % _render_est(self.estimate)
         if self.elapsed:
             s += ' (elapsed:%s)' % _render_est(self.elapsed)
+        if self.note:
+            s += ' {%s}' % self.note
         return s
 
     def add(self, sub):
@@ -69,8 +73,23 @@ def read_tasks(prefix, lines):
         if not pre.startswith(prefix):
             break
         elif len(pre) > len(prefix):
-            for t in read_tasks(pre, lines):
-                out[-1].add(t)
+            subtasks = read_tasks(pre, lines)
+            is_real = 0
+            for t in subtasks:
+                if t.estimate or t.elapsed or t.subtasks or t.owner:
+                    is_real = 1
+                    break
+            if is_real:
+                for t in subtasks:
+                    out[-1].add(t)
+            else:
+                nl = []
+                for t in subtasks:
+                    subnote = t.title
+                    if t.note:
+                        subnote += '\n' + re.sub(re.compile(r'^', re.M), '\t', t.note)
+                    nl.append(subnote)
+                out[-1].note = '\n'.join(nl)
         else:
             lines.pop()
             t = Task()
