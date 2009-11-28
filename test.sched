@@ -11,6 +11,13 @@ EFT
 EQL
 	[5d] LUKE incorporate
 		[3h] AVERY create stuff
+			a
+				b
+					c
+						d [3h]
+							this is a
+							very narrow
+							sub note.
 		[1s] do more stuff
 		[4.5h] DONE do extra stuff
 
