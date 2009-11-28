@@ -96,7 +96,7 @@ def read_tasks(prefix, lines):
             words = text.split()
             for (i,word) in enumerate(words):
                 if word in people:
-                    t.owner = words[0]
+                    t.owner = word
                     words[i] = ''
                 elif word == 'DONE':
                     t.donedate = today
