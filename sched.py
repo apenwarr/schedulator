@@ -1,8 +1,25 @@
 #!/usr/bin/env python
-import sys, re, datetime
+import sys, re, time
 
-people = ['AP', 'LK']
+people = ['AVERY', 'LUKE', 'ZICK', 'EDUARDO', 'WOOI', 'HUGH', 'RODRIGO', 'BILL']
 unitmap = dict(w=40, d=8, h=1, m=1./60, s=1./60/60)
+
+
+def _today():
+    return int(time.time() / 3600 / 24) * 3600 * 24
+today = _today()
+
+
+def _render_time(t):
+    return time.strftime('%Y-%m-%d', time.gmtime(t))
+
+
+def _render_est(e):
+    if e >= 16:
+        return '%gd' % (e/8.0)
+    else:
+        return '%gh' % e
+
 
 class Task:
     def __init__(self):
@@ -16,23 +33,30 @@ class Task:
 
     def __str__(self):
         s = ''
-        if self.parent:
-            s += '%s: ' % self.parent.title
+        #if self.parent:
+        #    s += '%s: ' % self.parent.title
         s += self.title
         if self.owner:
             s += ' (owner:%s)' % self.owner
         if self.donedate:
-            s += ' (done:%s)' % self.donedate
+            s += ' (done:%s)' % _render_time(self.donedate)
         if self.estimate != None:
-            s += ' (est:%gh)' % self.estimate
+            s += ' (est:%s)' % _render_est(self.estimate)
         if self.elapsed:
-            s += ' (elapsed:%gh)' % self.elapsed
+            s += ' (elapsed:%s)' % _render_est(self.elapsed)
         return s
 
     def add(self, sub):
         assert(not sub.parent)
         self.subtasks.append(sub)
         sub.parent = self
+        if self.owner and not sub.owner:
+            sub.owner = self.owner
+
+    def depth(self):
+        if self.parent:
+            return self.parent.depth() + 1
+        return 0
 
 
 def read_tasks(prefix, lines):
@@ -51,25 +75,26 @@ def read_tasks(prefix, lines):
             lines.pop()
             t = Task()
             words = text.split()
-            while words:
-                if words[0] in people:
+            for (i,word) in enumerate(words):
+                if word in people:
                     t.owner = words[0]
-                elif words[0] == 'DONE':
-                    t.donedate = datetime.date.today()
+                    words[i] = ''
+                elif word == 'DONE':
+                    t.donedate = today
+                    words[i] = ''
                 else:
                     # eg: [5d]
                     # or: [3h/1d]
-                    x = re.match(r'\[((\d+(\.\d*)?)([wdhms])/)?(\d+(\.\d*)?)([wdhms])\]', words[0])
+                    x = re.match(r'\[((\d+(\.\d*)?)([wdhms])/)?(\d+(\.\d*)?)([wdhms])\]', word)
                     if x:
-                        (junk1, elnum, junk2, elunit, estnum, junk3, estunit) = x.groups()
+                        (j1, elnum, j2, elunit, estnum, j3, estunit) \
+                            = x.groups()
                         if elnum and elunit:
                             t.elapsed = float(elnum)*unitmap[elunit]
                         if estnum and estunit:
                             t.estimate = float(estnum)*unitmap[estunit]
-                    else:
-                        break
-                words = words[1:]
-            t.title = ' '.join(words)
+                        words[i] = ''
+            t.title = ' '.join(words).strip()
             out.append(t)
     return out
 
@@ -79,9 +104,9 @@ def dump(prefix, t):
     for sub in t.subtasks:
         dump(prefix+'    ', sub)
 
+
 lines = sys.stdin.readlines()
 lines.reverse()
-
 tasks = read_tasks('', lines)
 for t in tasks:
     dump('', t)
