@@ -135,10 +135,12 @@ def read_tasks(prefix, lines):
             for (i,word) in enumerate(words):
                 # eg: [5d]
                 # or: [3h/1d]
-                x = re.match(r'\[((\d+(\.\d*)?)([wdhms])/)?(\d+(\.\d*)?)([wdhms])\]$', word)
+                x = re.match(r'\[((\d+(\.\d*)?)([wdhms]?)/)?(\d+(\.\d*)?)([wdhms])\]$', word)
                 if x:
                     (j1, elnum, j2, elunit, estnum, j3, estunit) \
                         = x.groups()
+                    if not elunit:
+                        elunit = estunit
                     if elnum and elunit:
                         t.elapsed = float(elnum)*unitmap[elunit]
                     if estnum and estunit:
