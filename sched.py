@@ -73,12 +73,19 @@ class Task:
             s += ' {%s}' % self.note
         return s
 
+    def _fixowners(self, owner):
+        for s in self.subtasks:
+            if not s.owner:
+                s.owner = owner
+                s._fixowners(owner)
+
     def add(self, sub):
         assert(not sub.parent)
         self.subtasks.append(sub)
         sub.parent = self
         if self.owner and not sub.owner:
             sub.owner = self.owner
+            sub._fixowners(self.owner)
 
     def depth(self):
         if self.parent:
