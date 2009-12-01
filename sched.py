@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import sys, re, time
 
-names = ['AVERY', 'LUKE', 'ZICK', 'EDUARDO',
-         'WOOI', 'HUGH', 'RODRIGO', 'BILL', 'DEPOSITS']
 unitmap = dict(w=40, d=8, h=1, m=1./60, s=1./60/60)
 
 
@@ -45,7 +43,7 @@ class Person:
 
 nobody = Person('-Unassigned-')
 people = {nobody.name: nobody}
-
+people_unique = [nobody]
 
 class Task:
     def __init__(self):
@@ -126,11 +124,9 @@ def read_tasks(prefix, lines):
             t = Task()
             words = text.split()
             for (i,word) in enumerate(words):
-                if word in names:
-                    o = people.get(word)
-                    if not o:
-                        o = Person(word.lower())
-                        people[word] = o
+                if word.endswith(':') and people.get(word[:-1].lower()):
+                    name = word[:-1].lower()
+                    o = people.get(name)
                     t.owner = o
                     words[i] = ''
                 elif word == 'DONE':
@@ -161,6 +157,14 @@ def dump(prefix, t):
         dump(prefix+'    ', sub)
 
 
+for line in open('users'):
+    names = line.split()
+    if names and names[0]:
+        p = Person(names[0])
+        people_unique.append(p)
+        for name in names:
+            people[name.lower()] = p
+
 lines = sys.stdin.readlines()
 lines.reverse()
 root = Task()
@@ -182,11 +186,12 @@ for t in root.linearize():
 print '%-40s %10s %10s %10s' % ('', 'Estimate', 'Elapsed', 'Remain')
 mr = 0
 mrn = 'None'
-for p in sorted(people.values(), cmp = lambda a,b: int(b.remain() - a.remain())):
+for p in sorted(people_unique, cmp = lambda a,b: int(b.remain() - a.remain())):
     if p.remain() > mr:
         mr = p.remain()
         mrn = p.name
-    print '%-40s %10.2f %10.2f %10.2f' % \
-        (p.name, p.time_queued/8, p.time_done/8, p.remain()/8)
+    if p.remain() or p.time_queued:
+        print '%-40s %9.1fd %9.1fd %9.1fd' % \
+            (p.name, p.time_queued/8, p.time_done/8, p.remain()/8)
 
 print '\nCritical path: %s (%.2f days)' % (mrn, mr/8)
