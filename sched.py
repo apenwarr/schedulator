@@ -102,7 +102,8 @@ class Task:
 def read_tasks(prefix, lines):
     out = []
     while lines:
-        (pre, text, post) = re.match(r'(\s*)(.*)(\s*)', lines[-1]).groups(0)
+        (dot, pre, text, post) = re.match(r'(\.?)(\s*)(.*)(\s*)', 
+                                     lines[-1]).groups(0)
         if not text:
             lines.pop()
             continue
@@ -123,7 +124,8 @@ def read_tasks(prefix, lines):
                 for t in subtasks:
                     subnote = t.title
                     if t.note:
-                        subnote += '\n' + re.sub(re.compile(r'^', re.M), '\t', t.note)
+                        subnote += '\n' + re.sub(re.compile(r'^', re.M),
+                                                 '\t', t.note)
                     nl.append(subnote)
                 out[-1].note = '\n'.join(nl)
         else:
@@ -147,6 +149,8 @@ def read_tasks(prefix, lines):
             if words and (words[0] == '.' or words[0] == 'DONE'):
                 t.donedate = today
                 words = words[1:]
+            if dot and not t.donedate:
+                t.donedate = today
             isname = words and words[0] and words[0].endswith(':')
             name = isname and words[0][:-1].lower()
             if name and people.get(name):
