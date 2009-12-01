@@ -14,10 +14,12 @@ def _render_time(t):
 
 
 def _render_est(e):
+    if e >= 60:
+        return '%.1fw' % (e/40.0)
     if e >= 16:
-        return '%gd' % (e/8.0)
+        return '%.1fd' % (e/8.0)
     else:
-        return '%gh' % e
+        return '%.1fh' % e
 
 
 class Person:
@@ -178,6 +180,7 @@ def read_tasks(prefix, lines):
             out.append(t)
     return out
 
+
 def dump(prefix, t):
     print '%s%s%s' % (t.donedate and '.' or '', prefix, t)
     if t.note:
@@ -185,6 +188,39 @@ def dump(prefix, t):
             print '%s        %s' % (prefix, l)
     for sub in t.subtasks:
         dump(prefix+'    ', sub)
+
+
+def print_pretty():
+    for t in tasks:
+        dump('', t)
+        print
+
+
+def print_pretty_totals():
+    print '%-20s %10s %10s %10s' % ('', 'Estimate', 'Elapsed', 'Remain')
+    mr = 0
+    mrn = 'None'
+    for p in sorted(people_unique, cmp = lambda a,b: int(b.remain() - a.remain())):
+        if p.remain() > mr:
+            mr = p.remain()
+            mrn = p.name
+        if p.remain() or p.time_queued:
+            print '%-20s %9.1fw %9.1fw %9.1fw' % \
+                (p.name, p.time_queued/40.0, p.time_done/40.0, p.remain()/40.0)
+
+    print '\nCritical path: %s (%.2f days)' % (mrn, mr/8)
+
+
+def print_csv():
+    print 'Person,Task,,,,,,,,,,Remain (days),,,,,,,,,'
+    for t in root.linearize():
+        depth = t.depth()-1
+        before = ['']*depth
+        after = ['']*(9-depth)
+        title = re.sub(',', ';', t.title)
+        print ','.join([t.owner and t.owner.name or ''] +
+                       before + [title] + after + 
+                       before + ['%.1f' % (t.total()/8.0)] + after)
 
 
 for line in open('users'):
@@ -202,10 +238,6 @@ tasks = read_tasks('', lines)
 for t in tasks:
     root.add(t)
 
-for t in tasks:
-    dump('', t)
-    print
-
 for t in root.linearize():
     if (t.elapsed or t.estimate) and not t.owner:
         t.owner = nobody
@@ -214,15 +246,7 @@ for t in root.linearize():
     if t.estimate:
         t.owner.addtime(t.estimate)
 
-print '%-20s %10s %10s %10s' % ('', 'Estimate', 'Elapsed', 'Remain')
-mr = 0
-mrn = 'None'
-for p in sorted(people_unique, cmp = lambda a,b: int(b.remain() - a.remain())):
-    if p.remain() > mr:
-        mr = p.remain()
-        mrn = p.name
-    if p.remain() or p.time_queued:
-        print '%-20s %9.1fd %9.1fd %9.1fd' % \
-            (p.name, p.time_queued/8, p.time_done/8, p.remain()/8)
 
-print '\nCritical path: %s (%.2f days)' % (mrn, mr/8)
+#print_pretty()
+#print_pretty_totals()
+print_csv()
