@@ -69,8 +69,10 @@ class Task:
             s += ' (est:%s)' % _render_est(self.estimate)
         if self.elapsed:
             s += ' (elapsed:%s)' % _render_est(self.elapsed)
-        if self.note:
-            s += ' {%s}' % self.note
+        if self.subtasks:
+            s += ' (total:%s)' % _render_est(self.total())
+        #if self.note:
+        #    s += ' {%s}' % self.note
         return s
 
     def _fixowners(self, owner):
@@ -98,6 +100,15 @@ class Task:
             for tt in t.linearize():
                 yield tt
 
+    def remain(self):
+        return (self.estimate or 0) - self.elapsed
+
+    def total(self):
+        tt = self.remain()
+        for t in self.subtasks:
+            tt += t.total()
+        return tt
+
 
 def read_tasks(prefix, lines):
     out = []
@@ -113,7 +124,8 @@ def read_tasks(prefix, lines):
             subtasks = read_tasks(pre, lines)
             is_real = 0
             for t in subtasks:
-                if t.estimate or t.elapsed or t.subtasks or t.owner:
+                if (t.estimate or t.elapsed or t.subtasks 
+                    or t.owner or t.donedate):
                     is_real = 1
                     break
             if is_real:
@@ -161,14 +173,16 @@ def read_tasks(prefix, lines):
             t.title = ' '.join(words).strip()
             if t.elapsed > 0 and t.elapsed == t.estimate and not t.donedate:
                 t.donedate = today
-            if t.donedate:
+            if t.donedate and t.estimate:
                 t.elapsed = t.estimate
             out.append(t)
     return out
 
-
 def dump(prefix, t):
     print '%s%s%s' % (t.donedate and '.' or '', prefix, t)
+    if t.note:
+        for l in t.note.split('\n'):
+            print '%s        %s' % (prefix, l)
     for sub in t.subtasks:
         dump(prefix+'    ', sub)
 
@@ -190,6 +204,7 @@ for t in tasks:
 
 for t in tasks:
     dump('', t)
+    print
 
 for t in root.linearize():
     if (t.elapsed or t.estimate) and not t.owner:
@@ -199,7 +214,7 @@ for t in root.linearize():
     if t.estimate:
         t.owner.addtime(t.estimate)
 
-print '%-40s %10s %10s %10s' % ('', 'Estimate', 'Elapsed', 'Remain')
+print '%-20s %10s %10s %10s' % ('', 'Estimate', 'Elapsed', 'Remain')
 mr = 0
 mrn = 'None'
 for p in sorted(people_unique, cmp = lambda a,b: int(b.remain() - a.remain())):
@@ -207,7 +222,7 @@ for p in sorted(people_unique, cmp = lambda a,b: int(b.remain() - a.remain())):
         mr = p.remain()
         mrn = p.name
     if p.remain() or p.time_queued:
-        print '%-40s %9.1fd %9.1fd %9.1fd' % \
+        print '%-20s %9.1fd %9.1fd %9.1fd' % \
             (p.name, p.time_queued/8, p.time_done/8, p.remain()/8)
 
 print '\nCritical path: %s (%.2f days)' % (mrn, mr/8)
