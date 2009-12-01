@@ -159,6 +159,8 @@ def read_tasks(prefix, lines):
                 t.owner = people.get(name)
                 words = words[1:]
             t.title = ' '.join(words).strip()
+            if t.elapsed > 0 and t.elapsed == t.estimate and not t.donedate:
+                t.donedate = today
             if t.donedate:
                 t.elapsed = t.estimate
             out.append(t)
@@ -166,7 +168,7 @@ def read_tasks(prefix, lines):
 
 
 def dump(prefix, t):
-    print '%s%s' % (prefix, t)
+    print '%s%s%s' % (t.donedate and '.' or '', prefix, t)
     for sub in t.subtasks:
         dump(prefix+'    ', sub)
 
