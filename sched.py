@@ -124,26 +124,27 @@ def read_tasks(prefix, lines):
             t = Task()
             words = text.split()
             for (i,word) in enumerate(words):
-                if word.endswith(':') and people.get(word[:-1].lower()):
-                    name = word[:-1].lower()
-                    o = people.get(name)
-                    t.owner = o
+                # eg: [5d]
+                # or: [3h/1d]
+                x = re.match(r'\[((\d+(\.\d*)?)([wdhms])/)?(\d+(\.\d*)?)([wdhms])\]$', word)
+                if x:
+                    (j1, elnum, j2, elunit, estnum, j3, estunit) \
+                        = x.groups()
+                    if elnum and elunit:
+                        t.elapsed = float(elnum)*unitmap[elunit]
+                    if estnum and estunit:
+                        t.estimate = float(estnum)*unitmap[estunit]
                     words[i] = ''
-                elif word == 'DONE':
-                    t.donedate = today
-                    words[i] = ''
-                else:
-                    # eg: [5d]
-                    # or: [3h/1d]
-                    x = re.match(r'\[((\d+(\.\d*)?)([wdhms])/)?(\d+(\.\d*)?)([wdhms])\]', word)
-                    if x:
-                        (j1, elnum, j2, elunit, estnum, j3, estunit) \
-                            = x.groups()
-                        if elnum and elunit:
-                            t.elapsed = float(elnum)*unitmap[elunit]
-                        if estnum and estunit:
-                            t.estimate = float(estnum)*unitmap[estunit]
-                        words[i] = ''
+            while words and not words[0]:
+                words = words[1:]
+            if words and (words[0] == '.' or words[0] == 'DONE'):
+                t.donedate = today
+                words = words[1:]
+            isname = words and words[0] and words[0].endswith(':')
+            name = isname and words[0][:-1].lower()
+            if name and people.get(name):
+                t.owner = people.get(name)
+                words = words[1:]
             t.title = ' '.join(words).strip()
             if t.donedate:
                 t.elapsed = t.estimate
