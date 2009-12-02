@@ -1,6 +1,11 @@
 {% block main %}
 <html>
-<head><title>{{title}}</title></body>
+<head>
+    <title>{{title}}</title>
+    <link type="text/css" href="/static/css/ui-lightness/jquery-ui-1.7.2.custom.css" rel="stylesheet" />	
+    <script type="text/javascript" src="/static/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery-ui-1.7.2.custom.min.js"></script>
+</head>
 <body>
   <h1>{{title}}</h1>
   {% block content %}

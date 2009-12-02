@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
+  <div id='whack'>
+    <ul>
+        <li><a href="/">first tab</a></li>
+        <li><a href="#t2">second tab</a></li>
+    </ul>
+    <div id='t1'>this is some text</div>
+    <div id='t2'>this is other text</div>
+  </div>
   <table>
       <tr>
        	  <th>Owner</th>
@@ -24,4 +32,9 @@
 	  </tr>
       {% end %}
   </table>
+  <script type="text/javascript">
+    $(function() {
+        $('#whack').tabs();
+    });
+  </script>
 {% end %}

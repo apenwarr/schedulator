@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, re
+import sys, re, os
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
@@ -18,10 +18,15 @@ class UserHandler(tornado.web.RequestHandler):
                     tasks=s,
                     render_est=schedulator.render_est)
 
+settings = dict(
+    static_path = os.path.join(os.path.dirname(__file__), "static"),
+    xsrf_cookies = True,
+    debug = 1
+)
 application = tornado.web.Application([
     (r'/', HelloHandler),
     (r'/user/(\w+)', UserHandler),
-], debug=1)
+], **settings)
 
 srv = tornado.httpserver.HTTPServer(application)
 srv.listen(8011)
