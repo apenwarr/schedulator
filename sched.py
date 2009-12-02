@@ -31,6 +31,13 @@ def _render_est(e):
 class SDate:
     def __init__(self, start):
         self.date = _parse_date(start)
+        self._fixdate()
+
+    def __str__(self):
+        return _render_time(self.date)
+
+    def __cmp__(x, y):
+        return cmp(x.date, y.date)
 
     def _fixdate(self):
         while 1:
@@ -58,11 +65,10 @@ class SDate:
     def copy(self):
         return SDate(self)
 
-    def __str__(self):
-        return _render_time(self.date)
-
-    def __cmp__(x, y):
-        return cmp(x.date, y.date)
+    def fastforward(self, sdate):
+        if self < sdate:
+            self.date = sdate.date
+            self._fixdate()
 
 
 class Person:
@@ -172,10 +178,23 @@ def read_tasks(prefix, lines):
     out = []
     while lines:
         (dot, pre, text, post) = re.match(r'(\.?)(\s*)(.*)(\s*)', 
-                                     lines[-1]).groups(0)
+                                     lines[-1]).groups()
         if not text:
             lines.pop()
             continue
+        if text.startswith('#'):
+            g = re.match(r'#date(\s+(\S+))?\s+(\d\d\d\d-\d\d-\d\d)', text)
+            if g:
+                (junk, user, date) = g.groups()
+                sdate = SDate(date)
+                if user:
+                    p = people.get(user.lower())
+                    if p: p.date.fastforward(sdate)
+                else:
+                    for p in people_unique:
+                        p.date.fastforward(sdate)
+                lines.pop()
+                continue
         if not pre.startswith(prefix):
             break
         elif len(pre) > len(prefix):
@@ -253,7 +272,8 @@ def print_pretty():
 
 
 def print_pretty_totals():
-    print '%-20s %10s %10s %10s' % ('', 'Estimate', 'Elapsed', 'Remain')
+    print '%-20s %10s %10s %10s  %-10s' % ('', 'Estimate',
+                                         'Elapsed', 'Remain', 'Date')
     mr = 0
     mrn = 'None'
     for p in sorted(people_unique, cmp = lambda a,b: int(b.remain() - a.remain())):
@@ -261,8 +281,9 @@ def print_pretty_totals():
             mr = p.remain()
             mrn = p.name
         if p.remain() or p.time_queued:
-            print '%-20s %9.1fw %9.1fw %9.1fw' % \
-                (p.name, p.time_queued/40.0, p.time_done/40.0, p.remain()/40.0)
+            print '%-20s %9.1fw %9.1fw %9.1fw  %10s' % \
+                (p.name, p.time_queued/40.0, p.time_done/40.0, p.remain()/40.0,
+                 p.date)
 
     print '\nCritical path: %s (%.2f days)' % (mrn, mr/8)
 
