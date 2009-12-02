@@ -2,10 +2,16 @@
 import sys, re, time
 
 unitmap = dict(w=40, d=8, h=1, m=1./60, s=1./60/60)
+DAY = 24.0*60*60
+WEEK = 7.0*DAY
+
+def _parse_date(s):
+    return time.mktime(time.strptime(str(s), '%Y-%m-%d'))
 
 
 def _today():
-    return int(time.time() / 3600 / 24) * 3600 * 24
+    lt = time.localtime(time.time())
+    return time.mktime((lt[0],lt[1],lt[2],0,0,0,0,0,0))
 today = _today()
 
 
@@ -22,19 +28,55 @@ def _render_est(e):
         return '%.1fh' % e
 
 
+class SDate:
+    def __init__(self, start):
+        self.date = _parse_date(start)
+
+    def _fixdate(self):
+        while 1:
+            (y,m,d,h,m,s,wday,yday,isdst) = time.localtime(self.date)
+            if wday == 5 or wday == 6:
+                self.date += DAY
+            else:
+                break
+
+    def add(self, days):
+        # print 'adding %g days to %s' % (days, self)
+        assert(days < 10000)
+        assert(days >= 0)
+        while days > 40:  # fast forward a week at a time
+            self.date += WEEK
+            days -= 40
+        while days >= 1:
+            self.date += DAY
+            self._fixdate()
+            days -= 1
+        self.date += days*DAY
+        self._fixdate()
+        # print '  result: %s' % self
+
+    def copy(self):
+        return SDate(self)
+
+    def __str__(self):
+        return _render_time(self.date)
+
+
 class Person:
     def __init__(self, name):
         self.name = name
-        self.date = time.mktime(time.strptime('1970-01-01', '%Y-%m-%d'))
+        self.date = SDate('1970-01-01')
         self.time_queued = 0
         self.time_done = 0
 
     def __str__(self):
         return self.name
 
-    def addtime(self, t):
-        self.time_queued += t
-        # FIXME: update date
+    def addtime(self, hestimate, helapsed):
+        self.time_queued += hestimate or 0
+        self.time_done += helapsed or 0
+        remain = (hestimate or 0) - (helapsed or 0)
+        self.date.add(remain/8.0)
 
     def addcompleted(self, t):
         # FIXME: this isn't what we'll do eventually
@@ -47,6 +89,7 @@ nobody = Person('-Unassigned-')
 people = {nobody.name: nobody}
 people_unique = [nobody]
 
+
 class Task:
     def __init__(self):
         self.parent = None
@@ -57,6 +100,7 @@ class Task:
         self.elapsed = 0
         self.subtasks = []
         self.donedate = None
+        self.duedate = None
 
     def __str__(self):
         s = ''
@@ -73,6 +117,8 @@ class Task:
             s += ' (elapsed:%s)' % _render_est(self.elapsed)
         if self.subtasks:
             s += ' (total:%s)' % _render_est(self.total())
+        if self.duedate:
+            s += ' (due:%s)' % self.duedate
         #if self.note:
         #    s += ' {%s}' % self.note
         return s
@@ -98,9 +144,9 @@ class Task:
 
     def linearize(self):
         for t in self.subtasks:
-            yield t
             for tt in t.linearize():
                 yield tt
+            yield t
 
     def remain(self):
         return (self.estimate or 0) - self.elapsed
@@ -241,12 +287,10 @@ for t in tasks:
 for t in root.linearize():
     if (t.elapsed or t.estimate) and not t.owner:
         t.owner = nobody
-    if t.elapsed:
-        t.owner.addcompleted(t.elapsed)
-    if t.estimate:
-        t.owner.addtime(t.estimate)
+    if t.owner:
+        t.owner.addtime(t.estimate, t.elapsed)
+    t.duedate = t.owner and t.owner.date.copy() or SDate('1970-01-01')
 
-
-#print_pretty()
-#print_pretty_totals()
-print_csv()
+print_pretty()
+print_pretty_totals()
+#print_csv()

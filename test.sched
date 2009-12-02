@@ -1,4 +1,13 @@
 
+ed: big task
+	[3d] a
+		[4d] a.b
+	[1d] c
+	d
+	ap: [5d] e
+		ed: [6d] f
+
+
 EFT
 	talk to customer
 	test import file
