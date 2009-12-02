@@ -1,5 +1,6 @@
 #date 1971-01-01
 #date apenwarr 1972-01-01
+#loadfactor apenwarr 5.0
 
 ed: megatask
 	hf: [1d] smallish

@@ -74,6 +74,7 @@ class SDate:
 class Person:
     def __init__(self, name):
         self.name = name
+        self.loadfactor = 1.0
         self.date = SDate('1970-01-01')
         self.time_queued = 0
         self.time_done = 0
@@ -82,14 +83,11 @@ class Person:
         return self.name
 
     def addtime(self, hestimate, helapsed):
+        lf = self.loadfactor
         self.time_queued += hestimate or 0
         self.time_done += helapsed or 0
-        remain = (hestimate or 0) - (helapsed or 0)
+        remain = (hestimate or 0)*lf - (helapsed or 0)*lf
         self.date.add(remain/8.0)
-
-    def addcompleted(self, t):
-        # FIXME: this isn't what we'll do eventually
-        self.time_done += t
 
     def remain(self):
         return self.time_queued - self.time_done
@@ -183,6 +181,9 @@ def read_tasks(prefix, lines):
             lines.pop()
             continue
         if text.startswith('#'):
+            # FIXME: we should be doing the duedate calculation at parse
+            # time, so that the following directives are interpreted at the
+            # right times.  Or maybe store the directives inline as tasks?
             g = re.match(r'#date(\s+(\S+))?\s+(\d\d\d\d-\d\d-\d\d)', text)
             if g:
                 (junk, user, date) = g.groups()
@@ -193,6 +194,18 @@ def read_tasks(prefix, lines):
                 else:
                     for p in people_unique:
                         p.date.fastforward(sdate)
+                lines.pop()
+                continue
+            g = re.match(r'#loadfactor(\s+(\S+))?\s+(\d+\.?\d*)', text)
+            if g:
+                (junk, user, loadfactor_s) = g.groups()
+                loadfactor = float(loadfactor_s)
+                if user:
+                    p = people.get(user.lower())
+                    if p: p.loadfactor = loadfactor
+                else:
+                    for p in people_unique:
+                        p.loadfactor = loadfactor
                 lines.pop()
                 continue
         if not pre.startswith(prefix):
