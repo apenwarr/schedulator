@@ -4,7 +4,7 @@ import schedulator
 
 root= schedulator.Schedule(sys.stdin)
 
-print 'Person,Task,,,,,,,,,,Remain (days),,,,,,,,,'
+print 'Person,Task,,,,,,,,,,Due,,,,,,,,,'
 for t in root.linearize():
     depth = t.depth()-1
     before = ['']*depth
@@ -12,4 +12,4 @@ for t in root.linearize():
     title = re.sub(',', ';', t.title)
     print ','.join([t.owner and t.owner.name or ''] +
                    before + [title] + after + 
-                   before + ['%.1f' % (t.total()/8.0)] + after)
+                   before + [str(t.duedate)] + after)

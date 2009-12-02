@@ -148,11 +148,14 @@ class Task:
             return self.parent.depth() + 1
         return 0
 
-    def linearize(self):
+    def linearize(self, parent_after_children = 0):
         for t in self.subtasks:
-            for tt in t.linearize():
+            if not parent_after_children:
+                yield t
+            for tt in t.linearize(parent_after_children):
                 yield tt
-            yield t
+            if parent_after_children:
+                yield t
 
     def remain(self):
         return (self.estimate or 0) - self.elapsed
@@ -170,12 +173,22 @@ class Task:
                 mindate = t.duedate
         self.duedate = mindate.copy()
 
+def _expand(tabtext):
+    out = ''
+    for c in tabtext:
+        if c == '\t':
+            nextstop = (len(out)+8)/8*8
+            out += ' ' * (nextstop-len(out))
+        else:
+            out += c
+    return out
 
 def read_tasks(prefix, lines):
     out = []
     while lines:
         (dot, pre, text, post) = re.match(r'(\.?)(\s*)(.*)(\s*)', 
                                      lines[-1]).groups()
+        pre = _expand(pre)
         if not text:
             lines.pop()
             continue
@@ -285,7 +298,7 @@ class Schedule(Task):
         for t in tasks:
             self.add(t)
 
-        for t in self.linearize():
+        for t in self.linearize(parent_after_children=1):
             if (t.elapsed or t.estimate) and not t.owner:
                 t.owner = nobody
             if t.owner:
