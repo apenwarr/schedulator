@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import sys, re, time
 
 unitmap = dict(w=40, d=8, h=1, m=1./60, s=1./60/60)
@@ -269,50 +268,6 @@ def read_tasks(prefix, lines):
     return out
 
 
-def dump(prefix, t):
-    print '%s%s%s' % (t.donedate and '.' or '', prefix, t)
-    if t.note:
-        for l in t.note.split('\n'):
-            print '%s        %s' % (prefix, l)
-    for sub in t.subtasks:
-        dump(prefix+'    ', sub)
-
-
-def print_pretty():
-    for t in tasks:
-        dump('', t)
-        print
-
-
-def print_pretty_totals():
-    print '%-20s %10s %10s %10s  %-10s' % ('', 'Estimate',
-                                         'Elapsed', 'Remain', 'Date')
-    mr = 0
-    mrn = 'None'
-    for p in sorted(people_unique, cmp = lambda a,b: int(b.remain() - a.remain())):
-        if p.remain() > mr:
-            mr = p.remain()
-            mrn = p.name
-        if p.remain() or p.time_queued:
-            print '%-20s %9.1fw %9.1fw %9.1fw  %10s' % \
-                (p.name, p.time_queued/40.0, p.time_done/40.0, p.remain()/40.0,
-                 p.date)
-
-    print '\nCritical path: %s (%.2f days)' % (mrn, mr/8)
-
-
-def print_csv():
-    print 'Person,Task,,,,,,,,,,Remain (days),,,,,,,,,'
-    for t in root.linearize():
-        depth = t.depth()-1
-        before = ['']*depth
-        after = ['']*(9-depth)
-        title = re.sub(',', ';', t.title)
-        print ','.join([t.owner and t.owner.name or ''] +
-                       before + [title] + after + 
-                       before + ['%.1f' % (t.total()/8.0)] + after)
-
-
 for line in open('users'):
     names = line.split()
     if names and names[0]:
@@ -321,20 +276,18 @@ for line in open('users'):
         for name in names:
             people[name.lower()] = p
 
-lines = sys.stdin.readlines()
-lines.reverse()
-root = Task()
-tasks = read_tasks('', lines)
-for t in tasks:
-    root.add(t)
+class Schedule(Task):
+    def __init__(self, f):
+        Task.__init__(self)
+        lines = f.readlines()
+        lines.reverse()
+        tasks = read_tasks('', lines)
+        for t in tasks:
+            self.add(t)
 
-for t in root.linearize():
-    if (t.elapsed or t.estimate) and not t.owner:
-        t.owner = nobody
-    if t.owner:
-        t.owner.addtime(t.estimate, t.elapsed)
-    t.set_duedate()
-
-print_pretty()
-print_pretty_totals()
-#print_csv()
+        for t in self.linearize():
+            if (t.elapsed or t.estimate) and not t.owner:
+                t.owner = nobody
+            if t.owner:
+                t.owner.addtime(t.estimate, t.elapsed)
+            t.set_duedate()
