@@ -61,6 +61,9 @@ class SDate:
     def __str__(self):
         return _render_time(self.date)
 
+    def __cmp__(x, y):
+        return cmp(x.date, y.date)
+
 
 class Person:
     def __init__(self, name):
@@ -156,6 +159,13 @@ class Task:
         for t in self.subtasks:
             tt += t.total()
         return tt
+
+    def set_duedate(self):
+        mindate = self.owner and self.owner.date or SDate('1970-01-01')
+        for t in self.subtasks:
+            if t.duedate > mindate:
+                mindate = t.duedate
+        self.duedate = mindate.copy()
 
 
 def read_tasks(prefix, lines):
@@ -289,7 +299,7 @@ for t in root.linearize():
         t.owner = nobody
     if t.owner:
         t.owner.addtime(t.estimate, t.elapsed)
-    t.duedate = t.owner and t.owner.date.copy() or SDate('1970-01-01')
+    t.set_duedate()
 
 print_pretty()
 print_pretty_totals()

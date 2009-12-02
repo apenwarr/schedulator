@@ -1,4 +1,11 @@
 
+ed: megatask
+	hf: [1d] smallish
+	ap: [2d] bigger
+	lk: [3d] biggest
+	
+ed: upper [1d]
+
 ed: big task
 	[3d] a
 		[4d] a.b
