@@ -14,11 +14,13 @@ def _today():
 today = _today()
 
 
-def _render_time(t):
+def render_time(t):
     return time.strftime('%Y-%m-%d', time.localtime(t))
 
 
-def _render_est(e):
+def render_est(e):
+    if not e:
+        return ''
     if e >= 60:
         return '%.1fw' % (e/40.0)
     if e >= 16:
@@ -33,7 +35,7 @@ class SDate:
         self._fixdate()
 
     def __str__(self):
-        return _render_time(self.date)
+        return render_time(self.date)
 
     def __cmp__(x, y):
         return cmp(x.date, y.date)
@@ -116,13 +118,13 @@ class Task:
         if self.owner:
             s += ' (owner:%s)' % self.owner
         if self.donedate:
-            s += ' (done:%s)' % _render_time(self.donedate)
+            s += ' (done:%s)' % render_time(self.donedate)
         if self.estimate != None:
-            s += ' (est:%s)' % _render_est(self.estimate)
+            s += ' (est:%s)' % render_est(self.estimate)
         if self.elapsed:
-            s += ' (elapsed:%s)' % _render_est(self.elapsed)
+            s += ' (elapsed:%s)' % render_est(self.elapsed)
         if self.subtasks:
-            s += ' (total:%s)' % _render_est(self.total())
+            s += ' (total:%s)' % render_est(self.total_remain())
         if self.duedate:
             s += ' (due:%s)' % self.duedate
         #if self.note:
@@ -160,10 +162,22 @@ class Task:
     def remain(self):
         return (self.estimate or 0) - self.elapsed
 
-    def total(self):
+    def total_estimate(self):
+        tt = self.estimate or 0
+        for t in self.subtasks:
+            tt += t.total_estimate()
+        return tt
+
+    def total_elapsed(self):
+        tt = self.elapsed or 0
+        for t in self.subtasks:
+            tt += t.total_elapsed()
+        return tt
+
+    def total_remain(self):
         tt = self.remain()
         for t in self.subtasks:
-            tt += t.total()
+            tt += t.total_remain()
         return tt
 
     def set_duedate(self):

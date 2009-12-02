@@ -1,0 +1,11 @@
+{% block main %}
+<html>
+<head><title>{{title}}</title></body>
+<body>
+  <h1>{{title}}</h1>
+  {% block content %}
+    Hello, world
+  {% end %}
+</body>
+</html>
+{% end %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <table>
+      <tr>
+       	  <th>Owner</th>
+ 	  <th>Task</th>
+ 	  <th>CurrEst</th>
+ 	  <th>Elapsed</th>
+ 	  <th>Remain</th>
+ 	  <th>Due</th>
+      </tr>
+      {% for t in tasks.linearize() %}
+          <tr>
+	    <td>{{t.owner and t.owner.name or ''}}</td>
+ 	    <td>
+   	        {% for i in range(t.depth()*8) %}&nbsp;{% end %}
+ 	    	{{t.title}}
+ 	    </td>
+ 	    <td>{{render_est(t.total_estimate())}}</td>
+ 	    <td>{{render_est(t.total_elapsed())}}</td>
+ 	    <td>{{render_est(t.total_remain())}}</td>
+ 	    <td>{{t.duedate}}</td>
+	  </tr>
+      {% end %}
+  </table>
+{% end %}
