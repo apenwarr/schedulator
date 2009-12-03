@@ -15,6 +15,15 @@
 	}
 	return false;
     }
+
+    $(function() {
+        $('#schedule tr').each(function() {
+	    $(this).addClass("collapsed");
+	    if (!$(this).hasClass("depth-1")) {
+	        $(this).hide();
+	    }
+	});
+    });
 </script>
 
 <style>
