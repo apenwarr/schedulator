@@ -193,6 +193,9 @@ class Task:
                 mindate = t.duedate
         self.duedate = mindate.copy()
 
+    def late(self):
+        return self.duedate and (self.duedate.date < today);
+
     def contains_user(self, user):
         if not user:
             return 1

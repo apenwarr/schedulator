@@ -4,20 +4,20 @@
         var was_collapsed = row.hasClass("collapsed");
 	var subs = row.nextAll().slice(0,nchildren);
 	if (was_collapsed) {
-	    row.removeClass("collapsed");
+	    row.removeClass("collapsed").addClass("expanded");
 	    subs.addClass("collapsed")
 		.filter('.depth-' + (parentdepth+1))
 		.show();
 	} else {
-	    row.addClass("collapsed");
-	    subs.addClass("collapsed")
+	    row.addClass("collapsed").removeClass("expanded");
+	    subs.addClass("collapsed").removeClass("expanded")
 		.hide();
 	}
 	return false;
     }
 
     $(function() {
-        $('#schedule tr').each(function() {
+        $('#schedule tr td').parent().each(function() {
 	    $(this).addClass("collapsed");
 	    if (!$(this).hasClass("depth-1")) {
 	        $(this).hide();
@@ -39,6 +39,12 @@
   #schedule tr.done td {
       text-decoration: line-through;
       color: #888888;
+  }
+  #schedule tr.late .duedate {
+      color: red;
+  }
+  #schedule tr.expanded .summary {
+      visibility: hidden;
   }
   #schedule .title .ui-icon {
       float: left;
@@ -83,7 +89,7 @@
       </tr>
       {% for t in tasks.linearize() %}
         {% if t.contains_user(user) %}
-          <tr class="depth-{{t.depth()}} {% if t.donedate %}done{% end %}">
+          <tr class="depth-{{t.depth()}} {% if t.donedate %}done{% end %} {% if not t.donedate and t.late() %}late{% end %}">
  	    <td class="title">
 	        {% if t.subtasks %}
 	        <a href="#" onClick="return flip_row(this, {{t.depth()}}, {{t.total_children(user)}});"
@@ -92,12 +98,12 @@
 		{{t.title}}
 		{% end %}
  	    </td>
- 	    <td>{{render_est(t.total_estimate())}}</td>
- 	    <td>{{render_est(t.total_elapsed())}}</td>
- 	    <td>{{render_est(t.total_remain())}}</td>
- 	    <td>{{t.duedate}}</td>
+ 	    <td class="summary">{{render_est(t.total_estimate())}}</td>
+ 	    <td class="summary">{{render_est(t.total_elapsed())}}</td>
+ 	    <td class="summary">{{render_est(t.total_remain())}}</td>
+ 	    <td class="duedate summary">{{t.duedate}}</td>
 	    {% if not user %}
-	    <td>{{t.owner and t.owner.name or ''}}</td>
+	    <td class="summary">{{t.owner and t.owner.name or ''}}</td>
 	    {% end %}
 	  </tr>
 	{% end %}
