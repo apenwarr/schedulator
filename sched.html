@@ -76,6 +76,16 @@
   #schedule .depth-7 .title {
       padding-left: 18em;
   }
+  #schedule .note {
+      display: block;
+      padding-left: 2em;
+      font-size: 90%;
+      font-style: italic;
+      color: #222222;
+  }
+  #schedule .summary {
+      white-space: nowrap;
+  }
 </style>
 
   <table id='schedule'>
@@ -97,6 +107,7 @@
 		{% else %}
 		{{t.title}}
 		{% end %}
+		{% if t.note %}<span class="note">{{t.note}}</span>{% end %}
  	    </td>
  	    <td class="summary">{{render_est(t.total_estimate())}}</td>
  	    <td class="summary">{{render_est(t.total_elapsed())}}</td>
