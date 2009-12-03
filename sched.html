@@ -1,39 +1,95 @@
 <script>
-    flip_row = function(e, nchildren) {
-        var ish = e.is_hidden;
-	ish = !ish;
-	e.is_hidden = ish;
-	$(e).closest('tr').nextAll().slice(0,nchildren+1).toggle(!ish);
+    flip_row = function(e, parentdepth, nchildren) {
+	var row = $(e).closest('tr')
+        var was_collapsed = row.hasClass("collapsed");
+	var subs = row.nextAll().slice(0,nchildren);
+	if (was_collapsed) {
+	    row.removeClass("collapsed");
+	    subs.addClass("collapsed")
+		.filter('.depth-' + (parentdepth+1))
+		.show();
+	} else {
+	    row.addClass("collapsed");
+	    subs.addClass("collapsed")
+		.hide();
+	}
+	return false;
     }
 </script>
 
-  <table>
+<style>
+  #schedule {
+      width: 90%;
+  }
+  #schedule th {
+      text-align: left;
+  }
+  #schedule tr:hover {
+      background: #dddddd;
+  }
+  #schedule tr.done td {
+      text-decoration: line-through;
+      color: #888888;
+  }
+  #schedule .title .ui-icon {
+      float: left;
+      margin-left: -20px;
+      margin-top: 3px;
+      background-position: -48px -16px;
+  }
+  #schedule .collapsed .title .ui-icon {
+      background-position: -32px -16px;
+  }
+  #schedule .depth-1 .title {
+      padding-left: 0em;
+  }
+  #schedule .depth-2 .title {
+      padding-left: 3em;
+  }
+  #schedule .depth-3 .title {
+      padding-left: 6em;
+  }
+  #schedule .depth-4 .title {
+      padding-left: 9em;
+  }
+  #schedule .depth-5 .title {
+      padding-left: 12em;
+  }
+  #schedule .depth-6 .title {
+      padding-left: 15em;
+  }
+  #schedule .depth-7 .title {
+      padding-left: 18em;
+  }
+</style>
+
+  <table id='schedule'>
       <tr>
-       	  {% if not user %}<th>Owner</th>{% end %}
  	  <th>Task</th>
  	  <th>CurrEst</th>
  	  <th>Elapsed</th>
  	  <th>Remain</th>
  	  <th>Due</th>
+       	  {% if not user %}<th>Owner</th>{% end %}
       </tr>
       {% for t in tasks.linearize() %}
         {% if t.contains_user(user) %}
-          <tr>
-	    {% if not user %}
-	    <td>{{t.owner and t.owner.name or ''}}</td>
-	    {% end %}
- 	    <td>
-   	        {% for i in range(t.depth()*8) %}&nbsp;{% end %}
+          <tr class="depth-{{t.depth()}} {% if t.donedate %}done{% end %}">
+ 	    <td class="title">
 	        {% if t.subtasks %}
-	        <a href="#" onClick="flip_row(this, {{t.total_children()}});">x</a>
-		&nbsp;
+	        <a href="#" onClick="return flip_row(this, {{t.depth()}}, {{t.total_children(user)}});"
+		><span class="ui-icon"></span>{{t.title}}</a>
+		{% else %}
+		{{t.title}}
 		{% end %}
- 	    	{{t.title}}
  	    </td>
  	    <td>{{render_est(t.total_estimate())}}</td>
  	    <td>{{render_est(t.total_elapsed())}}</td>
  	    <td>{{render_est(t.total_remain())}}</td>
  	    <td>{{t.duedate}}</td>
+	    {% if not user %}
+	    <td>{{t.owner and t.owner.name or ''}}</td>
+	    {% end %}
 	  </tr>
 	{% end %}
       {% end %}

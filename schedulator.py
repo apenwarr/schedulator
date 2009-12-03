@@ -149,8 +149,12 @@ class Task:
             return self.parent.depth() + 1
         return 0
 
-    def total_children(self):
-        return len(list(self.linearize())) - 1
+    def total_children(self, user):
+        c = 0
+        for p in self.subtasks:
+            if p.contains_user(user):
+                c += 1 + p.total_children(user)
+        return c
 
     def linearize(self, parent_after_children = 0):
         for t in self.subtasks:
