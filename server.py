@@ -3,20 +3,35 @@ import sys, re, os
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
+import tornado.escape
 from tornado.web import HTTPError
 import schedulator
 
+def get_sched():
+    return schedulator.Schedule(open('test.sched'))
+
 class HelloHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("hello world")
+        s = get_sched()
+        userlist = []
+        for p in sorted(s.people_unique):
+            if p.time_queued:
+                userlist.append(p)
+        self.render('index.html',
+                    title='Schedulator',
+                    userlist = userlist)
 
 class UserHandler(tornado.web.RequestHandler):
-    def get(self, username):
-        s = schedulator.Schedule(open('test.sched'))
+    def get(self, username = None):
+        s = get_sched()
+        if username:
+            username = tornado.escape.url_unescape(username)
+        user = username and s.people.get(username.lower()) or None
+        tasks = []
         self.render('sched.html',
-                    title='Schedulator for %s' % username,
-                    tasks=s,
-                    render_est=schedulator.render_est)
+                    tasks = s,
+                    user = user,
+                    render_est = schedulator.render_est)
 
 settings = dict(
     static_path = os.path.join(os.path.dirname(__file__), "static"),
@@ -25,7 +40,8 @@ settings = dict(
 )
 application = tornado.web.Application([
     (r'/', HelloHandler),
-    (r'/user/(\w+)', UserHandler),
+    (r'/data/sched', UserHandler),
+    (r'/data/user/([^/]+)', UserHandler),
 ], **settings)
 
 srv = tornado.httpserver.HTTPServer(application)

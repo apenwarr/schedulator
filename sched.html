@@ -1,17 +1,15 @@
-{% extends "base.html" %}
+<script>
+    flip_row = function(e, nchildren) {
+        var ish = e.is_hidden;
+	ish = !ish;
+	e.is_hidden = ish;
+	$(e).closest('tr').nextAll().slice(0,nchildren+1).toggle(!ish);
+    }
+</script>
 
-{% block content %}
-  <div id='whack'>
-    <ul>
-        <li><a href="/">first tab</a></li>
-        <li><a href="#t2">second tab</a></li>
-    </ul>
-    <div id='t1'>this is some text</div>
-    <div id='t2'>this is other text</div>
-  </div>
   <table>
       <tr>
-       	  <th>Owner</th>
+       	  {% if not user %}<th>Owner</th>{% end %}
  	  <th>Task</th>
  	  <th>CurrEst</th>
  	  <th>Elapsed</th>
@@ -19,10 +17,17 @@
  	  <th>Due</th>
       </tr>
       {% for t in tasks.linearize() %}
+        {% if t.contains_user(user) %}
           <tr>
+	    {% if not user %}
 	    <td>{{t.owner and t.owner.name or ''}}</td>
+	    {% end %}
  	    <td>
    	        {% for i in range(t.depth()*8) %}&nbsp;{% end %}
+	        {% if t.subtasks %}
+	        <a href="#" onClick="flip_row(this, {{t.total_children()}});">x</a>
+		&nbsp;
+		{% end %}
  	    	{{t.title}}
  	    </td>
  	    <td>{{render_est(t.total_estimate())}}</td>
@@ -30,11 +35,6 @@
  	    <td>{{render_est(t.total_remain())}}</td>
  	    <td>{{t.duedate}}</td>
 	  </tr>
+	{% end %}
       {% end %}
   </table>
-  <script type="text/javascript">
-    $(function() {
-        $('#whack').tabs();
-    });
-  </script>
-{% end %}

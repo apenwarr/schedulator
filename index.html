@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div id='whack'>
+    <ul>
+        <li><a href="/data/sched">All</a></li>
+        {% for p in userlist %}
+	    <li><a href="/data/user/{{url_escape(p.name)}}">{{escape(p.name)}}</a></li>
+	{% end %}
+    </ul>
+  </div>
+  <script type="text/javascript">
+    $(function() {
+        $('#whack').tabs();
+    });
+  </script>
+{% end %}

@@ -83,6 +83,9 @@ class Person:
     def __str__(self):
         return self.name
 
+    def __cmp__(self, y):
+        return cmp(self.name, y and y.name or '')
+
     def addtime(self, hestimate, helapsed):
         lf = self.loadfactor
         self.time_queued += hestimate or 0
@@ -92,10 +95,6 @@ class Person:
 
     def remain(self):
         return self.time_queued - self.time_done
-
-nobody = Person('-Unassigned-')
-people = {nobody.name: nobody}
-people_unique = [nobody]
 
 
 class Task:
@@ -150,6 +149,9 @@ class Task:
             return self.parent.depth() + 1
         return 0
 
+    def total_children(self):
+        return len(list(self.linearize())) - 1
+
     def linearize(self, parent_after_children = 0):
         for t in self.subtasks:
             if not parent_after_children:
@@ -187,6 +189,16 @@ class Task:
                 mindate = t.duedate
         self.duedate = mindate.copy()
 
+    def contains_user(self, user):
+        if not user:
+            return 1
+        if self.owner == user:
+            return 1
+        for t in self.subtasks:
+            c = t.contains_user(user)
+            if c: return 1
+        return 0
+
 def _expand(tabtext):
     out = ''
     for c in tabtext:
@@ -197,124 +209,127 @@ def _expand(tabtext):
             out += c
     return out
 
-def read_tasks(prefix, lines):
-    out = []
-    while lines:
-        (dot, pre, text, post) = re.match(r'(\.?)(\s*)(.*)(\s*)', 
-                                     lines[-1]).groups()
-        pre = _expand(pre)
-        if not text:
-            lines.pop()
-            continue
-        if text.startswith('#'):
-            # FIXME: we should be doing the duedate calculation at parse
-            # time, so that the following directives are interpreted at the
-            # right times.  Or maybe store the directives inline as tasks?
-            g = re.match(r'#date(\s+(\S+))?\s+(\d\d\d\d-\d\d-\d\d)', text)
-            if g:
-                (junk, user, date) = g.groups()
-                sdate = SDate(date)
-                if user:
-                    p = people.get(user.lower())
-                    if p: p.date.fastforward(sdate)
-                else:
-                    for p in people_unique:
-                        p.date.fastforward(sdate)
-                lines.pop()
-                continue
-            g = re.match(r'#loadfactor(\s+(\S+))?\s+(\d+\.?\d*)', text)
-            if g:
-                (junk, user, loadfactor_s) = g.groups()
-                loadfactor = float(loadfactor_s)
-                if user:
-                    p = people.get(user.lower())
-                    if p: p.loadfactor = loadfactor
-                else:
-                    for p in people_unique:
-                        p.loadfactor = loadfactor
-                lines.pop()
-                continue
-        if not pre.startswith(prefix):
-            break
-        elif len(pre) > len(prefix):
-            subtasks = read_tasks(pre, lines)
-            is_real = 0
-            for t in subtasks:
-                if (t.estimate or t.elapsed or t.subtasks 
-                    or t.owner or t.donedate):
-                    is_real = 1
-                    break
-            if is_real:
-                for t in subtasks:
-                    out[-1].add(t)
-            else:
-                nl = []
-                for t in subtasks:
-                    subnote = t.title
-                    if t.note:
-                        subnote += '\n' + re.sub(re.compile(r'^', re.M),
-                                                 '\t', t.note)
-                    nl.append(subnote)
-                out[-1].note = '\n'.join(nl)
-        else:
-            lines.pop()
-            t = Task()
-            words = text.split()
-            for (i,word) in enumerate(words):
-                # eg: [5d]
-                # or: [3h/1d]
-                x = re.match(r'\[((\d+(\.\d*)?)([wdhms]?)/)?(\d+(\.\d*)?)([wdhms])\]$', word)
-                if x:
-                    (j1, elnum, j2, elunit, estnum, j3, estunit) \
-                        = x.groups()
-                    if not elunit:
-                        elunit = estunit
-                    if elnum and elunit:
-                        t.elapsed = float(elnum)*unitmap[elunit]
-                    if estnum and estunit:
-                        t.estimate = float(estnum)*unitmap[estunit]
-                    words[i] = ''
-            while words and not words[0]:
-                words = words[1:]
-            if words and (words[0] == '.' or words[0] == 'DONE'):
-                t.donedate = today
-                words = words[1:]
-            if dot and not t.donedate:
-                t.donedate = today
-            isname = words and words[0] and words[0].endswith(':')
-            name = isname and words[0][:-1].lower()
-            if name and people.get(name):
-                t.owner = people.get(name)
-                words = words[1:]
-            t.title = ' '.join(words).strip()
-            if t.elapsed > 0 and t.elapsed == t.estimate and not t.donedate:
-                t.donedate = today
-            if t.donedate and t.estimate:
-                t.elapsed = t.estimate
-            out.append(t)
-    return out
-
-
-for line in open('users'):
-    names = line.split()
-    if names and names[0]:
-        p = Person(names[0])
-        people_unique.append(p)
-        for name in names:
-            people[name.lower()] = p
-
 class Schedule(Task):
     def __init__(self, f):
         Task.__init__(self)
+        self.nobody = Person('-Unassigned-')
+        self.people = {self.nobody.name.lower(): self.nobody}
+        self.people_unique = [self.nobody]
+
+        for line in open('users'):
+            names = line.split()
+            if names and names[0]:
+                p = Person(names[0])
+                self.people_unique.append(p)
+                for name in names:
+                    self.people[name.lower()] = p
+
         lines = f.readlines()
         lines.reverse()
-        tasks = read_tasks('', lines)
+        tasks = self.read_tasks('', lines)
         for t in tasks:
             self.add(t)
 
         for t in self.linearize(parent_after_children=1):
             if (t.elapsed or t.estimate) and not t.owner:
-                t.owner = nobody
+                t.owner = self.nobody
             if t.owner:
                 t.owner.addtime(t.estimate, t.elapsed)
             t.set_duedate()
+
+    def read_tasks(self, prefix, lines):
+        out = []
+        while lines:
+            (dot, pre, text, post) = re.match(r'(\.?)(\s*)(.*)(\s*)', 
+                                         lines[-1]).groups()
+            pre = _expand(pre)
+            if not text:
+                lines.pop()
+                continue
+            if text.startswith('#'):
+                # FIXME: we should be doing the duedate calculation at parse
+                # time, so that the following directives are interpreted at the
+                # right times.  Or maybe store the directives inline as tasks?
+                g = re.match(r'#date(\s+(\S+))?\s+(\d\d\d\d-\d\d-\d\d)', text)
+                if g:
+                    (junk, user, date) = g.groups()
+                    sdate = SDate(date)
+                    if user:
+                        p = self.people.get(user.lower())
+                        if p: p.date.fastforward(sdate)
+                    else:
+                        for p in self.people_unique:
+                            p.date.fastforward(sdate)
+                    lines.pop()
+                    continue
+                g = re.match(r'#loadfactor(\s+(\S+))?\s+(\d+\.?\d*)', text)
+                if g:
+                    (junk, user, loadfactor_s) = g.groups()
+                    loadfactor = float(loadfactor_s)
+                    if user:
+                        p = self.people.get(user.lower())
+                        if p: p.loadfactor = loadfactor
+                    else:
+                        for p in self.people_unique:
+                            p.loadfactor = loadfactor
+                    lines.pop()
+                    continue
+            if not pre.startswith(prefix):
+                break
+            elif len(pre) > len(prefix):
+                subtasks = self.read_tasks(pre, lines)
+                is_real = 0
+                for t in subtasks:
+                    if (t.estimate or t.elapsed or t.subtasks 
+                        or t.owner or t.donedate):
+                        is_real = 1
+                        break
+                if is_real:
+                    for t in subtasks:
+                        out[-1].add(t)
+                else:
+                    nl = []
+                    for t in subtasks:
+                        subnote = t.title
+                        if t.note:
+                            subnote += '\n' + re.sub(re.compile(r'^', re.M),
+                                                     '\t', t.note)
+                        nl.append(subnote)
+                    out[-1].note = '\n'.join(nl)
+            else:
+                lines.pop()
+                t = Task()
+                words = text.split()
+                for (i,word) in enumerate(words):
+                    # eg: [5d]
+                    # or: [3h/1d]
+                    x = re.match(r'\[((\d+(\.\d*)?)([wdhms]?)/)?(\d+(\.\d*)?)([wdhms])\]$', word)
+                    if x:
+                        (j1, elnum, j2, elunit, estnum, j3, estunit) \
+                            = x.groups()
+                        if not elunit:
+                            elunit = estunit
+                        if elnum and elunit:
+                            t.elapsed = float(elnum)*unitmap[elunit]
+                        if estnum and estunit:
+                            t.estimate = float(estnum)*unitmap[estunit]
+                        words[i] = ''
+                while words and not words[0]:
+                    words = words[1:]
+                if words and (words[0] == '.' or words[0] == 'DONE'):
+                    t.donedate = today
+                    words = words[1:]
+                if dot and not t.donedate:
+                    t.donedate = today
+                isname = words and words[0] and words[0].endswith(':')
+                name = isname and words[0][:-1].lower()
+                if name and self.people.get(name):
+                    t.owner = self.people.get(name)
+                    words = words[1:]
+                t.title = ' '.join(words).strip()
+                if t.elapsed > 0 and t.elapsed == t.estimate and not t.donedate:
+                    t.donedate = today
+                if t.donedate and t.estimate:
+                    t.elapsed = t.estimate
+                out.append(t)
+        return out
