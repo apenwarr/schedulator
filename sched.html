@@ -16,14 +16,16 @@
 	return false;
     }
 
+    {% if not user %}
     $(function() {
         $('#schedule tr td').parent().each(function() {
-	    $(this).addClass("collapsed");
+	    $(this).addClass("collapsed").removeClass("expanded");
 	    if (!$(this).hasClass("depth-1")) {
 	        $(this).hide();
 	    }
 	});
     });
+    {% end %}
 </script>
 
 <style>
@@ -99,7 +101,7 @@
       </tr>
       {% for t in tasks.linearize() %}
         {% if t.contains_user(user) %}
-          <tr class="depth-{{t.depth()}} {% if t.donedate %}done{% end %} {% if not t.donedate and t.late() %}late{% end %}">
+          <tr class="depth-{{t.depth()}} {% if t.donedate %}done{% end %} {% if not t.donedate and t.late() %}late{% end %} {% if t.total_children(user) %}expanded{% end %}">
  	    <td class="title">
 	        {% if t.subtasks %}
 	        <a href="#" onClick="return flip_row(this, {{t.depth()}}, {{t.total_children(user)}});"
