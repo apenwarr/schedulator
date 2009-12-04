@@ -12,7 +12,13 @@
   </div>
   <script type="text/javascript">
     $(function() {
-        $('#whack').tabs();
+        $('#whack').tabs({
+	    show: function(ui) {
+	        $('#accordion').accordion({
+		    autoHeight: false
+		});
+	    }
+	});
     });
   </script>
 {% end %}
