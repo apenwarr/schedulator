@@ -53,18 +53,22 @@ class SchedHandler(tornado.web.RequestHandler):
 
 
 class Project:
-    def __init__(self, task, nobody):
+    def __init__(self, task, root):
         self.task = task
         self.title = task.title
         
         datetasks = {}
         owners = {}
+#        for t in root.linearize():
+#            datetasks[str(t.duedate)] = []
         for t in task.linearize():
             if t.estimate:
                 date = str(t.duedate)
                 datetasks[date] = datetasks.get(date, []) + [t]
-                owner = t.owner or nobody
+                owner = t.owner or root.nobody
                 owners[owner.name] = owner
+        for p in root.people_unique:
+            owners[p.name] = p
         self.unique_dates = sorted(datetasks.keys())
         self.date_tasks = datetasks
         self.users = sorted(owners.values())
@@ -89,7 +93,7 @@ class GridHandler(tornado.web.RequestHandler):
     def get(self):
         s = get_sched()
         def tasktitler(t):
-            l = []
+            l = [str(t.duedate)]
             tt = t
             while tt:
                 l.append(tt.title)
@@ -102,7 +106,7 @@ class GridHandler(tornado.web.RequestHandler):
                 l2.append(('&nbsp;'*(i*4)) + e)
             title = '\n'.join(l2)
             return re.sub('"', "'", title)
-        projects = list([Project(t, s.nobody) for t in s.subtasks])
+        projects = list([Project(t, s) for t in s.subtasks])
         #projects.sort(cmp = lambda x,y: cmp(x.task.duedate, y.task.duedate))
         self.render('grids.html',
                     title = 'Schedulator Grid',
