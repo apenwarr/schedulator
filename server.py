@@ -7,10 +7,27 @@ import tornado.escape
 from tornado.web import HTTPError
 import schedulator
 
+
 def get_sched():
     return schedulator.Schedule(open('test.sched'))
 
-class HelloHandler(tornado.web.RequestHandler):
+
+def countify(l):
+    last = None
+    count = 0
+    for i in l:
+        if i == last:
+            count += 1
+        else:
+            if count:
+                yield (last, count)
+            last = i
+            count = 1
+    if count:
+        yield (last, count)
+
+
+class IndexHandler(tornado.web.RequestHandler):
     def get(self):
         s = get_sched()
         userlist = []
@@ -21,7 +38,8 @@ class HelloHandler(tornado.web.RequestHandler):
                     title='Schedulator',
                     userlist = userlist)
 
-class UserHandler(tornado.web.RequestHandler):
+
+class SchedHandler(tornado.web.RequestHandler):
     def get(self, username = None):
         s = get_sched()
         if username:
@@ -33,21 +51,64 @@ class UserHandler(tornado.web.RequestHandler):
                     user = user,
                     render_est = schedulator.render_est)
 
-settings = dict(
-    static_path = os.path.join(os.path.dirname(__file__), "static"),
-    xsrf_cookies = True,
-    debug = 1
-)
-application = tornado.web.Application([
-    (r'/', HelloHandler),
-    (r'/data/sched', UserHandler),
-    (r'/data/user/([^/]+)', UserHandler),
-], **settings)
 
-srv = tornado.httpserver.HTTPServer(application)
-srv.listen(8011)
+class Project:
+    def __init__(self, task, nobody):
+        self.task = task
+        self.title = task.title
+        
+        datetasks = {}
+        owners = {}
+        for t in task.linearize():
+            date = str(t.duedate)
+            datetasks[date] = datetasks.get(date, []) + [t]
+            owner = t.owner or nobody
+            owners[owner.name] = owner
+        self.unique_dates = sorted(datetasks.keys())
+        self.date_tasks = datetasks
+        self.users = sorted(owners.values())
 
-print "Listening on port %s" % srv._socket.getsockname()[1]
+    def years(self):
+        years = list([d[0:4] for d in self.unique_dates])
+        return countify(years)
 
-loop = tornado.ioloop.IOLoop.instance()
-loop.start()
+    def months(self):
+        monthnames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
+        periods = list([d[0:7] for d in self.unique_dates])
+        for (period,count) in countify(periods):
+            yield (monthnames[int(period[5:])-1],count)
+
+    def days(self):
+        for d in self.unique_dates:
+            yield d[8:]
+
+
+class GridHandler(tornado.web.RequestHandler):
+    def get(self):
+        s = get_sched()
+        self.render('grids.html',
+                    title = 'Schedulator Grid',
+                    projects = [Project(t, s.nobody) for t in s.subtasks])
+
+
+if __name__ == "__main__":
+    settings = dict(
+        static_path = os.path.join(os.path.dirname(__file__), "static"),
+        xsrf_cookies = True,
+        debug = 1
+    )
+    application = tornado.web.Application([
+        (r'/', IndexHandler),
+        (r'/chunk/sched', SchedHandler),
+        (r'/chunk/grid', GridHandler),
+        (r'/chunk/user/([^/]+)', SchedHandler),
+    ], **settings)
+
+    srv = tornado.httpserver.HTTPServer(application)
+    srv.listen(8011)
+
+    print "Listening on port %s" % srv._socket.getsockname()[1]
+
+    loop = tornado.ioloop.IOLoop.instance()
+    loop.start()

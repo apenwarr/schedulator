@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .schedgrid th {
+        text-align: left;
+    }
+    .schedgrid td {
+	text-align: center;
+    }
+    .schedgrid .task a {
+        text-decoration: none;
+	color: black;
+	background: #eeeeff;
+    }
+    .schedgrid .task.late a {
+        background: red;
+    }
+    .schedgrid .task.done a {
+        text-decoration: line-through;
+	color: #888888;
+	background: white;
+    }
+    .schedgrid td:hover, .schedgrid td:hover .task a {
+        background: #ffffaa;
+    }
+    .schedgrid td:hover .task a:hover {
+        background: #bbbb00;
+    }
+</style>
+
+<div>
+  <div id='accordion'>
+    {% for project in projects %}
+    <h3><a href="#">{{escape(project.title)}}</a></h3>
+    <div>
+        <table class="schedgrid">
+	    <tr>
+	        <th></th>
+		{% for (year,span) in project.years() %}
+	        <th colspan={{span}}>{{year}}</th>
+		{% end %}
+	    </tr>
+	    <tr>
+	        <th></th>
+		{% for (month,span) in project.months() %}
+	        <th colspan={{span}}>{{month}}</th>
+		{% end %}
+	    </tr>
+	    <tr>
+	        <th></th>
+		{% for day in project.days() %}
+	        <th>{{day}}</th>
+		{% end %}
+	    </tr>
+	    {% for u in project.users %}
+	    <tr>
+	        <td>{{escape(u.name)}}</td>
+	        {% for d in project.unique_dates %}
+		<td>
+		    {% for t in project.date_tasks[d] %}
+		        {% if t.owner == u %}
+			<span class="task {{t.late() and 'late'}} {{t.donedate and 'done'}}"><a
+			href="#" onclick='return false' title="{{escape(t.title)}}">o</a></span>
+			{% end %}
+		    {% end %}
+		</td>
+		{% end %}
+	    </tr>
+	    {% end %}
+	</table>
+    </div>
+    {% end %}
+  </div>
+</div>
+
+<script type="text/javascript">
+  /*  $(function() {
+        $('#accordion').accordion({
+	    fillSpace: true
+	});
+    }); */
+</script>
+{% end %}
