@@ -42,7 +42,7 @@
 <div>
   <div id='accordion'>
     {% for project in projects %}
-    <h3><a href="#">{{escape(project.title)}}</a></h3>
+    <h3><a href="#">{{project.task.duedate}}: {{escape(project.title)}}</a></h3>
     <div>
         <table class="schedgrid">
 	    <tr>
@@ -71,7 +71,8 @@
 		    {% for t in project.date_tasks[d] %}
 		        {% if t.owner == u or (not t.owner) %}
 			<span class="task {{t.late() and 'late' or ''}} {{t.donedate and 'done' or ''}}"><a
-			href="#" onclick='return false' title="{{escape(t.title)}}">o</a></span>
+			href="#" onclick='return false'
+			title="{{tasktitler(t)}}">o</a></span>
 			{% end %}
 		    {% end %}
 		</td>
@@ -83,5 +84,17 @@
     {% end %}
   </div>
 </div>
+
+<script>
+    $(function() {
+        $(".schedgrid a").tooltip({
+	    track: true,
+	    delay: 0,
+	    showURL: false,
+	    showBody: "\n",
+	    fade: 250
+	});
+    });
+</script>
 
 {% end %}

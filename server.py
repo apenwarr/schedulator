@@ -60,10 +60,11 @@ class Project:
         datetasks = {}
         owners = {}
         for t in task.linearize():
-            date = str(t.duedate)
-            datetasks[date] = datetasks.get(date, []) + [t]
-            owner = t.owner or nobody
-            owners[owner.name] = owner
+            if t.estimate:
+                date = str(t.duedate)
+                datetasks[date] = datetasks.get(date, []) + [t]
+                owner = t.owner or nobody
+                owners[owner.name] = owner
         self.unique_dates = sorted(datetasks.keys())
         self.date_tasks = datetasks
         self.users = sorted(owners.values())
@@ -87,9 +88,26 @@ class Project:
 class GridHandler(tornado.web.RequestHandler):
     def get(self):
         s = get_sched()
+        def tasktitler(t):
+            l = []
+            tt = t
+            while tt:
+                l.append(tt.title)
+                tt = tt.parent
+            l.pop()
+            l.pop()
+            l.reverse()
+            l2 = []
+            for i,e in enumerate(l):
+                l2.append(('&nbsp;'*(i*4)) + e)
+            title = '\n'.join(l2)
+            return re.sub('"', "'", title)
+        projects = list([Project(t, s.nobody) for t in s.subtasks])
+        projects.sort(cmp = lambda x,y: cmp(x.task.duedate, y.task.duedate))
         self.render('grids.html',
                     title = 'Schedulator Grid',
-                    projects = [Project(t, s.nobody) for t in s.subtasks])
+                    tasktitler = tasktitler,
+                    projects = projects)
 
 
 if __name__ == "__main__":
