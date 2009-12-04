@@ -123,6 +123,10 @@
       white-space: nowrap;
   }
 </style>
+  
+  {% if user %}
+  <p>Load factor: {{ user.loadfactor }}</p>
+  {% end %}
 
   <table id='schedule'>
       <tr>
