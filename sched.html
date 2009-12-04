@@ -1,4 +1,17 @@
 <script>
+    oddevenize_rows = function() {
+        var rows = $('#schedule tr.shown td').parent();
+	var x = 0;
+	rows.each(function() {
+	    if (x % 4 >= 2) {
+	        $(this).addClass('even').removeClass('odd');
+	    } else {
+	        $(this).addClass('odd').removeClass('even');
+	    }
+	    x++;
+	});
+    }
+
     flip_row = function(e, parentdepth, nchildren) {
 	var row = $(e).closest('tr')
         var was_collapsed = row.hasClass("collapsed");
@@ -7,36 +20,53 @@
 	    row.removeClass("collapsed").addClass("expanded");
 	    subs.addClass("collapsed")
 		.filter('.depth-' + (parentdepth+1))
+		.addClass("shown")
 		.show();
 	} else {
 	    row.addClass("collapsed").removeClass("expanded");
 	    subs.addClass("collapsed").removeClass("expanded")
+	        .removeClass("shown")
 		.hide();
 	}
+	oddevenize_rows();
 	return false;
     }
-
-    {% if not user %}
+    
     $(function() {
-        $('#schedule tr td').parent().each(function() {
+        var rows = $('#schedule tr td').parent();
+        {% if not user %}
+        rows.each(function() {
 	    $(this).addClass("collapsed").removeClass("expanded");
 	    if (!$(this).hasClass("depth-1")) {
-	        $(this).hide();
+	        $(this).removeClass("shown").hide();
+	    } else {
+	        $(this).addClass("shown").show();
 	    }
 	});
+	{% else %}
+	rows.addClass("shown").show();
+	{% end %}
+	oddevenize_rows();
     });
-    {% end %}
 </script>
 
 <style>
   #schedule {
       width: 90%;
+      border-spacing: 0px;
+      font-size: 12pt;
   }
   #schedule th {
       text-align: left;
   }
-  #schedule tr:hover {
-      background: #dddddd;
+  #schedule tr.odd {
+      background: #eeeeee;
+  }
+  #schedule tr.even {
+      background: #e4e4e4;
+  }
+  #schedule tr a:hover {
+      background: #ccdddd;
   }
   #schedule tr.done td {
       text-decoration: line-through;
@@ -45,14 +75,19 @@
   #schedule tr.late .duedate {
       color: red;
   }
-  #schedule tr.expanded .summary {
-      visibility: hidden;
+  #schedule tr.expanded td.summary {
+      xvisibility: hidden;
+      text-indent: -99999px;
+      overflow: hidden;
   }
   #schedule .title .ui-icon {
       float: left;
       margin-left: -20px;
       margin-top: 3px;
       background-position: -48px -16px;
+  }
+  #schedule .narrow {
+      width: 5em;
   }
   #schedule .collapsed .title .ui-icon {
       background-position: -32px -16px;
@@ -111,12 +146,12 @@
 		{% end %}
 		{% if t.note %}<span class="note">{{t.note}}</span>{% end %}
  	    </td>
- 	    <td class="summary">{{render_est(t.total_estimate())}}</td>
- 	    <td class="summary">{{render_est(t.total_elapsed())}}</td>
- 	    <td class="summary">{{render_est(t.total_remain())}}</td>
- 	    <td class="duedate summary">{{t.duedate}}</td>
+ 	    <td class="summary narrow">{{render_est(t.total_estimate())}}</td>
+ 	    <td class="summary narrow">{{render_est(t.total_elapsed())}}</td>
+ 	    <td class="summary narrow">{{render_est(t.total_remain())}}</td>
+ 	    <td class="summary narrow duedate">{{t.duedate}}</td>
 	    {% if not user %}
-	    <td class="summary">{{t.owner and t.owner.name or ''}}</td>
+	    <td class="summary narrow">{{t.owner and t.owner.name or ''}}</td>
 	    {% end %}
 	  </tr>
 	{% end %}
