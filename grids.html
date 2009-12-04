@@ -5,13 +5,23 @@
     .schedgrid th {
         text-align: left;
     }
+    .schedgrid tr.days {
+        font-size: small;
+    }
     .schedgrid td {
 	text-align: center;
+    }
+    .schedgrid .task {
+        display: block;
+	float: left;
+	line-height: 85%;
+	margin: 0px;
+	padding: 0px;
+	overflow: hidden;
     }
     .schedgrid .task a {
         text-decoration: none;
 	color: black;
-	background: #eeeeff;
     }
     .schedgrid .task.late a {
         background: red;
@@ -19,9 +29,8 @@
     .schedgrid .task.done a {
         text-decoration: line-through;
 	color: #888888;
-	background: white;
     }
-    .schedgrid td:hover, .schedgrid td:hover .task a {
+    .schedgrid td:hover {
         background: #ffffaa;
     }
     .schedgrid td:hover .task a:hover {
@@ -47,7 +56,7 @@
 	        <th colspan={{span}}>{{month}}</th>
 		{% end %}
 	    </tr>
-	    <tr>
+	    <tr class="days">
 	        <th></th>
 		{% for day in project.days() %}
 	        <th>{{day}}</th>
@@ -55,12 +64,12 @@
 	    </tr>
 	    {% for u in project.users %}
 	    <tr>
-	        <td>{{escape(u.name)}}</td>
+	        <th>{{escape(u.name)}}</th>
 	        {% for d in project.unique_dates %}
 		<td>
 		    {% for t in project.date_tasks[d] %}
 		        {% if t.owner == u %}
-			<span class="task {{t.late() and 'late'}} {{t.donedate and 'done'}}"><a
+			<span class="task {{t.late() and 'late' or ''}} {{t.donedate and 'done' or ''}}"><a
 			href="#" onclick='return false' title="{{escape(t.title)}}">o</a></span>
 			{% end %}
 		    {% end %}
