@@ -103,7 +103,7 @@ class GridHandler(tornado.web.RequestHandler):
             title = '\n'.join(l2)
             return re.sub('"', "'", title)
         projects = list([Project(t, s.nobody) for t in s.subtasks])
-        projects.sort(cmp = lambda x,y: cmp(x.task.duedate, y.task.duedate))
+        #projects.sort(cmp = lambda x,y: cmp(x.task.duedate, y.task.duedate))
         self.render('grids.html',
                     title = 'Schedulator Grid',
                     tasktitler = tasktitler,
