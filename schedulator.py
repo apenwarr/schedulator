@@ -86,6 +86,9 @@ class Person:
     def __cmp__(self, y):
         return cmp(self.name, y and y.name or '')
 
+    def __hash__(self):
+        return hash(self.name)
+
     def addtime(self, hestimate, helapsed):
         lf = self.loadfactor
         self.time_queued += hestimate or 0
@@ -222,13 +225,11 @@ class Schedule(Task):
         Task.__init__(self)
         self.nobody = Person('-Unassigned-')
         self.people = {self.nobody.name.lower(): self.nobody}
-        self.people_unique = [self.nobody]
 
         for line in open('users'):
             names = line.split()
             if names and names[0]:
                 p = Person(names[0])
-                self.people_unique.append(p)
                 for name in names:
                     self.people[name.lower()] = p
 
@@ -266,7 +267,7 @@ class Schedule(Task):
                         p = self.people.get(user.lower())
                         if p: p.date.fastforward(sdate)
                     else:
-                        for p in self.people_unique:
+                        for p in set(self.people.values()):
                             p.date.fastforward(sdate)
                     lines.pop()
                     continue
@@ -278,7 +279,7 @@ class Schedule(Task):
                         p = self.people.get(user.lower())
                         if p: p.loadfactor = loadfactor
                     else:
-                        for p in self.people_unique:
+                        for p in set(self.people.values()):
                             p.loadfactor = loadfactor
                     lines.pop()
                     continue

@@ -17,12 +17,12 @@ def print_pretty(tasks):
         print
 
 
-def print_pretty_totals():
+def print_pretty_totals(sched):
     print '%-20s %10s %10s %10s  %-10s' % ('', 'Estimate',
                                          'Elapsed', 'Remain', 'Date')
     mr = 0
     mrn = 'None'
-    for p in sorted(schedulator.people_unique,
+    for p in sorted(set(sched.people.values()),
                     cmp = lambda a,b: int(b.remain() - a.remain())):
         if p.remain() > mr:
             mr = p.remain()
@@ -38,4 +38,4 @@ def print_pretty_totals():
 sched = schedulator.Schedule(sys.stdin)
 
 print_pretty(sched.subtasks)
-print_pretty_totals()
+print_pretty_totals(sched)

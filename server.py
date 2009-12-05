@@ -31,7 +31,7 @@ class IndexHandler(tornado.web.RequestHandler):
     def get(self):
         s = get_sched()
         userlist = []
-        for p in sorted(s.people_unique):
+        for p in sorted(set(s.people.values())):
             if p.time_queued:
                 userlist.append(p)
         self.render('index.html',
@@ -85,7 +85,7 @@ class Project:
                 datetasks[date] = datetasks.get(date, []) + [t]
                 owner = t.owner or root.nobody
                 owners[owner.name] = owner
-        for p in root.people_unique:
+        for p in set(root.people.values()):
             owners[p.name] = p
         self.unique_dates = sorted(datetasks.keys())
         self.date_tasks = datetasks
