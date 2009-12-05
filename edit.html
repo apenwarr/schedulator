@@ -6,17 +6,58 @@
     #schededit textarea {
         width: 100%;
 	height: 100%;
+	font-family: Andale Mono; Courier New; Courier; mono;
+	font-size: 11pt;
     }
 </style>
 
 <div id='schededit'>
     <form>
-        <textarea id='schedtext'>{{text}}</textarea>
+        <textarea id='schedtext' onkeydown='return fix_tabs(event, this);'
+	>{{text}}</textarea>
     </form>
 </div>
 
 <script src="http://mobwrite3.appspot.com/static/compressed_form.js"></script>
 <script>
+
+function insert_chars(field, s)
+{
+    if (document.selection) // IE
+    {
+        field.focus();
+        sel = document.selection.createRange();
+        sel.text = s;
+    }
+    else if (field.selectionStart || field.selectionStart == '0') {
+        var spos = field.selectionStart;
+        var epos = field.selectionEnd;
+	var oldtop = field.scrollTop;
+       
+        field.value = 
+	    field.value.substring(0, spos) +
+	    s +
+	    field.value.substring(epos, field.value.length);
+       
+        field.selectionStart = spos + s.length;
+        field.selectionEnd = epos + s.length;
+       
+        if (oldtop) field.scrollTop = oldtop;
+    } else {
+        field.value += s;
+    }
+}
+
+function fix_tabs(evt, control)
+{
+    key = evt.keyCode ? evt.keyCode : evt.which ? evt.which : evt.charCode;
+    if (key == 9) {
+        insert_chars(control, '\t');
+        return false;
+    } else {
+        return key;
+    }
+}
 
 var oldtext = '';
 
