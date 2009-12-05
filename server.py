@@ -39,6 +39,24 @@ class IndexHandler(tornado.web.RequestHandler):
                     userlist = userlist)
 
 
+class EditHandler(tornado.web.RequestHandler):
+    def get(self):
+        if os.path.exists('.schedid'):
+            id = open('.schedid').read().strip()
+        else:
+            id = 'x' + open('/dev/urandom').read(32).encode('hex')
+            open('.schedid', 'w').write(id)
+        self.render('edit.html',
+                    hexcode = id,
+                    text = open('test.sched').read())
+
+    def post(self):
+        t = str(self.request.body)
+        open('test.sched', 'w').write(t)
+        self.write('ok')
+        print 'Updated schedule (%s).' % repr(t[:40])
+
+
 class SchedHandler(tornado.web.RequestHandler):
     def get(self, username = None):
         s = get_sched()
@@ -117,11 +135,12 @@ class GridHandler(tornado.web.RequestHandler):
 if __name__ == "__main__":
     settings = dict(
         static_path = os.path.join(os.path.dirname(__file__), "static"),
-        xsrf_cookies = True,
+        # xsrf_cookies = True, # FIXME?
         debug = 1
     )
     application = tornado.web.Application([
         (r'/', IndexHandler),
+        (r'/chunk/edit', EditHandler),
         (r'/chunk/sched', SchedHandler),
         (r'/chunk/grid', GridHandler),
         (r'/chunk/user/([^/]+)', SchedHandler),

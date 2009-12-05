@@ -1,0 +1,53 @@
+<style>
+    #schededit form {
+        width: 100%;
+	height: 90%;
+    }
+    #schededit textarea {
+        width: 100%;
+	height: 100%;
+    }
+</style>
+
+<div id='schededit'>
+    <form>
+        <textarea id='schedtext'>{{text}}</textarea>
+    </form>
+</div>
+
+<script src="http://mobwrite3.appspot.com/static/compressed_form.js"></script>
+<script>
+
+var oldtext = '';
+
+sched_post = function() {
+    var v = $('#schedtext').val();
+    if (v != oldtext) {
+        $.post('/chunk/edit', v);
+	oldtext = v;
+    }
+};
+
+sched_post_timer = function() {
+    sched_post();
+    setTimeout(sched_post_timer, 5000);
+};
+
+$(function() {
+    $('#schededit').height($(window).height()*.8);
+    
+    oldtext = $('#schedtext').val();
+    setTimeout(sched_post_timer, 5000);
+    $('#schedtext').blur(function() {
+        sched_post();
+    });
+});
+
+setTimeout(function() {
+        mobwrite.syncGateway = 'http://mobwrite3.appspot.com/scripts/q.py';
+	mobwrite.idPrefix = '{{hexcode}}';
+	mobwrite.share('schedtext');
+}, 1000); // FIXME: why does this need to be delayed?
+    
+
+</script>
