@@ -2,6 +2,14 @@
 #date apenwarr 1972-01-01
 #loadfactor apenwarr 5.0
 
+#alias Avery ap apenwarr
+#alias Luke lk lkosewsk
+#alias Eduardo ed
+#alias Wooi wooik
+#alias Hugh hughf hf
+#alias Rodrigo rf
+#alias Bill billh williamh wdheughan wheughan
+
 ed: megatask
 	hf: [1d] smallish
 	ap: [2d] bigger

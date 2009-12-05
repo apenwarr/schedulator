@@ -226,13 +226,6 @@ class Schedule(Task):
         self.nobody = Person('-Unassigned-')
         self.people = {self.nobody.name.lower(): self.nobody}
 
-        for line in open('users'):
-            names = line.split()
-            if names and names[0]:
-                p = Person(names[0])
-                for name in names:
-                    self.people[name.lower()] = p
-
         lines = f.readlines()
         lines.reverse()
         tasks = self.read_tasks('', lines)
@@ -245,6 +238,13 @@ class Schedule(Task):
             if t.owner:
                 t.owner.addtime(t.estimate, t.elapsed)
             t.set_duedate()
+
+    def make_person(self, name):
+        p = self.people.get(name.lower())
+        if not p:
+            p = Person(name)
+            self.people[name.lower()] = p
+        return p
 
     def read_tasks(self, prefix, lines):
         out = []
@@ -264,7 +264,7 @@ class Schedule(Task):
                     (junk, user, date) = g.groups()
                     sdate = SDate(date)
                     if user:
-                        p = self.people.get(user.lower())
+                        p = self.make_person(user)
                         if p: p.date.fastforward(sdate)
                     else:
                         for p in set(self.people.values()):
@@ -276,11 +276,20 @@ class Schedule(Task):
                     (junk, user, loadfactor_s) = g.groups()
                     loadfactor = float(loadfactor_s)
                     if user:
-                        p = self.people.get(user.lower())
+                        p = self.make_person(user)
                         if p: p.loadfactor = loadfactor
                     else:
                         for p in set(self.people.values()):
                             p.loadfactor = loadfactor
+                    lines.pop()
+                    continue
+                g = re.match(r'#alias\s+(.*)', text)
+                if g:
+                    names = g.groups()[0].split()
+                    if names and names[0]:
+                        p = self.make_person(names[0])
+                        for name in names:
+                            self.people[name.lower()] = p
                     lines.pop()
                     continue
             if not pre.startswith(prefix):
