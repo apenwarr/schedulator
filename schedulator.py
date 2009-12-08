@@ -41,16 +41,14 @@ class SDate:
         return cmp(x.date, y.date)
 
     def _is_vacation_day(self):
-        while self.vacations and self.vacations[0][1] < self:
+        while self.vacations and self.vacations[0][1].date+DAY <= self.date:
             self.vacations = self.vacations[1:]
-        return self.vacations and self.vacations[0][0] <= self
+        return self.vacations and self.vacations[0][0].date <= self.date
 
     def _fixdate(self):
         while 1:
             (y,m,d,h,m,s,wday,yday,isdst) = time.localtime(self.date)
-            if wday == 5 or wday == 6:
-                self.date += DAY
-            elif self._is_vacation_day():
+            if wday == 5 or wday == 6 or self._is_vacation_day():
                 self.date += DAY
             else:
                 break
@@ -93,6 +91,7 @@ class Person:
         self.loadfactor = 1.0
         self.date = SDate('1970-01-01')
         self.date_set_explicitly = 0
+        self.vacations = []
         self.time_queued = 0
         self.time_done = 0
 
@@ -169,6 +168,13 @@ class Task:
         if self.owner and not sub.owner:
             sub.owner = self.owner
             sub._fixowners(self.owner)
+
+    def insert_before_me(self, t):
+        assert(not t.parent)
+        assert(self.parent)
+        i = self.parent.subtasks.index(self)
+        self.parent.subtasks.insert(i, t)
+        t.parent = self.parent
 
     def depth(self):
         if self.parent:
@@ -256,10 +262,6 @@ class Schedule(Task):
         self.doneroot.title = 'Elapsed Time'
         self.add(self.doneroot)
 
-        self.vacationroot = Task()
-        self.vacationroot.title = 'Vacations'
-        self.add(self.vacationroot)
-
         lines = f.readlines()
         lines.reverse()
         tasks = self.read_tasks('', lines)
@@ -273,17 +275,25 @@ class Schedule(Task):
             else:
                 pl = set(self.people.values()) - set([self.nobody])
             for p in pl:
-                vt = Task()
-                vt.title = 'Vacation: %s to %s (%s)' % (v[0], v[1], p.name)
-                vt.owner = p
-                if v[1] <= stoday:
-                    vt.duedate = vt.donedate = v[1]
-                else:
-                    vt.duedate = v[0]
                 p.date.vacations.append(v)
-                self.vacationroot.add(vt)
+                p.vacations.append(v)
 
         self.schedule_tasks()
+
+        for t in self.linearize(parent_after_children=1):
+            p = t.owner
+            if not p or p == self.nobody: continue
+            if not p.vacations: continue
+            v = p.vacations[0]
+            if t.duedate >= v[0]:
+                vt = Task()
+                vt.title = 'Vacation: %s to %s' % (v[0], v[1])
+                vt.owner = p
+                vt.duedate = v[1]
+                if v[1] <= stoday:
+                    vt.donedate = v[1]
+                t.insert_before_me(vt)
+                p.vacations = p.vacations[1:]
 
     def make_person(self, name):
         p = self.people.get(name.lower())
@@ -434,8 +444,7 @@ class Schedule(Task):
         for t in self.linearize(parent_after_children=1):
             if t.elapsed and t.owner and not t.donedate:
                 nt = Task()
-                ttl = t.flat_title()
-                nt.title = 'Partially done: ' + ttl
+                nt.title = 'Partially done: ' + t.title
                 nt.owner = t.owner
                 nt.estimate = nt.elapsed = t.elapsed
                 nt.owner.add_elapsed(nt.elapsed)

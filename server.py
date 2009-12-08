@@ -83,7 +83,7 @@ class Project:
 #        for t in root.linearize():
 #            datetasks[str(t.duedate)] = []
         for t in task.linearize():
-            if t.estimate:
+            if t.estimate or not t.subtasks:
                 date = str(t.duedate)
                 datetasks[date] = datetasks.get(date, []) + [t]
                 owner = t.owner or root.nobody
