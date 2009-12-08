@@ -145,7 +145,7 @@
 	        <a href="#" onClick="return flip_row(this, {{t.depth()}}, {{t.total_children(user)}});"
 		><span class="ui-icon"></span>{{escape(t.title)}}</a>
 		{% else %}
-		{{t.title}}
+		{{escape(t.title)}}
 		{% end %}
 		{% if t.note %}<span class="note">{{escape(t.note)}}</span>{% end %}
  	    </td>
