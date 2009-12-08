@@ -77,6 +77,7 @@ class Person:
         self.name = name
         self.loadfactor = 1.0
         self.date = SDate('1970-01-01')
+        self.date_set_explicitly = 0
         self.time_queued = 0
         self.time_done = 0
 
@@ -92,9 +93,13 @@ class Person:
     def addtime(self, hestimate, helapsed):
         lf = self.loadfactor
         self.time_queued += hestimate or 0
-        self.time_done += helapsed or 0
         remain = (hestimate or 0)*lf - (helapsed or 0)*lf
         self.date.add(remain/8.0)
+
+    def add_elapsed(self, helapsed):
+        lf = self.loadfactor
+        self.time_done += helapsed or 0
+        self.date.add((helapsed or 0)*lf/8.0)
 
     def remain(self):
         return self.time_queued - self.time_done
@@ -114,8 +119,6 @@ class Task:
 
     def __str__(self):
         s = ''
-        #if self.parent:
-        #    s += '%s: ' % self.parent.title
         s += self.title
         if self.owner:
             s += ' (owner:%s)' % self.owner
@@ -132,6 +135,11 @@ class Task:
         #if self.note:
         #    s += ' {%s}' % self.note
         return s
+
+    def flat_title(self):
+        if self.parent and self.parent.title:
+            return '%s: %s' % (self.parent.flat_title(), self.title)
+        return self.title
 
     def _fixowners(self, owner):
         for s in self.subtasks:
@@ -210,6 +218,7 @@ class Task:
             if c: return 1
         return 0
 
+
 def _expand(tabtext):
     out = ''
     for c in tabtext:
@@ -220,11 +229,16 @@ def _expand(tabtext):
             out += c
     return out
 
+
 class Schedule(Task):
     def __init__(self, f):
         Task.__init__(self)
         self.nobody = Person('-Unassigned-')
         self.people = {self.nobody.name.lower(): self.nobody}
+
+        doneroot = Task()
+        doneroot.title = 'Elapsed Time'
+        self.add(doneroot)
 
         lines = f.readlines()
         lines.reverse()
@@ -232,12 +246,44 @@ class Schedule(Task):
         for t in tasks:
             self.add(t)
 
+        if 0:
+          # allocate time for all completed tasks first
+          for t in self.linearize(parent_after_children=1):
+            if t.donedate:
+                if t.owner and t.elapsed:
+                    t.owner.add_elapsed(t.elapsed)
+                # FIXME: it would be smarter to record the *actual*
+                # completion date, but we don't yet.
+                t.set_duedate()
+                t.donedate = t.duedate
+
+        # allocate time for all elapsed-but-incomplete tasks
+        for t in self.linearize(parent_after_children=1):
+            if t.elapsed and t.owner:
+                nt = Task()
+                ttl = t.flat_title()
+                if t.donedate:
+                    nt.title = 'Done: ' + ttl
+                else:
+                    nt.title = 'Partially done: ' + ttl
+                nt.owner = t.owner
+                nt.estimate = nt.elapsed = t.elapsed
+                nt.owner.add_elapsed(nt.elapsed)
+                nt.set_duedate()
+                nt.donedate = nt.duedate
+                doneroot.add(nt)
+            if t.donedate:
+                t.set_duedate()
+                t.donedate = t.duedate
+                
+        # calculate due dates for incomplete tasks
         for t in self.linearize(parent_after_children=1):
             if (t.elapsed or t.estimate) and not t.owner:
                 t.owner = self.nobody
             if t.owner:
                 t.owner.addtime(t.estimate, t.elapsed)
-            t.set_duedate()
+            if not t.donedate:
+                t.set_duedate()
 
     def make_person(self, name):
         p = self.people.get(name.lower())
@@ -265,10 +311,14 @@ class Schedule(Task):
                     sdate = SDate(date)
                     if user:
                         p = self.make_person(user)
-                        if p: p.date.fastforward(sdate)
+                        if p:
+                            p.date.fastforward(sdate)
+                            p.date_set_explicitly = 1
                     else:
                         for p in set(self.people.values()):
-                            p.date.fastforward(sdate)
+                            if not p.date_set_explicitly:
+                                p.date.fastforward(sdate)
+                                p.date_set_explicitly = 1
                     lines.pop()
                     continue
                 g = re.match(r'#loadfactor(\s+(\S+))?\s+(\d+\.?\d*)', text)
