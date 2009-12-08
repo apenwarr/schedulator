@@ -5,13 +5,10 @@ DAY = 24.0*60*60
 WEEK = 7.0*DAY
 
 def _parse_date(s):
-    return time.mktime(time.strptime(str(s), '%Y-%m-%d'))
-
-
-def _today():
-    lt = time.localtime(time.time())
-    return time.mktime((lt[0],lt[1],lt[2],0,0,0,0,0,0))
-today = _today()
+    if isinstance(s, int) or isinstance(s, float):
+        return s
+    else:
+        return time.mktime(time.strptime(str(s), '%Y-%m-%d'))
 
 
 def render_time(t):
@@ -31,19 +28,29 @@ def render_est(e):
 
 class SDate:
     def __init__(self, start):
+        self.vacations = []
         self.date = _parse_date(start)
-        self._fixdate()
 
     def __str__(self):
         return render_time(self.date)
 
+    def __repr__(self):
+        return 'SDate(%s)' % str(self)
+
     def __cmp__(x, y):
         return cmp(x.date, y.date)
+
+    def _is_vacation_day(self):
+        while self.vacations and self.vacations[0][1] < self:
+            self.vacations = self.vacations[1:]
+        return self.vacations and self.vacations[0][0] <= self
 
     def _fixdate(self):
         while 1:
             (y,m,d,h,m,s,wday,yday,isdst) = time.localtime(self.date)
             if wday == 5 or wday == 6:
+                self.date += DAY
+            elif self._is_vacation_day():
                 self.date += DAY
             else:
                 break
@@ -52,9 +59,10 @@ class SDate:
         # print 'adding %g days to %s' % (days, self)
         assert(days < 10000)
         assert(days >= 0)
-        while days > 40:  # fast forward a week at a time
-            self.date += WEEK
-            days -= 40
+        self._fixdate()
+        #while days > 40:  # fast forward a week at a time
+        #    self.date += WEEK
+        #    days -= 40
         while days >= 1:
             self.date += DAY
             self._fixdate()
@@ -70,6 +78,13 @@ class SDate:
         if self < sdate:
             self.date = sdate.date
             self._fixdate()
+
+
+def _today():
+    lt = time.localtime(time.time())
+    return time.mktime((lt[0],lt[1],lt[2],0,0,0,0,0,0))
+today = _today()
+stoday = SDate(today)
 
 
 class Person:
@@ -235,10 +250,15 @@ class Schedule(Task):
         Task.__init__(self)
         self.nobody = Person('-Unassigned-')
         self.people = {self.nobody.name.lower(): self.nobody}
+        self.vacations = []
 
-        doneroot = Task()
-        doneroot.title = 'Elapsed Time'
-        self.add(doneroot)
+        self.doneroot = Task()
+        self.doneroot.title = 'Elapsed Time'
+        self.add(self.doneroot)
+
+        self.vacationroot = Task()
+        self.vacationroot.title = 'Vacations'
+        self.add(self.vacationroot)
 
         lines = f.readlines()
         lines.reverse()
@@ -246,35 +266,24 @@ class Schedule(Task):
         for t in tasks:
             self.add(t)
 
-        # allocate time for all completed tasks first
-        for t in self.linearize(parent_after_children=1):
-            if t.donedate:
-                if t.owner and t.elapsed:
-                    t.owner.add_elapsed(t.elapsed)
-                # FIXME: it would be smarter to record the *actual*
-                # completion date, but we don't yet.
-                t.donedate = t.duedate = t.calc_duedate()
+        self.vacations.sort()
+        for v in self.vacations:
+            if v[2]:
+                pl = [v[2]]
+            else:
+                pl = set(self.people.values()) - set([self.nobody])
+            for p in pl:
+                vt = Task()
+                vt.title = 'Vacation: %s to %s (%s)' % (v[0], v[1], p.name)
+                vt.owner = p
+                if v[1] <= stoday:
+                    vt.duedate = vt.donedate = v[1]
+                else:
+                    vt.duedate = v[0]
+                p.date.vacations.append(v)
+                self.vacationroot.add(vt)
 
-        # allocate time for all elapsed-but-incomplete tasks
-        for t in self.linearize(parent_after_children=1):
-            if t.elapsed and t.owner and not t.donedate:
-                nt = Task()
-                ttl = t.flat_title()
-                nt.title = 'Partially done: ' + ttl
-                nt.owner = t.owner
-                nt.estimate = nt.elapsed = t.elapsed
-                nt.owner.add_elapsed(nt.elapsed)
-                nt.donedate = nt.duedate = nt.calc_duedate()
-                doneroot.add(nt)
-                
-        # calculate due dates for incomplete tasks
-        for t in self.linearize(parent_after_children=1):
-            if (t.elapsed or t.estimate) and not t.owner:
-                t.owner = self.nobody
-            if t.owner:
-                t.owner.addtime(t.estimate, t.elapsed)
-            if not t.donedate:
-                t.duedate = t.calc_duedate()
+        self.schedule_tasks()
 
     def make_person(self, name):
         p = self.people.get(name.lower())
@@ -282,6 +291,12 @@ class Schedule(Task):
             p = Person(name)
             self.people[name.lower()] = p
         return p
+
+    def add_vacation(self, user, startdate, enddate):
+        assert(startdate)
+        p = user and self.make_person(user) or None
+        if not enddate: enddate = startdate
+        self.vacations.append((SDate(startdate), SDate(enddate), p))
 
     def read_tasks(self, prefix, lines):
         out = []
@@ -310,6 +325,18 @@ class Schedule(Task):
                             if not p.date_set_explicitly:
                                 p.date.fastforward(sdate)
                                 p.date_set_explicitly = 1
+                    lines.pop()
+                    continue
+                g = re.match(r'#vacation\s+(\d\d\d\d-\d\d-\d\d)(\s+(\d\d\d\d-\d\d-\d\d))?', text)
+                if g:
+                    (d1, junk, d2) = g.groups()
+                    self.add_vacation(None, d1, d2)
+                    lines.pop()
+                    continue
+                g = re.match(r'#vacation(\s+(\S+))?\s+(\d\d\d\d-\d\d-\d\d)(\s+(\d\d\d\d-\d\d-\d\d))', text)
+                if g:
+                    (junk, user, d1, junk2, d2) = g.groups()
+                    self.add_vacation(user, d1, d2)
                     lines.pop()
                     continue
                 g = re.match(r'#loadfactor(\s+(\S+))?\s+(\d+\.?\d*)', text)
@@ -392,3 +419,36 @@ class Schedule(Task):
                     t.elapsed = t.estimate
                 out.append(t)
         return out
+
+    def schedule_tasks(self):
+        # allocate time for all completed tasks first
+        for t in self.linearize(parent_after_children=1):
+            if t.donedate:
+                if t.owner and t.elapsed:
+                    t.owner.add_elapsed(t.elapsed)
+                # FIXME: it would be smarter to record the *actual*
+                # completion date, but we don't yet.
+                t.donedate = t.duedate = t.calc_duedate()
+
+        # allocate time for all elapsed-but-incomplete tasks
+        for t in self.linearize(parent_after_children=1):
+            if t.elapsed and t.owner and not t.donedate:
+                nt = Task()
+                ttl = t.flat_title()
+                nt.title = 'Partially done: ' + ttl
+                nt.owner = t.owner
+                nt.estimate = nt.elapsed = t.elapsed
+                nt.owner.add_elapsed(nt.elapsed)
+                nt.donedate = nt.duedate = nt.calc_duedate()
+                self.doneroot.add(nt)
+                
+        # calculate due dates for incomplete tasks
+        for t in self.linearize(parent_after_children=1):
+            if t.duedate: # already set
+                continue
+            if (t.elapsed or t.estimate) and not t.owner:
+                t.owner = self.nobody
+            if t.owner:
+                t.owner.addtime(t.estimate, t.elapsed)
+            if not t.donedate:
+                t.duedate = t.calc_duedate()
