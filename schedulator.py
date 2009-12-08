@@ -197,12 +197,12 @@ class Task:
             tt += t.total_remain()
         return tt
 
-    def set_duedate(self):
+    def calc_duedate(self):
         mindate = self.owner and self.owner.date or SDate('1970-01-01')
         for t in self.subtasks:
             if t.duedate > mindate:
                 mindate = t.duedate
-        self.duedate = mindate.copy()
+        return mindate.copy()
 
     def late(self):
         return (self.duedate and (self.duedate.date < today)
@@ -246,35 +246,26 @@ class Schedule(Task):
         for t in tasks:
             self.add(t)
 
-        if 0:
-          # allocate time for all completed tasks first
-          for t in self.linearize(parent_after_children=1):
+        # allocate time for all completed tasks first
+        for t in self.linearize(parent_after_children=1):
             if t.donedate:
                 if t.owner and t.elapsed:
                     t.owner.add_elapsed(t.elapsed)
                 # FIXME: it would be smarter to record the *actual*
                 # completion date, but we don't yet.
-                t.set_duedate()
-                t.donedate = t.duedate
+                t.donedate = t.duedate = t.calc_duedate()
 
         # allocate time for all elapsed-but-incomplete tasks
         for t in self.linearize(parent_after_children=1):
-            if t.elapsed and t.owner:
+            if t.elapsed and t.owner and not t.donedate:
                 nt = Task()
                 ttl = t.flat_title()
-                if t.donedate:
-                    nt.title = 'Done: ' + ttl
-                else:
-                    nt.title = 'Partially done: ' + ttl
+                nt.title = 'Partially done: ' + ttl
                 nt.owner = t.owner
                 nt.estimate = nt.elapsed = t.elapsed
                 nt.owner.add_elapsed(nt.elapsed)
-                nt.set_duedate()
-                nt.donedate = nt.duedate
+                nt.donedate = nt.duedate = nt.calc_duedate()
                 doneroot.add(nt)
-            if t.donedate:
-                t.set_duedate()
-                t.donedate = t.duedate
                 
         # calculate due dates for incomplete tasks
         for t in self.linearize(parent_after_children=1):
@@ -283,7 +274,7 @@ class Schedule(Task):
             if t.owner:
                 t.owner.addtime(t.estimate, t.elapsed)
             if not t.donedate:
-                t.set_duedate()
+                t.duedate = t.calc_duedate()
 
     def make_person(self, name):
         p = self.people.get(name.lower())
