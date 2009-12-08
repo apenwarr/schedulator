@@ -18,7 +18,9 @@
     </form>
 </div>
 
-<script src="http://mobwrite3.appspot.com/static/compressed_form.js"></script>
+<script src="/static/mobwrite/diff_match_patch_uncompressed.js"></script>
+<script src="/static/mobwrite/mobwrite_core.js"></script>
+<script src="/static/mobwrite/mobwrite_form.js"></script>
 <script>
 
 function insert_chars(field, s)
@@ -85,7 +87,7 @@ $(function() {
 });
 
 setTimeout(function() {
-        mobwrite.syncGateway = 'http://mobwrite3.appspot.com/scripts/q.py';
+        mobwrite.syncGateway = '/chunk/mobwrite';
 	mobwrite.idPrefix = '{{hexcode}}';
 	mobwrite.share('schedtext');
 }, 1000); // FIXME: why does this need to be delayed?

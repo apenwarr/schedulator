@@ -5,6 +5,9 @@ import tornado.ioloop
 import tornado.web
 import tornado.escape
 from tornado.web import HTTPError
+import mobwrite.daemon.mobwrite_tornado as mobwrite_tornado
+mobwrite_core = mobwrite_tornado.mobwrite_core
+mobwrite_daemon = mobwrite_tornado.mobwrite_daemon
 import schedulator
 
 
@@ -133,6 +136,8 @@ class GridHandler(tornado.web.RequestHandler):
 
 
 if __name__ == "__main__":
+    mobwrite_core.CFG.initConfig(mobwrite_daemon.ROOT_DIR
+                                 + "lib/mobwrite_config.txt")
     settings = dict(
         static_path = os.path.join(os.path.dirname(__file__), "static"),
         # xsrf_cookies = True, # FIXME?
@@ -141,6 +146,7 @@ if __name__ == "__main__":
     application = tornado.web.Application([
         (r'/', IndexHandler),
         (r'/chunk/edit', EditHandler),
+        (r'/chunk/mobwrite', mobwrite_tornado.MobWriteHandler),
         (r'/chunk/sched', SchedHandler),
         (r'/chunk/grid', GridHandler),
         (r'/chunk/user/([^/]+)', SchedHandler),
