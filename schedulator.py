@@ -78,11 +78,13 @@ class SDate:
             self._fixdate()
 
 
-def _today():
+today = None
+stoday = None
+def set_today():
+    global today, stoday
     lt = time.localtime(time.time())
-    return time.mktime((lt[0],lt[1],lt[2],0,0,0,0,0,0))
-today = _today()
-stoday = SDate(today)
+    today = time.mktime((lt[0],lt[1],lt[2],0,0,0,0,0,0))
+    stoday = SDate(today)
 
 
 class Person:
@@ -227,7 +229,7 @@ class Task:
 
     def late(self):
         return (self.duedate and (self.duedate.date < today)
-                and not self.donedate);
+                and not self.donedate)
 
     def contains_user(self, user):
         if not user:
@@ -253,6 +255,8 @@ def _expand(tabtext):
 
 class Schedule(Task):
     def __init__(self, f):
+	set_today()
+	
         Task.__init__(self)
         self.nobody = Person('-Unassigned-')
         self.people = {self.nobody.name.lower(): self.nobody}
