@@ -255,7 +255,9 @@ def _expand(tabtext):
 
 
 class Schedule(Task):
-    def __init__(self, f):
+    def __init__(self, f, integrate_slips=False):
+        self.slipfactor = 2.0
+        self.integrate_slips = integrate_slips
         set_today()
         
         Task.__init__(self)
@@ -366,6 +368,12 @@ class Schedule(Task):
                             p.loadfactor = loadfactor
                     lines.pop()
                     continue
+                g = re.match(r'#slipfactor\s+(\d+\.?\d*)', text)
+                if g:
+                    slipfactor_s = g.group(1)
+                    self.slipfactor = float(slipfactor_s)
+                    lines.pop()
+                    continue
                 g = re.match(r'#alias\s+(.*)', text)
                 if g:
                     names = g.groups()[0].split()
@@ -461,12 +469,14 @@ class Schedule(Task):
                 self.doneroot.add(nt)
                 
         # calculate due dates for incomplete tasks
+        slippy = self.integrate_slips and self.slipfactor or 1.0
         for t in self.linearize(parent_after_children=1):
             if t.duedate: # already set
                 continue
             if (t.elapsed or t.estimate) and not t.owner:
                 t.owner = self.nobody
             if t.owner:
-                t.owner.addtime(t.estimate, t.elapsed)
+                t.owner.addtime((t.estimate or 0)*slippy,
+                                (t.elapsed or 0)*slippy)
             if not t.donedate:
                 t.duedate = t.calc_duedate()

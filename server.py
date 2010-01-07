@@ -11,8 +11,9 @@ mobwrite_daemon = mobwrite_tornado.mobwrite_daemon
 import schedulator
 
 
-def get_sched():
-    return schedulator.Schedule(open('test.sched'))
+def get_sched(integrate_slips=False):
+    return schedulator.Schedule(open('test.sched'),
+                                integrate_slips=integrate_slips)
 
 
 def countify(l):
@@ -74,9 +75,11 @@ class SchedHandler(tornado.web.RequestHandler):
 
 
 class Project:
-    def __init__(self, task, root):
+    def __init__(self, task, root, integrate_slips):
+        self.root = root
         self.task = task
         self.title = task.title
+        self.integrate_slips = integrate_slips
         
         datetasks = {}
         owners = {}
@@ -109,10 +112,11 @@ class Project:
         cd = self.task.commitdate
         today = schedulator.today
         if cd:
-            wdate = (cd.date-today)/2.0 + today
+            wdate = (cd.date-today)/self.root.slipfactor + today \
+                         - schedulator.DAY
             if dt >= cd:
                 return 'late'
-            elif dt.date >= wdate:
+            elif (not self.integrate_slips) and dt.date >= wdate:
                 return 'warning'
         if dt.date < today:
             return 'old'
@@ -122,7 +126,7 @@ class Project:
         cd = self.task.commitdate
         for d in self.unique_dates:
             dt = schedulator.SDate(d)
-            yield (d[8:], self._lateness(dt))
+            yield (str(dt)[8:], self._lateness(dt))
 
     def unique_dates_and_lateness(self):
         cd = self.task.commitdate
@@ -132,8 +136,9 @@ class Project:
 
 
 class GridHandler(tornado.web.RequestHandler):
-    def get(self):
-        s = get_sched()
+    def get(self, integrate_slips=False,
+            title='Schedulator Grid'):
+        s = get_sched(integrate_slips=integrate_slips)
         def tasktitler(t):
             l = [str(t.duedate)]
             tt = t
@@ -148,12 +153,17 @@ class GridHandler(tornado.web.RequestHandler):
                 l2.append(('&nbsp;'*(i*4)) + e)
             title = '\n'.join(l2)
             return re.sub('"', "'", title)
-        projects = list([Project(t, s) for t in s.subtasks])
+        projects = list([Project(t, s, integrate_slips) for t in s.subtasks])
         #projects.sort(cmp = lambda x,y: cmp(x.task.duedate, y.task.duedate))
         self.render('grids.html',
-                    title = 'Schedulator Grid',
+                    title = title,
                     tasktitler = tasktitler,
                     projects = projects)
+
+class SlipGridHandler(GridHandler):
+    def get(self):
+        return GridHandler.get(self, integrate_slips=True,
+                               title = 'Schedulator Slipgrid')
 
 
 if __name__ == "__main__":
@@ -170,6 +180,7 @@ if __name__ == "__main__":
         (r'/chunk/mobwrite', mobwrite_tornado.MobWriteHandler),
         (r'/chunk/sched', SchedHandler),
         (r'/chunk/grid', GridHandler),
+        (r'/chunk/slipgrid', SlipGridHandler),
         (r'/chunk/user/([^/]+)', SchedHandler),
     ], **settings)
 
