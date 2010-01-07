@@ -105,19 +105,30 @@ class Project:
         for (period,count) in countify(periods):
             yield (monthnames[int(period[5:])-1],count)
 
+    def _lateness(self, dt):
+        cd = self.task.commitdate
+        today = schedulator.today
+        if cd:
+            wdate = (cd.date-today)/2.0 + today
+            if dt >= cd:
+                return 'late'
+            elif dt.date >= wdate:
+                return 'warning'
+        if dt.date < today:
+            return 'old'
+        return ''
+
     def days_and_lateness(self):
         cd = self.task.commitdate
         for d in self.unique_dates:
             dt = schedulator.SDate(d)
-            lateness = (cd and dt >= cd) and 'late' or ''
-            yield (d[8:], lateness)
+            yield (d[8:], self._lateness(dt))
 
     def unique_dates_and_lateness(self):
         cd = self.task.commitdate
         for d in self.unique_dates:
             dt = schedulator.SDate(d)
-            lateness = (cd and dt >= cd) and 'late' or ''
-            yield (d, lateness)
+            yield (d, self._lateness(dt))
 
 
 class GridHandler(tornado.web.RequestHandler):
