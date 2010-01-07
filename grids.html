@@ -2,6 +2,7 @@
 <style>
     .schedgrid th {
         text-align: left;
+	padding: 2px;
     }
     .schedgrid tr.days {
         font-size: small;
@@ -11,6 +12,9 @@
     }
     .schedgrid th.username {
         padding-right: 1em;
+    }
+    .schedgrid th.late, .schedgrid td.late {
+        background: #ff6666;
     }
     .schedgrid .task {
         display: block;
@@ -37,14 +41,27 @@
     .schedgrid td:hover .task a:hover {
         background: #bbbb00;
     }
+    .ui-accordion a .subtitle {
+        color: #aaaaaa;
+	font-weight: medium;
+	font-size: 50%;
+	padding-left: 2em;
+    }
+    .ui-accordion a .subtitle b{
+        color: #666666;
+    }
 </style>
 
 <div>
   <div id='accordion'>
     {% for project in projects %}
-    <h3><a href="#">{{project.task.duedate}}: {{escape(project.title)}}</a></h3>
+    <h3><a href="#"><table><tr><td>{{escape(project.title)}}</td>
+    <td class='subtitle'>
+    Committed: <b>{{project.task.commitdate}}</b><br>
+    Predicted: <b>{{project.task.duedate}}</b></td></tr></table>
+    </a></h3>
     <div>
-        <table class="schedgrid">
+        <table class="schedgrid" cellpadding=0 cellspacing=0>
 	    <tr>
 	        <th></th>
 		{% for (year,span) in project.years() %}
@@ -59,15 +76,15 @@
 	    </tr>
 	    <tr class="days">
 	        <th></th>
-		{% for day in project.days() %}
-	        <th>{{day}}</th>
+		{% for (day,lateness) in project.days_and_lateness() %}
+	        <th class="{{lateness}}">{{day}}</th>
 		{% end %}
 	    </tr>
 	    {% for u in project.users %}
 	    <tr>
 	        <th class="username">{{escape(u.name)}}</th>
-	        {% for d in project.unique_dates %}
-		<td>
+	        {% for (d,lateness) in project.unique_dates_and_lateness() %}
+		<td class="{{lateness}}">
 		    {% for t in project.date_tasks[d] %}
 		        {% if t.owner == u or (not t.owner) %}
 			<span class="task {{t.late() and 'late' or ''}} {{t.donedate and 'done' or ''}}"><a

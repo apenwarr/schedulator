@@ -132,6 +132,7 @@ class Task:
         self.subtasks = []
         self.donedate = None
         self.duedate = None
+        self.commitdate = None
 
     def __str__(self):
         s = ''
@@ -255,8 +256,8 @@ def _expand(tabtext):
 
 class Schedule(Task):
     def __init__(self, f):
-	set_today()
-	
+        set_today()
+        
         Task.__init__(self)
         self.nobody = Person('-Unassigned-')
         self.people = {self.nobody.name.lower(): self.nobody}
@@ -413,6 +414,10 @@ class Schedule(Task):
                             t.elapsed = float(elnum)*unitmap[elunit]
                         if estnum and estunit:
                             t.estimate = float(estnum)*unitmap[estunit]
+                        words[i] = ''
+                    x = re.match(r'\[commit=(\d\d\d\d-\d\d-\d\d)\]', word)
+                    if x:
+                        t.commitdate = SDate(x.group(1))
                         words[i] = ''
                 while words and not words[0]:
                     words = words[1:]
