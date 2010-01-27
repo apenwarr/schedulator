@@ -38,7 +38,7 @@ class SDate:
         return 'SDate(%s)' % str(self)
 
     def __cmp__(x, y):
-        return cmp(x.date, y.date)
+        return cmp(x and x.date, y and y.date)
 
     def _is_vacation_day(self):
         while self.vacations and self.vacations[0][1].date+DAY <= self.date:
