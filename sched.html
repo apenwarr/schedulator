@@ -148,7 +148,7 @@
  	    <td class="summary narrow duedate">{{t.duedate}}</td>
 	    {% if not user %}
 	    <td class="summary narrow">
-	      {{escape(t.owner and t.owner.name or '')}}</td>
+	      {{escape(', '.join(o.name for o in t.all_owners()))}}</td>
 	    {% end %}
 	  </tr>
 	{% end %}

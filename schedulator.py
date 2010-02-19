@@ -242,6 +242,18 @@ class Task:
             if c: return 1
         return 0
 
+    def _all_sub_owners(self, s):
+        for t in self.subtasks:
+            if not t.donedate:
+                # we only care about *sub* tasks if they aren't done
+                s.add(t.owner)
+            t._all_sub_owners(s)
+
+    def all_owners(self):
+        s = set([self.owner])
+        self._all_sub_owners(s)
+        return filter(None, s)
+
 
 def _expand(tabtext):
     out = ''
