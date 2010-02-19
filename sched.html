@@ -130,12 +130,6 @@
   {% end %}
 
   <table id='schedule'>
-      <tr>
- 	  <th>Task</th>
- 	  <th>Remain</th>
- 	  <th>Due</th>
-       	  {% if not user %}<th>Owner</th>{% end %}
-      </tr>
       {% for t in tasks.linearize() %}
         {% if t.contains_user(user) %}
           <tr class="depth-{{t.depth()}} {% if t.donedate %}done{% end %} {% if not t.donedate and t.late() %}late{% end %} {% if t.total_children(user) %}expanded{% end %}">
@@ -151,7 +145,8 @@
  	    <td class="summary narrow">{{render_est(t.total_remain())}}</td>
  	    <td class="summary narrow duedate">{{t.duedate}}</td>
 	    {% if not user %}
-	    <td class="summary narrow">{{escape(t.owner and t.owner.name or '')}}</td>
+	    <td class="summary narrow" style='padding-left: 1em'>
+	      {{escape(t.owner and t.owner.name or '')}}</td>
 	    {% end %}
 	  </tr>
 	{% end %}
