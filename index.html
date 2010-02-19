@@ -16,8 +16,10 @@
     $(function() {
         $('#whack').tabs({
 	    show: function(ui) {
-	        $('#accordion').accordion({
-		    autoHeight: false
+	        $('.accordiate').accordion({
+		    autoHeight: false,
+		    animated: false,
+		    collapsible: true,
 		});
 	    }
 	});

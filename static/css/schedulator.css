@@ -1,0 +1,16 @@
+#schedulator .ui-widget {
+    font-size: 12pt;
+}
+#schedulator .ui-tabs-nav li {
+    line-height: 1;
+    font-weight: normal;
+}
+#schedulator .ui-tabs-nav li a {
+    padding: 2px;
+}
+#schedulator .ui-accordion .ui-accordion-header a {
+    font-size: 10pt;
+    line-height: 1;
+    padding-top: 0;
+    padding-bottom: 0;
+}

@@ -51,7 +51,7 @@
     .ui-accordion a .subtitle {
         color: #aaaaaa;
 	font-weight: medium;
-	font-size: 50%;
+	font-size: 75%;
 	padding-left: 2em;
     }
     .ui-accordion a .subtitle b{
@@ -60,12 +60,18 @@
 </style>
 
 <div>
-  <div id='accordion'>
+  <div class='accordiate'>
     {% for project in projects %}
     <h3><a href="#"><table><tr><td>{{escape(project.title)}}</td>
     <td class='subtitle'>
-    Committed: <b>{{project.task.commitdate}}</b><br>
-    Predicted: <b>{{project.task.duedate}}</b></td></tr></table>
+    {% if project.task.commitdate %}
+    <b>{{project.task.commitdate}}</b>
+    <span style='padding-left: 2em;'>Committed</span>
+    {% else %}
+    <b>{{project.task.duedate}}</b>
+    <span style='color: red; padding-left: 2em;'>ESTIMATED</span>
+    {% end %}
+    </td></tr></table>
     </a></h3>
     <div>
         <table class="schedgrid" cellpadding=0 cellspacing=0>
