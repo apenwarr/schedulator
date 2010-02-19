@@ -8,7 +8,7 @@ def _parse_date(s):
     if isinstance(s, int) or isinstance(s, float):
         return s
     else:
-        return time.mktime(time.strptime(str(s), '%Y-%m-%d'))
+        return time.mktime(time.strptime(str(s).replace('/', '-'), '%Y-%m-%d'))
 
 
 def render_time(t):
@@ -328,7 +328,8 @@ class Schedule(Task):
                 # FIXME: we should be doing the duedate calculation at parse
                 # time, so that the following directives are interpreted at the
                 # right times.  Or maybe store the directives inline as tasks?
-                g = re.match(r'#date(\s+(\S+))?\s+(\d\d\d\d-\d\d-\d\d)', text)
+                g = re.match(r'#date(\s+(\S+))?\s+(\d\d\d\d[-/]\d\d[-/]\d\d)',
+                             text)
                 if g:
                     (junk, user, date) = g.groups()
                     sdate = SDate(date)
@@ -344,13 +345,16 @@ class Schedule(Task):
                                 p.date_set_explicitly = 1
                     lines.pop()
                     continue
-                g = re.match(r'#vacation\s+(\d\d\d\d-\d\d-\d\d)(\s+(\d\d\d\d-\d\d-\d\d))?', text)
+                g = re.match(r'#vacation\s+(\d\d\d\d[-/]\d\d[-/]\d\d)' +
+                             r'(\s+(\d\d\d\d[-/]\d\d[-/]\d\d))?', text)
                 if g:
                     (d1, junk, d2) = g.groups()
                     self.add_vacation(None, d1, d2)
                     lines.pop()
                     continue
-                g = re.match(r'#vacation(\s+(\S+))?\s+(\d\d\d\d-\d\d-\d\d)(\s+(\d\d\d\d-\d\d-\d\d))', text)
+                g = re.match(r'#vacation(\s+(\S+))?\s+' +
+                             r'(\d\d\d\d[-/]\d\d[-/]\d\d)' +
+                             r'(\s+(\d\d\d\d[-/]\d\d[-/]\d\d))', text)
                 if g:
                     (junk, user, d1, junk2, d2) = g.groups()
                     self.add_vacation(user, d1, d2)
@@ -423,7 +427,8 @@ class Schedule(Task):
                         if estnum and estunit:
                             t.estimate = float(estnum)*unitmap[estunit]
                         words[i] = ''
-                    x = re.match(r'\[commit=(\d\d\d\d-\d\d-\d\d)\]', word)
+                    x = re.match(r'\[commit=(\d\d\d\d[-/]\d\d[-/]\d\d)\]',
+                                 word)
                     if x:
                         t.commitdate = SDate(x.group(1))
                         words[i] = ''
