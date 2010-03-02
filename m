@@ -1,9 +1,7 @@
 #!/bin/bash
 _mutt()
 {
-    mutt -e "set folder=$PWD/p" \
-    	 -e 'set hdr_format="%3C%Z %{%y/%m/%d} %-15.15F %s' \
-    	 "$@"
+    mutt -e "set folder=$PWD/p" -e 'source muttx' "$@"
 }
 
 if [ -n "$1" ]; then
@@ -13,5 +11,5 @@ if [ -n "$1" ]; then
 		break
 	done
 else
-	_mutt -f /dev/null -e "push c?"
+	_mutt -f /dev/null -e "push q"
 fi

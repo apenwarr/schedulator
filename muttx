@@ -1,0 +1,29 @@
+# Change the index view format to be better optimized for bugs
+set index_format="%3C %Z %{%y:%m/%d} %-15.15F %s"
+
+set folder_format="%4C  %f"
+set status_format="-%r-%f [Done:%F/%M %?d?Del:%d? %?t?Tag:%t? %l]---(%s/%S)-%>-(%P)---
+
+# Syntax highlighting for header fields inside messages
+color body brightgreen black "^(From|Subject|Date|Sent|To|Cc|Reply-To): "
+
+# never delete messages.  This would be a good idea for our purposes, except
+# saving to another folder needs to delete from the current folder.
+#set delete=no
+
+# prevent accidental deletion using the 'd' key
+bind index d sync-mailbox
+bind pager d exit
+
+# when done viewing a folder, go to the folder list
+bind index Q quit
+macro index q "<change-folder>\t"
+macro browser Q "<exit>"
+macro browser q "<exit>\nQ"
+
+# don't include quoted message contents when replying
+set include=yes
+
+# don't bother asking questions when replying; always send it to the
+# configured reply-to address
+set fast_reply=yes

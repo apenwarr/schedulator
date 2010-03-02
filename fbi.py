@@ -21,6 +21,8 @@ class Person:
     def mailname(self):
         # FIXME: handle quoting
         return '%s <%s>' % (self.name, self.email)
+    def user(self):
+        return re.sub(r'@.*', '', self.email)
 persons = {}
 
 for (id, name, email) in \
@@ -65,12 +67,13 @@ def mkdir(p):
             raise
 
 def mkfixfor(f):
-    mkdir('p')
     if f.project:
-        p = 'p/%s: %s' % (f.project.name, f.name)
+        p = '%s-%s' % (f.project.name, f.name)
     else:
-        p = 'p/%s' % f.name
-    mkdir(p)
+        p = '%s' % f.name
+    p = 'p/' + re.sub(r'[\s:/_]', '-', p)
+    mkdir('p')
+    mkdir('%s' % p)
     mkdir('%s/new' % p)
     mkdir('%s/cur' % p)
     mkdir('%s/tmp' % p)
@@ -88,13 +91,13 @@ def fixdt(dt):
 
 
 def _writemail(f, tm, content):
-    f.write("From schedulator %s\n" % time.asctime(time.localtime(tm)))
+    #f.write("From schedulator %s\n" % time.asctime(time.localtime(tm)))
     f.write(content.replace('\r\n', '\n'))
     f.write('\n\n')
 
 
 def writemail(f, tm, _from, to, cc, subject, body, headers = []):
-    f.write("From schedulator %s\n" % time.asctime(time.localtime(tm)))
+    #f.write("From schedulator %s\n" % time.asctime(time.localtime(tm)))
     #f.write("Message-Id: <%d@fbi>\n" % id)
     if _from:
         f.write("From: %s\n" % _from)
@@ -107,32 +110,51 @@ def writemail(f, tm, _from, to, cc, subject, body, headers = []):
     for k,v in headers:
         f.write("%s: %s\n" % (k, v))
     f.write("\n")
-    body = (body or '').replace('\r\n', '\n')
-    f.write(body)
-    f.write('\n\n')
+    body = (body or '').replace('\r\n', '\n').rstrip()
+    if body:
+        f.write(body + '\n')
 
 
-for (id, date, title, fixforid, openbyid, assignedid, resolvedid) in \
-  query('select ixBug, dtOpened, sTitle, ixFixFor, ' +
+for (id, date, isopen, status, title, fixforid, 
+     openbyid, assignedid, resolvedid) in \
+  query('select ixBug, dtOpened, fOpen, ixStatus, sTitle, ixFixFor, ' +
         'ixPersonOpenedBy, ixPersonAssignedTo, ixPersonResolvedBy from Bug'):
+    isresolved = (status != 1)
     fixfor = fixfors[fixforid]
     openby = persons[openbyid]
     assigned = persons[assignedid]
     resolved = persons.get(resolvedid)
     print '%-5s %s' % (id, title)
-    subj = '[Bug %s] %s' % (id, title)
+    subj = '[%s] %s' % (id, title)
     d = mkfixfor(fixfor)
-    f = open('%s/cur/%s' % (d, id), 'wb')
+    flags = 'S'
+    if isresolved:
+        flags += 'R'   # R is for "replied", but we'll use it for resolved
+    if not isopen:
+        flags += 'F'   # F is for "flagged", but we'll use it for closed
+    f = open('%s/cur/%s:2,%s' % (d, id, flags), 'wb')
+    f.write("From schedulator %s\n" 
+            % time.asctime(time.localtime(fixdt(date))))
+    msgid = [('MIME-Version', '1.0'),
+             ('Content-Type', 'multipart/digest; boundary="=--"'),
+             ]
+    assignee = (resolved or assigned)
     writemail(f, tm=fixdt(date),
               _from=openby.mailname(),
-              to=(resolved or assigned).mailname(),
+              to=assignee.mailname(),
               cc=None,
               subject=subj,
-              body=None)
+              body=None,
+              headers=msgid)
+    f.write('\n--=--\n\n')
+    f.write(('# Schedulator tasks\n' +
+            '%s: Implementation\n' +
+            '%s: Test\n\n') % (assignee.user(), assignee.user()))
     for (evid, evdate, evismail, verb, evwhoid, evbody, evchanges) in \
       query('select ixBugEvent, dt, fEmail, sVerb, ixPerson, s, sChanges ' +
             ' from BugEvent where ixBug=%s order by dt', id):
         evwho = persons.get(evwhoid)
+        f.write('\n--=--\n\n')
         if evismail:
             _writemail(f, tm=fixdt(evdate), content=evbody)
         else:
@@ -150,4 +172,5 @@ for (id, date, title, fixforid, openbyid, assignedid, resolvedid) in \
                       subject=None,
                       body=s,
                       headers=headers)
+    f.write('\n--=----\n\n')
     f.close()
