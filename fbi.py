@@ -141,7 +141,7 @@ for (id, date, isopen, status, title, fixforid,
     f.write("From schedulator %s\n" 
             % time.asctime(time.localtime(fixdt(date))))
     msgid = [('MIME-Version', '1.0'),
-             ('Content-Type', 'multipart/digest; boundary="=--"'),
+             ('Content-Type', 'multipart/mixed; boundary="=--"'),
              ]
     assignee = (resolved or assigned)
     writemail(f, tm=fixdt(date),
@@ -159,7 +159,7 @@ for (id, date, isopen, status, title, fixforid,
       query('select ixBugEvent, dt, fEmail, sVerb, ixPerson, s, sChanges ' +
             ' from BugEvent where ixBug=%s order by dt', id):
         evwho = persons.get(evwhoid)
-        f.write('\n--=--\n\n')
+        f.write('\n--=--\nContent-Type: message/rfc822\n\n')
         if evismail:
             _writemail(f, tm=fixdt(evdate), content=evbody)
         else:
