@@ -81,9 +81,14 @@ def mkfixfor(f):
 
 
 def fixwrap(s):
-    paras = re.split(r'\s*\n\s*\n', s)
-    wparas = ['\n'.join(textwrap.wrap(para, width=70)) for para in paras]
-    return '\n\n'.join(wparas)
+    l = []
+    for line in s.replace('\r\n', '\n').split('\n'):
+        if not re.match(r'\s', line):  # leading whitespace = preformatted
+            if len(line) > 80:
+                l += textwrap.wrap(line, width=72)
+                continue
+        l.append(line)
+    return '\n'.join(l)
 
 
 def fixdt(dt):
