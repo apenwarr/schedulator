@@ -6,6 +6,7 @@ import tornado.web
 import tornado.escape
 from tornado.web import HTTPError
 import schedulator
+from bog import options
 
 
 def get_sched(integrate_slips=False):
@@ -163,25 +164,35 @@ class SlipGridHandler(GridHandler):
                                title = 'Schedulator Slipgrid')
 
 
-if __name__ == "__main__":
-    settings = dict(
-        static_path = os.path.join(os.path.dirname(__file__), "static"),
-        # xsrf_cookies = True, # FIXME?
-        debug = 1
-    )
-    application = tornado.web.Application([
-        (r'/', IndexHandler),
-        (r'/chunk/edit', EditHandler),
-        (r'/chunk/sched', SchedHandler),
-        (r'/chunk/grid', GridHandler),
-        (r'/chunk/slipgrid', SlipGridHandler),
-        (r'/chunk/user/([^/]+)', SchedHandler),
-    ], **settings)
+optspec = """
+bog instaweb [-p port]
+--
+p,port=     Port number to listen on for http
+"""
+o = options.Options('bog instaweb', optspec)
+(opt, flags, extra) = o.parse(sys.argv[1:])
 
-    srv = tornado.httpserver.HTTPServer(application)
-    srv.listen(8011)
+pwd = os.path.abspath('.')
 
-    print "Listening on port %s" % srv._socket.getsockname()[1]
+settings = dict(
+    static_path = os.path.join(pwd, "static"),
+    template_path = pwd,
+    # xsrf_cookies = True, # FIXME?
+    debug = 1
+)
+application = tornado.web.Application([
+    (r'/', IndexHandler),
+    (r'/chunk/edit', EditHandler),
+    (r'/chunk/sched', SchedHandler),
+    (r'/chunk/grid', GridHandler),
+    (r'/chunk/slipgrid', SlipGridHandler),
+    (r'/chunk/user/([^/]+)', SchedHandler),
+], **settings)
 
-    loop = tornado.ioloop.IOLoop.instance()
-    loop.start()
+srv = tornado.httpserver.HTTPServer(application)
+srv.listen(opt.port or 8011)
+
+print "Listening on port %s" % srv._socket.getsockname()[1]
+
+loop = tornado.ioloop.IOLoop.instance()
+loop.start()
