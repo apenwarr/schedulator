@@ -1,9 +1,36 @@
 #!/usr/bin/env python
-import os, errno, time, textwrap, re
+import os, errno, time, textwrap, re, subprocess
 import MySQLdb as mysql
+from bog import options
+from bog.helpers import *
 
-m = mysql.Connect(host='fogbugz', user='fogbugz', passwd='scs')
-m.select_db('fogbugz5')
+optspec = """
+bog fogbugz [-h server] [-u user] [-p passwd] <outputdir>
+--
+s,server=   Fogbugz MySQL server hostname
+u,user=     Fogbugz MySQL server login username
+p,passwd=   Fogbugz MySQL server password
+d,dbname=   Fogbugz MysQL database name
+"""
+o = options.Options('bog fogbugz', optspec)
+(opt, flags, extra) = o.parse(sys.argv[1:])
+
+if not opt.server or not opt.user or not opt.passwd or not opt.dbname:
+    o.fatal('you must provide -h, -u, -p, and -d options')
+
+if len(extra) != 1:
+    o.fatal('you must provide exactly one <outputdir> parameter')
+
+m = mysql.Connect(host=opt.server, user=opt.user, passwd=opt.passwd)
+m.select_db(opt.dbname)
+
+topdir = extra[0]
+
+if os.path.exists(topdir):
+    log('Deleting %r...\n' % topdir)
+    subprocess.call(['rm', '-rf', topdir])
+log('Exporting...\n')
+
 
 def query(q, *args):
     c = m.cursor()
@@ -57,26 +84,15 @@ for (id, name, projectid) in \
   query('select ixFixFor, sFixFor, ixProject from FixFor'):
     fixfors[id] = FixFor(id, name, projects.get(projectid))
 
-def mkdir(p):
-    try:
-        os.mkdir(p)
-    except OSError, e:
-        if e.errno == errno.EEXIST:
-            pass
-        else:
-            raise
-
 def mkfixfor(f):
     if f.project:
         p = '%s-%s' % (f.project.name, f.name)
     else:
         p = '%s' % f.name
-    p = 'p/' + re.sub(r'[\s:/_]', '-', p)
-    mkdir('p')
-    mkdir('%s' % p)
-    mkdir('%s/new' % p)
-    mkdir('%s/cur' % p)
-    mkdir('%s/tmp' % p)
+    p = os.path.join(topdir, re.sub(r'[\s:/_]', '-', p))
+    mkdirp('%s/new' % p)
+    mkdirp('%s/cur' % p)
+    mkdirp('%s/tmp' % p)
     return p
 
 

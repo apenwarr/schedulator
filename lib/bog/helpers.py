@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, errno
 
 
 def log(s):
