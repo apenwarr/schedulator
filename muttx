@@ -2,7 +2,7 @@
 set index_format="%3C %Z %{%y:%m/%d} %-15.15F %s"
 
 set folder_format="%4C  %f"
-set status_format="-%r-%f [Done:%F/%M %?d?Del:%d? %?t?Tag:%t? %l]---(%s/%S)-%>-(%P)---
+set status_format="-%r-%f [Done:%F/%M%?d? Del:%d?%?t? Tag:%t? %l]---(%s/%S)-%>-(%P)---
 
 # Syntax highlighting for header fields inside messages
 color body brightgreen black "^(From|Subject|Date|Sent|To|Cc|Reply-To): "
