@@ -14,6 +14,17 @@ os.environ['PYTHONPATH'] = libpath + ':' + os.environ.get('PYTHONPATH', '')
 from bog.helpers import *
 
 
+def find_bog_dir():
+    if not os.environ.get('BOG_DIR'):
+        parts = os.path.abspath('.').split('/')
+        while len(parts) >= 1:
+            p = '/'.join(parts)
+            if os.path.exists(os.path.join(p, '.bogroot')):
+                os.environ['BOG_DIR'] = p
+                return p
+            parts.pop()
+
+            
 def columnate(l, prefix):
     l = l[:]
     clen = max(len(s) for s in l)
@@ -72,6 +83,8 @@ if not os.path.exists(subpath(subcmd)):
     log('error: unknown command "%s"\n' % subcmd)
     usage()
 
+bog_dir = find_bog_dir()
+#log('BOG_DIR is %r\n' % find_bog_dir())
 
 ret = 95
 try:
