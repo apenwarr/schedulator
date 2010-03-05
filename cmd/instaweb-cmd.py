@@ -5,8 +5,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.escape
 from tornado.web import HTTPError
-import schedulator
-from bog import options
+from bog import options, schedulator
 
 
 def get_sched(integrate_slips=False):
@@ -172,7 +171,8 @@ p,port=     Port number to listen on for http
 o = options.Options('bog instaweb', optspec)
 (opt, flags, extra) = o.parse(sys.argv[1:])
 
-pwd = os.path.abspath('.')
+(exedir,junk) = os.path.split(sys.argv[0])
+pwd = os.path.abspath(os.path.join(exedir, '..'))
 
 settings = dict(
     static_path = os.path.join(pwd, "static"),
