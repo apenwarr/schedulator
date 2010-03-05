@@ -68,9 +68,10 @@ def usage():
     sys.exit(99)
 
 
-if len(argv) < 2 or not argv[1] or argv[1][0] == '-':
+if len(argv) == 1 or atoi(argv[1]) != 0:
+    argv[1:1] = ['view']  # default to 'view' if just a bug number is given
+elif not argv[1] or argv[1][0] == '-':
     usage()
-
 subcmd = argv[1]
 
 def subpath(s):
