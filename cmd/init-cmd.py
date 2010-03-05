@@ -21,4 +21,7 @@ if oldd and oldd != os.path.abspath('.'):
 
 subprocess.call(['git', 'init'])
 open('.bogroot', 'wb').close()
+mkdirp('Undecided/cur')
+mkdirp('Undecided/new')
+mkdirp('Undecided/tmp')
 log('Initialized Bog repository.\n')

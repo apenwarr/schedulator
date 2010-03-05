@@ -267,7 +267,7 @@ def _expand(tabtext):
 
 
 class Schedule(Task):
-    def __init__(self, f, integrate_slips=False):
+    def __init__(self, lines, integrate_slips=False):
         self.slipfactor = 2.0
         self.integrate_slips = integrate_slips
         set_today()
@@ -281,9 +281,7 @@ class Schedule(Task):
         self.doneroot.title = 'Elapsed Time'
         self.add(self.doneroot)
 
-        lines = f.readlines()
-        lines.reverse()
-        tasks = self.read_tasks('', lines)
+        tasks = self.read_tasks('', list(reversed(lines)))
         for t in tasks:
             self.add(t)
 

@@ -10,7 +10,7 @@
 #alias Rodrigo rf
 #alias Bill billh williamh wdheughan wheughan
 
-ed: megatask
+ed: megatask 2
 	hf: [1d] smallish
 	ap: [2d] bigger
 	lk: [3d] biggest

@@ -6,10 +6,44 @@ import tornado.web
 import tornado.escape
 from tornado.web import HTTPError
 from bog import options, schedulator
+from bog.helpers import *
 
 
 def get_sched(integrate_slips=False):
-    return schedulator.Schedule(open('test.sched'),
+    # FIXME: this is terrible.  Make a real module for reading email
+    # contents...
+    lines = []
+    lines += open(mainpath).readlines()
+    
+    lastdir = ['']
+    def f(junk, dir, names):
+        names.sort()
+        #log('dir: %r\n' % dir)
+        if dir[-4:] in ['/cur', '/new']:
+            for n in names[:10]:
+                if n.endswith('~') or n.startswith('.'):
+                    continue
+                #log('reading: %r\n' % n)
+                g = re.split(r'\n--=--\n', open(os.path.join(dir, n)).read())
+                if g:
+                    top = g[0].strip()
+                    g2 = re.search(re.compile(r'^Subject: (.*)$', re.M), top)
+                    subj = g2 and g2.group(1) or 'Untitled'
+                    sch = g[1].strip()
+                    #log('%s\n' % sch)
+                    folder = dir[len(bogdir):-4]
+                    if lastdir[0] != folder:
+                        lines.append(folder)
+                        lastdir[0] = folder
+                    lines.append('\t' + subj)
+                    for s in sch.split('\n'):
+                        lines.append(re.sub(re.compile(r'^([^#])', re.M),
+                                            r'\t\t\1', s))
+    os.path.walk(bogdir, f, None)
+    #log('\n\n\n')
+    #for l in lines:
+    #    log('%s\n' % l)
+    return schedulator.Schedule(lines,
                                 integrate_slips=integrate_slips)
 
 
@@ -49,11 +83,11 @@ class EditHandler(tornado.web.RequestHandler):
             open('.schedid', 'w').write(id)
         self.render('edit.html',
                     hexcode = id,
-                    text = open('test.sched').read())
+                    text = open(mainpath).read())
 
     def post(self):
         t = str(self.request.body)
-        open('test.sched', 'w').write(t)
+        open(mainpath, 'wb').write(t)
         self.write('ok')
         print 'Updated schedule (%s).' % repr(t[:40])
 
@@ -173,6 +207,13 @@ o = options.Options('bog instaweb', optspec)
 
 (exedir,junk) = os.path.split(sys.argv[0])
 pwd = os.path.abspath(os.path.join(exedir, '..'))
+bogdir = check_bog_dir()
+mainpath = os.path.join(bogdir, 'main.sched')
+
+if not os.path.exists(mainpath):
+    f = open(mainpath, 'wb')
+    f.write('\n# Main schedule file\n')
+    f.close()
 
 settings = dict(
     static_path = os.path.join(pwd, "static"),
