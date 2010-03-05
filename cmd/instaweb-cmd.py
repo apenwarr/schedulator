@@ -62,37 +62,55 @@ def countify(l):
         yield (last, count)
 
 
-class IndexHandler(tornado.web.RequestHandler):
+class _Handler(tornado.web.RequestHandler):
+    def render(self, template,
+               page, subpage=None,
+               submenu=[], submenu_title=None, **kwargs):
+        menu = [
+            ('/bog', 'Bogs'),
+            ('/pri', 'Prioritize'),
+            ('/sched', 'Schedules'),
+            ('/grid', 'TimeGrid'),
+        ]
+        tornado.web.RequestHandler.render(self, template,
+                                          page=page, subpage=subpage,
+                                          menu=menu, submenu=submenu,
+                                          submenu_title=submenu_title,
+                                          **kwargs)
+
+
+class DashboardHandler(_Handler):
     def get(self):
-        s = get_sched()
-        userlist = []
-        for p in sorted(set(s.people.values())):
+        self.render('base.html', page='', title='Dashboard')
+
+
+class BogIndexHandler(_Handler):
+    def get(self):
+        self.render('unimplemented.html', page='/bog',
+                    title='Bog List')
+
+
+class PriHandler(_Handler):
+    def get(self):
+        self.render('unimplemented.html', page='/pri',
+                    title='Release Prioritization')
+
+
+class SchedHandler(_Handler):
+    def render(self, template, tasks, subpage, **kwargs):
+        submenu = [
+            ('/sched', '-All-'),
+            ('/sched/edit', '-Edit-'),
+        ]
+        for p in sorted(set(tasks.people.values())):
             if p.time_queued:
-                userlist.append(p)
-        self.render('index.html',
-                    title='Schedulator',
-                    userlist = userlist)
-
-
-class EditHandler(tornado.web.RequestHandler):
-    def get(self):
-        if os.path.exists('.schedid'):
-            id = open('.schedid').read().strip()
-        else:
-            id = 'x' + open('/dev/urandom').read(32).encode('hex')
-            open('.schedid', 'w').write(id)
-        self.render('edit.html',
-                    hexcode = id,
-                    text = open(mainpath).read())
-
-    def post(self):
-        t = str(self.request.body)
-        open(mainpath, 'wb').write(t)
-        self.write('ok')
-        print 'Updated schedule (%s).' % repr(t[:40])
-
-
-class SchedHandler(tornado.web.RequestHandler):
+                submenu.append(('/sched/user/%s' % p.name, p.name))
+        return _Handler.render(self, template,
+                               page='/sched',
+                               submenu=submenu, subpage=subpage,
+                               tasks=tasks,
+                               **kwargs)
+    
     def get(self, username = None):
         s = get_sched()
         if username:
@@ -101,8 +119,26 @@ class SchedHandler(tornado.web.RequestHandler):
         tasks = []
         self.render('sched.html',
                     tasks = s,
+                    subpage = user and ('/sched/user/%s' % user.name) 
+                       or '/sched',
+                    title = user and ('Schedulator: %s' % user.name) 
+                       or 'Schedulator',
                     user = user,
                     render_est = schedulator.render_est)
+
+
+class EditHandler(SchedHandler):
+    def get(self):
+        self.render('edit.html', subpage='/sched/edit',
+                    title = 'Edit Schedule',
+                    tasks = get_sched(),
+                    text = open(mainpath).read())
+
+    def post(self):
+        t = str(self.request.body)
+        open(mainpath, 'wb').write(t)
+        self.write('ok')
+        print 'Updated schedule (%s).' % repr(t[:40])
 
 
 class Project:
@@ -166,9 +202,14 @@ class Project:
             yield (d, self._lateness(dt))
 
 
-class GridHandler(tornado.web.RequestHandler):
-    def get(self, integrate_slips=False,
-            title='Schedulator Grid'):
+class GridHandler(_Handler):
+    def get(self, integrate_slips=False, title='Grid',
+            subpage="/grid"):
+        submenu = [
+            ('/grid', 'Normal'),
+            ('/grid/slip', 'Slip'),
+        ]
+                
         s = get_sched(integrate_slips=integrate_slips)
         def tasktitler(t):
             l = [str(t.duedate)]
@@ -187,14 +228,18 @@ class GridHandler(tornado.web.RequestHandler):
         projects = list([Project(t, s, integrate_slips) for t in s.subtasks])
         #projects.sort(cmp = lambda x,y: cmp(x.task.duedate, y.task.duedate))
         self.render('grids.html',
-                    title = title,
-                    tasktitler = tasktitler,
-                    projects = projects)
+                    title=title,
+                    page='/grid', subpage=subpage,
+                    submenu=submenu, submenu_title='Grid type:',
+                    tasktitler=tasktitler,
+                    projects=projects)
+
 
 class SlipGridHandler(GridHandler):
     def get(self):
         return GridHandler.get(self, integrate_slips=True,
-                               title = 'Schedulator Slipgrid')
+                               title = 'Slipgrid',
+                               subpage = '/grid/slip' )
 
 
 optspec = """
@@ -217,17 +262,19 @@ if not os.path.exists(mainpath):
 
 settings = dict(
     static_path = os.path.join(pwd, "static"),
-    template_path = pwd,
+    template_path = os.path.join(pwd, "templates"),
     # xsrf_cookies = True, # FIXME?
     debug = 1
 )
 application = tornado.web.Application([
-    (r'/', IndexHandler),
-    (r'/chunk/edit', EditHandler),
-    (r'/chunk/sched', SchedHandler),
-    (r'/chunk/grid', GridHandler),
-    (r'/chunk/slipgrid', SlipGridHandler),
-    (r'/chunk/user/([^/]+)', SchedHandler),
+    (r'/', DashboardHandler),
+    (r'/bog', BogIndexHandler),
+    (r'/pri', PriHandler),
+    (r'/sched', SchedHandler),
+    (r'/sched/edit', EditHandler),
+    (r'/sched/user/([^/]+)', SchedHandler),
+    (r'/grid', GridHandler),
+    (r'/grid/slip', SlipGridHandler),
 ], **settings)
 
 srv = tornado.httpserver.HTTPServer(application)

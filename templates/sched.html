@@ -1,55 +1,6 @@
-<script>
-    oddevenize_rows = function() {
-        var rows = $('#schedule tr.shown td').parent();
-	var x = 0;
-	rows.each(function() {
-	    if (x % 4 >= 2) {
-	        $(this).addClass('even').removeClass('odd');
-	    } else {
-	        $(this).addClass('odd').removeClass('even');
-	    }
-	    x++;
-	});
-    }
+{% extends "base_nosidebar.html" %}
 
-    flip_row = function(e, parentdepth, nchildren) {
-	var row = $(e).closest('tr')
-        var was_collapsed = row.hasClass("collapsed");
-	var subs = row.nextAll().slice(0,nchildren);
-	if (was_collapsed) {
-	    row.removeClass("collapsed").addClass("expanded");
-	    subs.addClass("collapsed")
-		.filter('.depth-' + (parentdepth+1))
-		.addClass("shown")
-		.show();
-	} else {
-	    row.addClass("collapsed").removeClass("expanded");
-	    subs.addClass("collapsed").removeClass("expanded")
-	        .removeClass("shown")
-		.hide();
-	}
-	oddevenize_rows();
-	return false;
-    }
-    
-    $(function() {
-        var rows = $('#schedule tr td').parent();
-        {% if not user %}
-        rows.each(function() {
-	    $(this).addClass("collapsed").removeClass("expanded");
-	    if (!$(this).hasClass("depth-1")) {
-	        $(this).removeClass("shown").hide();
-	    } else {
-	        $(this).addClass("shown").show();
-	    }
-	});
-	{% else %}
-	rows.addClass("shown").show();
-	{% end %}
-	oddevenize_rows();
-    });
-</script>
-
+{% block main %}
 <style>
   #schedule {
       border-spacing: 0px;
@@ -70,6 +21,9 @@
   }
   #schedule tr.done td {
       text-decoration: line-through;
+      color: #888888;
+  }
+  #schedule tr.done a {
       color: #888888;
   }
   #schedule td {
@@ -128,6 +82,7 @@
 </style>
   
   {% if user %}
+  <h1>Schedulator for {{ user.name }}</h1>
   <p>Load factor: {{ user.loadfactor }}</p>
   {% end %}
 
@@ -154,4 +109,59 @@
 	{% end %}
       {% end %}
   </table>
+{% end %}
+
+{% block extra_js %}
+<script>
+    oddevenize_rows = function() {
+        var rows = $('#schedule tr.shown td').parent();
+	var x = 0;
+	rows.each(function() {
+	    if (x % 4 >= 2) {
+	        $(this).addClass('even').removeClass('odd');
+	    } else {
+	        $(this).addClass('odd').removeClass('even');
+	    }
+	    x++;
+	});
+    }
+
+    flip_row = function(e, parentdepth, nchildren) {
+	var row = $(e).closest('tr')
+        var was_collapsed = row.hasClass("collapsed");
+	var subs = row.nextAll().slice(0,nchildren);
+	if (was_collapsed) {
+	    row.removeClass("collapsed").addClass("expanded");
+	    subs.addClass("collapsed")
+		.filter('.depth-' + (parentdepth+1))
+		.addClass("shown")
+		.show();
+	} else {
+	    row.addClass("collapsed").removeClass("expanded");
+	    subs.addClass("collapsed").removeClass("expanded")
+	        .removeClass("shown")
+		.hide();
+	}
+	oddevenize_rows();
+	return false;
+    }
+    
+    $(function() {
+        var rows = $('#schedule tr td').parent();
+        {% if not user %}
+        rows.each(function() {
+	    $(this).addClass("collapsed").removeClass("expanded");
+	    if (!$(this).hasClass("depth-1")) {
+	        $(this).removeClass("shown").hide();
+	    } else {
+	        $(this).addClass("shown").show();
+	    }
+	});
+	{% else %}
+	rows.addClass("shown").show();
+	{% end %}
+	oddevenize_rows();
+    });
+</script>
+{% end %}
 

@@ -3,15 +3,16 @@
 {% block content %}
   <div id='whack'>
     <ul>
-        <li><a href="/chunk/sched">[All]</a></li>
+        <li><a href="/sched/all">[All]</a></li>
 	<li><a href="/chunk/edit">[Edit]</a></li>
-        <li><a href="/chunk/grid">[Grid]</a></li>
-        <li><a href="/chunk/slipgrid">[Slip]</a></li>
         {% for p in userlist %}
-	    <li><a href="/chunk/user/{{url_escape(p.name)}}">{{escape(p.name)}}</a></li>
+	    <li><a href="/sched/user/{{url_escape(p.name)}}">{{escape(p.name)}}</a></li>
 	{% end %}
     </ul>
   </div>
+{% end %}
+
+{% block extra_js %}
   <script type="text/javascript">
     $(function() {
         $('#whack').tabs({
