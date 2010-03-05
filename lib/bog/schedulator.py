@@ -333,7 +333,7 @@ class Schedule(Task):
             (dot, pre, text, post) = re.match(r'(\.?)(\s*)(.*)(\s*)', 
                                          lines[-1]).groups()
             pre = _expand(pre)
-            if not text:
+            if not text or text.startswith('# '):
                 lines.pop()
                 continue
             if text.startswith('#'):
