@@ -14,3 +14,10 @@
     padding-top: 0;
     padding-bottom: 0;
 }
+
+.ui-icon {
+    background-image: url(/static/ui-icons_222222_256x240.png);
+    width: 20px;
+    height: 20px;
+    display: block;
+}

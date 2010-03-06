@@ -169,7 +169,7 @@ for (id, date, isopen, status, title, fixforid,
               headers=msgid)
     f.write('\n--=--\n\n')
     f.write(('# Schedulator tasks\n' +
-            '%s: Implementation\n' +
+            '%s: Implementation [1h]\n' +
             '%s: Test\n\n') % (assignee.user(), assignee.user()))
     for (evid, evdate, evismail, verb, evwhoid, evbody, evchanges) in \
       query('select ixBugEvent, dt, fEmail, sVerb, ixPerson, s, sChanges ' +

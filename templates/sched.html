@@ -10,6 +10,9 @@
   #schedule th {
       text-align: left;
   }
+  #schedule tr td {
+      border-bottom: 1px solid #ccc;
+  }
   #schedule tr.odd {
       background: #fefefe;
   }
@@ -19,9 +22,10 @@
   #schedule tr a:hover {
       background: #ddeeee;
   }
-  #schedule tr.done td {
+  #schedule tr.done td, #schedule tr.done td .note {
       text-decoration: line-through;
       color: #888888;
+      border-bottom: 0;
   }
   #schedule tr.done a {
       color: #888888;
@@ -41,6 +45,12 @@
       margin-left: -20px;
       margin-top: 3px;
       background-position: -48px -16px;
+  }
+  #schedule .title p {
+      display: block;
+      margin: 0;
+      padding: 0 0 0 1em;
+      text-indent: -1em;
   }
   #schedule .narrow {
       width: 5em;
@@ -75,6 +85,7 @@
       font-size: 90%;
       font-style: italic;
       color: #222222;
+      white-space: pre-wrap;
   }
   #schedule .summary {
       white-space: nowrap;
@@ -93,9 +104,9 @@
  	    <td class="title">
 	        {% if t.subtasks %}
 	        <a href="#" onClick="return flip_row(this, {{t.depth()}}, {{t.total_children(user)}});"
-		><span class="ui-icon"></span>{{escape(t.title)}}</a>
+		><span class="ui-icon"></span><p>{{escape(t.title)}}</p></a>
 		{% else %}
-		{{escape(t.title)}}
+		<p>{{escape(t.title)}}</p>
 		{% end %}
 		{% if t.note %}<span class="note">{{escape(t.note)}}</span>{% end %}
  	    </td>
@@ -113,19 +124,6 @@
 
 {% block extra_js %}
 <script>
-    oddevenize_rows = function() {
-        var rows = $('#schedule tr.shown td').parent();
-	var x = 0;
-	rows.each(function() {
-	    if (x % 4 >= 2) {
-	        $(this).addClass('even').removeClass('odd');
-	    } else {
-	        $(this).addClass('odd').removeClass('even');
-	    }
-	    x++;
-	});
-    }
-
     flip_row = function(e, parentdepth, nchildren) {
 	var row = $(e).closest('tr')
         var was_collapsed = row.hasClass("collapsed");
@@ -142,7 +140,6 @@
 	        .removeClass("shown")
 		.hide();
 	}
-	oddevenize_rows();
 	return false;
     }
     
@@ -160,7 +157,6 @@
 	{% else %}
 	rows.addClass("shown").show();
 	{% end %}
-	oddevenize_rows();
     });
 </script>
 {% end %}
