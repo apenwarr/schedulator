@@ -172,9 +172,8 @@ for (id, date, isopen, status, title, fixforid,
             '%s: Implementation [1h]\n' +
             '%s: Test\n\n') % (assignee.user(), assignee.user()))
     for (evid, evdate, evismail, verb, evwhoid, evbody, evchanges) in \
-      query('select 1, now(), \'e@mail.com\', 1, 1, \'Body\', \'Changes?\' '):
-        # +
-        #    ' from BugEvent where ixBug=%s order by dt', id):
+      query('select id, now(), \'e@mail.com\', 1, 1, description, \'Changes?\' '
+         + ' from mantis_bug_text_table where id=%s ', id):
         evwho = persons.get(evwhoid)
         f.write('\n--=--\nContent-Type: message/rfc822\n\n')
         if evismail:
