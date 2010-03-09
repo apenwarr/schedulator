@@ -140,9 +140,10 @@ for (id, date, isopen, status, title, fixforid,
      openbyid, assignedid, resolvedid) in \
   query('select id,date_submitted,status,status,summary,1,reporter_id, ' +
         '1,1 from mantis_bug_table'):
+    defaultPerson = Person(999,'NOT FOUND','admin@test.com')
     isresolved = (status != 1)
     fixfor = fixfors[fixforid]
-    openby = persons[openbyid]
+    openby = persons.get(openbyid,defaultPerson);
     assigned = persons[assignedid]
     resolved = persons.get(resolvedid)
     print '%-5s %s' % (id, title)
@@ -159,6 +160,7 @@ for (id, date, isopen, status, title, fixforid,
     msgid = [('MIME-Version', '1.0'),
              ('Content-Type', 'multipart/mixed; boundary="=--"'),
              ]
+
     assignee = (resolved or assigned)
     writemail(f, tm=fixdt(date),
               _from=openby.mailname(),
@@ -172,8 +174,10 @@ for (id, date, isopen, status, title, fixforid,
             '%s: Implementation [1h]\n' +
             '%s: Test\n\n') % (assignee.user(), assignee.user()))
     for (evid, evdate, evismail, verb, evwhoid, evbody, evchanges) in \
-      query('select id, now(), \'e@mail.com\', 1, 1, description, \'Changes?\' '
-         + ' from mantis_bug_text_table where id=%s ', id):
+      query('select mbtt.id, mbt.date_submitted, 0, 1, mbt.reporter_id, '
+          + 'mbtt.description, \'Changes?\' '
+          + ' from mantis_bug_text_table mbtt, mantis_bug_table mbt '
+          + ' where mbtt.id=%s and mbtt.id=mbt.id', id):
         evwho = persons.get(evwhoid)
         f.write('\n--=--\nContent-Type: message/rfc822\n\n')
         if evismail:
