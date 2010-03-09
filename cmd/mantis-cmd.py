@@ -177,7 +177,12 @@ for (id, date, isopen, status, title, fixforid,
       query('select mbtt.id, mbt.date_submitted, 0, 1, mbt.reporter_id, '
           + 'mbtt.description, \'Changes?\' '
           + ' from mantis_bug_text_table mbtt, mantis_bug_table mbt '
-          + ' where mbtt.id=%s and mbtt.id=mbt.id', id):
+          + ' where mbtt.id=%s and mbtt.id=mbt.id UNION '
+          + 'select mbnt.bug_id, mbnt.date_submitted, 0, 1, mbnt.reporter_id,'
+          + 'mbntt.note,\'Changes?\' '
+          + ' from mantis_bugnote_table mbnt, mantis_bugnote_text_table mbntt'
+          + ' where mbnt.bug_id=%s and mbnt.bugnote_text_id=mbntt.id', 
+            (id, id) ):
         evwho = persons.get(evwhoid)
         f.write('\n--=--\nContent-Type: message/rfc822\n\n')
         if evismail:
