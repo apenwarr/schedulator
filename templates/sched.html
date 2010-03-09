@@ -1,163 +1,40 @@
 {% extends "base_nosidebar.html" %}
 
 {% block main %}
-<style>
-  #schedule {
-      border-spacing: 0px;
-      font-size: 10pt;
-      font-family: Andale Mono, Courier New, monospace;
-  }
-  #schedule th {
-      text-align: left;
-  }
-  #schedule tr td {
-      border-bottom: 1px solid #ccc;
-  }
-  #schedule tr.odd {
-      background: #fefefe;
-  }
-  #schedule tr.even {
-      background: #f4f4f4;
-  }
-  #schedule tr a:hover {
-      background: #ddeeee;
-  }
-  #schedule tr.done td, #schedule tr.done td .note {
-      text-decoration: line-through;
-      color: #888888;
-      border-bottom: 0;
-  }
-  #schedule tr.done a {
-      color: #888888;
-  }
-  #schedule td {
-      padding-left: 1em;
-  }
-  #schedule tr.late .duedate {
-      color: red;
-  }
-  #schedule tr.expanded td.summary {
-      text-indent: -99999px;
-      overflow: hidden;
-  }
-  #schedule .title .ui-icon {
-      float: left;
-      margin-left: -20px;
-      margin-top: 3px;
-      background-position: -48px -16px;
-  }
-  #schedule .title p {
-      display: block;
-      margin: 0;
-      padding: 0 0 0 1em;
-      text-indent: -1em;
-  }
-  #schedule .narrow {
-      width: 5em;
-  }
-  #schedule .collapsed .title .ui-icon {
-      background-position: -32px -16px;
-  }
-  #schedule .depth-1 .title {
-      padding-left: 0em;
-  }
-  #schedule .depth-2 .title {
-      padding-left: 3em;
-  }
-  #schedule .depth-3 .title {
-      padding-left: 6em;
-  }
-  #schedule .depth-4 .title {
-      padding-left: 9em;
-  }
-  #schedule .depth-5 .title {
-      padding-left: 12em;
-  }
-  #schedule .depth-6 .title {
-      padding-left: 15em;
-  }
-  #schedule .depth-7 .title {
-      padding-left: 18em;
-  }
-  #schedule .note {
-      display: block;
-      padding-left: 2em;
-      font-size: 90%;
-      font-style: italic;
-      color: #222222;
-      white-space: pre-wrap;
-  }
-  #schedule .summary {
-      white-space: nowrap;
-  }
-</style>
-  
   {% if user %}
   <h1>Schedulator for {{ user.name }}</h1>
   <p>Load factor: {{ user.loadfactor }}</p>
   {% end %}
 
-  <table id='schedule'>
-      {% for t in tasks.linearize() %}
+  <div id='schedule'>
+      <ul>
+      {% for t in tasks.subtasks %}
         {% if t.contains_user(user) %}
-          <tr class="depth-{{t.depth()}} {% if t.donedate %}done{% end %} {% if not t.donedate and t.late() %}late{% end %} {% if t.total_children(user) %}expanded{% end %}">
- 	    <td class="title">
-	        {% if t.subtasks %}
-	        <a href="#" onClick="return flip_row(this, {{t.depth()}}, {{t.total_children(user)}});"
-		><span class="ui-icon"></span><p>{{escape(t.title)}}</p></a>
-		{% else %}
-		<p>{{escape(t.title)}}</p>
-		{% end %}
-		{% if t.note %}<span class="note">{{escape(t.note)}}</span>{% end %}
- 	    </td>
- 	    <td class="summary narrow">{{render_est(t.total_remain())}}</td>
- 	    <td class="summary narrow duedate">{{t.duedate}}</td>
-	    {% if not user %}
-	    <td class="summary narrow">
-	      {{escape(', '.join(o.name for o in t.all_owners()))}}</td>
-	    {% end %}
-	  </tr>
+	  {{ render_task(t) }}
 	{% end %}
       {% end %}
-  </table>
+      </ul>
+  </div>
 {% end %}
 
 {% block extra_js %}
 <script>
-    flip_row = function(e, parentdepth, nchildren) {
-	var row = $(e).closest('tr')
-        var was_collapsed = row.hasClass("collapsed");
-	var subs = row.nextAll().slice(0,nchildren);
-	if (was_collapsed) {
-	    row.removeClass("collapsed").addClass("expanded");
-	    subs.addClass("collapsed")
-		.filter('.depth-' + (parentdepth+1))
-		.addClass("shown")
-		.show();
-	} else {
-	    row.addClass("collapsed").removeClass("expanded");
-	    subs.addClass("collapsed").removeClass("expanded")
-	        .removeClass("shown")
-		.hide();
-	}
-	return false;
+$('#schedule li').click(function() {
+    var p = this;
+    if ($(p).hasClass("collapsed") || $(p).hasClass("precollapsed")) {
+        $(p).find('li.haschildren > ul').hide();
+	$(p).find('li.haschildren')
+	    .addClass('collapsed')
+	    .removeClass('expanded');
+        $(p).addClass('expanded').removeClass('collapsed');
+	$(p).children('ul').slideDown('fast');
+        $(p).removeClass("precollapsed");
+    } else if ($(p).hasClass("expanded")) {
+        $(p).addClass('collapsed').removeClass('expanded');
+        $(p).children('ul').slideUp('fast');
     }
-    
-    $(function() {
-        var rows = $('#schedule tr td').parent();
-        {% if not user %}
-        rows.each(function() {
-	    $(this).addClass("collapsed").removeClass("expanded");
-	    if (!$(this).hasClass("depth-1")) {
-	        $(this).removeClass("shown").hide();
-	    } else {
-	        $(this).addClass("shown").show();
-	    }
-	});
-	{% else %}
-	rows.addClass("shown").show();
-	{% end %}
-    });
+    return false;
+});
 </script>
 {% end %}
 

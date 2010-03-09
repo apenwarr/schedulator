@@ -117,14 +117,28 @@ class SchedHandler(_Handler):
             username = tornado.escape.url_unescape(username)
         user = username and s.people.get(username.lower()) or None
         tasks = []
-        self.render('sched.html',
-                    tasks = s,
-                    subpage = user and ('/sched/user/%s' % user.name) 
-                       or '/sched',
-                    title = user and ('Schedulator: %s' % user.name) 
-                       or 'Schedulator',
-                    user = user,
-                    render_est = schedulator.render_est)
+        d = dict(tasks = s,
+                 subpage = user and ('/sched/user/%s' % user.name) 
+                     or '/sched',
+                 title = user and ('Schedulator: %s' % user.name) 
+                     or 'Schedulator',
+                 user = user,
+                 render_est = schedulator.render_est)
+        taskcount = [0]
+        def countup(t):
+            if not t.donedate:
+                taskcount[0] += 1
+            return ''
+        def doexpand(t):
+            if t.donedate or taskcount[0] > 10 or not user:
+                return "precollapsed collapsed"
+            return "expanded"
+        def render_task(t):
+            return self.render_string('task.html', t = t, **d)
+        d['doexpand'] = doexpand
+        d['render_task'] = render_task
+        d['countup'] = countup
+        self.render('sched.html', **d)
 
 
 class EditHandler(SchedHandler):

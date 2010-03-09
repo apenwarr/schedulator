@@ -15,15 +15,24 @@ def render_time(t):
     return time.strftime('%Y-%m-%d', time.localtime(t))
 
 
+def _pl(n, word, add="s"):
+    if abs(1.0 - n) < 0.1:
+        return "1 %s" % word
+    elif abs(round(n) - n) < 0.1:
+        return "%d %s%s" % (int(round(n)), word, add)
+    else:
+        return "%.1f %s%s" % (n, word, add)
+
+
 def render_est(e):
     if not e:
         return ''
     if e >= 60:
-        return '%.1fw' % (e/40.0)
+        return _pl(e/40.0, "week")
     if e >= 16:
-        return '%.1fd' % (e/8.0)
+        return _pl(e/8.0, "day")
     else:
-        return '%.1fh' % e
+        return _pl(e, "hour")
 
 
 class SDate:
@@ -89,6 +98,9 @@ def set_today():
 
 class Person:
     def __init__(self, name):
+        global _last_personid
+        _last_personid += 1
+        self.id = (_last_personid <= 16) and _last_personid or 0
         self.name = name
         self.loadfactor = 1.0
         self.date = SDate('1970-01-01')
@@ -242,6 +254,14 @@ class Task:
             if c: return 1
         return 0
 
+    def sub_contains_user(self, user):
+        if not user:
+            return 1
+        for t in self.subtasks:
+            c = t.contains_user(user)
+            if c: return 1
+        return 0
+
     def _all_sub_owners(self, s):
         for t in self.subtasks:
             if not t.donedate:
@@ -268,6 +288,8 @@ def _expand(tabtext):
 
 class Schedule(Task):
     def __init__(self, lines, integrate_slips=False):
+        global _last_personid
+        _last_personid = -1
         self.slipfactor = 2.0
         self.integrate_slips = integrate_slips
         set_today()
@@ -279,6 +301,7 @@ class Schedule(Task):
 
         self.doneroot = Task()
         self.doneroot.title = 'Elapsed Time'
+        self.doneroot.donedate = today
         self.add(self.doneroot)
 
         tasks = self.read_tasks('', list(reversed(lines)))

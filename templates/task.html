@@ -1,0 +1,33 @@
+{{ countup(t) }}
+<li class="task {% if t.donedate %}done{% elif t.late() %}late{% end %} {% if t.subtasks and t.sub_contains_user(user) %}haschildren {{doexpand(t)}}{% end %}">
+    {% if t.subtasks and t.sub_contains_user(user) %}
+        <span class="ui-icon"></span>
+    {% end %}
+    <div class="text">
+	<span class="title">{{escape(t.title)}}</span>
+	<span class="summary">
+	<span class="remain">
+	   {% if t.total_remain() %}<i>{{render_est(t.total_remain())}}</i>
+	   {% end %}</span>
+	<span class="duedate">{% if t.donedate %}done{% else %}due{% end %} <b>{{t.duedate}}</b></span>
+	{% if not user %}
+	  <span class="owners">
+	    {% for o in t.all_owners() %}
+	        <span class="person p{{o.id}}">{{escape(o.name)}}</span>
+	    {% end %}
+	  </span>
+	{% end %}
+	{% if t.note %}
+	  <span class="note">{{escape(t.note)}}</span>
+	{% end %}
+    </div>
+    {% if t.total_children(user) %}
+    <ul>
+        {% for t2 in t.subtasks %}
+	    {% if t2.contains_user(user) %}
+	        {{ render_task(t2) }}
+	    {% end %}
+	{% end %}
+    </ul>
+    {% end %}
+</li>
