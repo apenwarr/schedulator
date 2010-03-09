@@ -5,6 +5,7 @@ body {
     font: 12px/170% 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     color: #666666; 
     text-align: center;	
+    overflow-y: scroll;
 }
 
 textarea {
@@ -108,15 +109,6 @@ dt {
 }
 dd {
     padding-left: 25px; 
-}
-
-/* images */
-.ekb-article img {
-    background: #fafafa;
-    border: 0px;
-    padding: 7px;
-    display: block;
-    max-width: 100%;
 }
 
 code {
@@ -387,7 +379,6 @@ input.button {
 }
 .minimal #main table {
     padding-right: 1em;
-    xmargin: 0 auto;
 }
 
 #sidebar {

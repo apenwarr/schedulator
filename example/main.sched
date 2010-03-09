@@ -1,7 +1,19 @@
-#date 1971-01-01
-#date apenwarr 1972-01-01
-#loadfactor apenwarr 5.0
-
+#alias person1
+#alias person2
+#alias person3
+#alias person4
+#alias person5
+#alias person6
+#alias person7
+#alias person8
+#alias person9
+#alias person10
+#alias person11
+#alias person12
+#alias person13
+#alias person14
+#alias person15
+#alias person16
 #alias Avery ap apenwarr
 #alias Luke lk lkosewsk
 #alias Eduardo ed
@@ -9,6 +21,28 @@
 #alias Hugh hughf hf
 #alias Rodrigo rf
 #alias Bill billh williamh wdheughan wheughan
+
+#date 2011-01-01
+#date apenwarr 2012-01-01
+#loadfactor apenwarr 15.0
+
+persons
+	person1: task [1d]
+	person2: task [1d]
+	person3: task [1d]
+	person4: task [1d]
+	person5: task [1d]
+	person6: task [1d]
+.	person7: task [1d]
+	person8: task [1d]
+	person9: task [1d]
+	person10: task [1d]
+	person11: task [1d]
+	person12: task [1d]
+	person13: task [1d]
+	person14: task [1d]
+	person15: task [1d]
+	person16: task [1d]
 
 ed: megatask 2
 	hf: [1d] smallish

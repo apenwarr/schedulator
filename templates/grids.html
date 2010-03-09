@@ -1,6 +1,20 @@
 {% extends "base_nosidebar.html" %}
 {% block main %}
 <style>
+    h3 {
+        margin: 0;
+	padding: 0;
+    }
+
+    #grids > table {
+        display: none;
+	padding: 2em 0em 2em 4em;
+    }
+    
+    .tooltip {
+        text-align: left;
+    }
+
     .schedgrid th {
         text-align: left;
 	padding: 2px;
@@ -49,19 +63,18 @@
     .schedgrid td:hover .task a:hover {
         background: #bbbb00;
     }
-    .ui-accordion a .subtitle {
+    #grids a .subtitle {
         color: #aaaaaa;
-	font-weight: medium;
+	font-weight: normal;
 	font-size: 75%;
 	padding-left: 2em;
     }
-    .ui-accordion a .subtitle b{
+    #grids a .subtitle b{
         color: #666666;
     }
 </style>
 
-<div>
-  <div class='accordiate'>
+<div id="grids">
     {% for project in projects %}
     <h3><a href="#"><table><tr><td>{{escape(project.title)}}</td>
     <td class='subtitle'>
@@ -74,7 +87,6 @@
     {% end %}
     </td></tr></table>
     </a></h3>
-    <div>
         <table class="schedgrid" cellpadding=0 cellspacing=0>
 	    <tr>
 	        <th></th>
@@ -111,21 +123,24 @@
 	    </tr>
 	    {% end %}
 	</table>
-    </div>
     {% end %}
-  </div>
 </div>
+{% end %}
 
+{% block extra_js %}
 <script>
     $(function() {
+        $("#grids h3").click(function() {
+	    $(this).next('table').slideToggle(100);
+	});
         $(".schedgrid a").tooltip({
 	    track: true,
 	    delay: 0,
 	    showURL: false,
+	    extraClass: "tooltip",
 	    showBody: "\n",
 	    fade: 250
 	});
     });
 </script>
-
 {% end %}

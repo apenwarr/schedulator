@@ -1,23 +1,109 @@
-#schedulator .ui-widget {
-    font-size: 12pt;
+#schedule ul li.task {
+    list-style-type: none;
 }
-#schedulator .ui-tabs-nav li {
-    line-height: 1;
-    font-weight: normal;
-}
-#schedulator .ui-tabs-nav li a {
-    padding: 2px;
-}
-#schedulator .ui-accordion .ui-accordion-header a {
-    font-size: 10pt;
-    line-height: 1;
-    padding-top: 0;
-    padding-bottom: 0;
+#schedule ul {
+    margin-top: 0;
+    margin-right: 0;
+    padding-right: 0;
 }
 
-.ui-icon {
+#schedule .ui-icon {
     background-image: url(/static/ui-icons_222222_256x240.png);
     width: 20px;
     height: 20px;
     display: block;
 }
+#schedule .ui-icon {
+    float: left;
+    margin-left: -20px;
+    margin-top: 3px;
+}
+#schedule .expanded > .ui-icon {
+    background-position: -48px -16px;
+}
+#schedule .collapsed > .ui-icon {
+    background-position: -32px -16px;
+}
+
+#schedule .text {
+    text-indent: -1em;
+    padding-left: 1em;
+}
+
+#schedule li.haschildren > .text:hover {
+    background: #ddeeee;
+}
+
+#schedule .title,
+#schedule .note {
+    font-size: 10pt;
+    font-family: Andale Mono, Courier New, monospace;
+    font-weight: bold;
+}
+#schedule .done .title,
+#schedule .done .note {
+    font-weight: normal;
+}
+
+#schedule .remain {
+    padding-left: 1em;
+    padding-right: 0.5em;
+}
+
+#schedule .done .text {
+    text-decoration: line-through;
+    color: #888;
+    border-bottom: 0;
+}
+#schedule .duedate {
+    color: green;
+}
+#schedule .late .duedate {
+    color: red;
+}
+#schedule .done .duedate {
+    color: #888;
+}
+#schedule .note {
+    display: block;
+    padding-left: 2em;
+    font-size: 90%;
+    font-style: italic;
+    white-space: pre-wrap;
+    line-height: 150%;
+}
+#schedule .summary {
+    font-size: 80%;
+}
+#schedule .expanded > * > .summary {
+    display: none;
+}
+#schedule .precollapsed > ul {
+    display: none;
+}
+
+#schedule .person {
+    padding: 2px;
+}
+#schedule .done .person {
+    background: inherit;
+    color: #888;
+    border: none;
+}
+#schedule .p0 { border: 1px solid #8cc; }
+#schedule .p1 { background: #ccf; }
+#schedule .p2 { background: #cfc; }
+#schedule .p3 { background: #cff; }
+#schedule .p4 { background: #fcc; }
+#schedule .p5 { background: #fcf; }
+#schedule .p6 { background: #ffc; }
+#schedule .p7 { background: #88c; color: white; }
+#schedule .p8 { background: #8c8; color: white; }
+#schedule .p9 { background: #8cc; color: white; }
+#schedule .p10 { background: #c8c; color: white; }
+#schedule .p11 { background: #cc8; color: white; }
+#schedule .p12 { background: #44c; color: white; }
+#schedule .p13 { background: #4c4; color: white; }
+#schedule .p14 { background: #4cc; color: white; }
+#schedule .p15 { background: #c44; color: white; }
+#schedule .p16 { background: #c4c; color: white; }
