@@ -1,4 +1,4 @@
-import sys, os, errno
+import sys, os, errno, subprocess
 
 
 def log(s):
@@ -62,3 +62,20 @@ def check_bog_dir():
 def fatal(s):
     log('error: %s\n' % s)
     sys.exit(90)
+
+
+def _try_editors(progs, fn, offset):
+    for prog in progs:
+        try:
+            return subprocess.Popen([prog, '+%d' % offset, fn]).wait()
+        except OSError, e:
+            pass
+
+
+def editor(fn, offset = 0):
+    return _try_editors([os.getenv('EDITOR'),
+                         'sensible-editor',
+                         'editor',
+                         'nano',
+                         'vi'], fn, offset)
+    
