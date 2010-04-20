@@ -41,5 +41,18 @@ def commit(msg='Checkpoint'):
 
 
 def resolve():
+    gitdir = os.path.join(check_dir(), '.git')
+    os.environ['GIT_DIR'] = gitdir
+    rv = subprocess.call(['git', 'merge', '-Xours', 'merge-me'])
+    rv += subprocess.call(['git', 'push', gitdir, 'master:merge-me'])
+    return rv
+
+
+def push():
     os.environ['GIT_DIR'] = os.path.join(check_dir(), '.git')
-    return subprocess.call(['git', 'merge', '-Xours', 'merge-me'])
+    return subprocess.call(['git', 'push', 'origin', 'master:merge-me'])
+
+
+def pull():
+    os.environ['GIT_DIR'] = os.path.join(check_dir(), '.git')
+    return subprocess.call(['git', 'pull', '-Xours', 'origin', 'master'])

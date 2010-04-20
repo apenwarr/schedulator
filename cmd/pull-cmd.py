@@ -13,11 +13,11 @@ if extra:
     o.fatal('no arguments expected')
 
 repo.check_dir()
-repo.commit('Commit (pull)')
-os.environ['GIT_DIR'] = os.path.join(repo.check_dir(), '.git')
-repo.resolve()
+rv = repo.commit('Commit (pull)')
+rv += repo.resolve()
 if repo.remote_url():
-    sys.exit(subprocess.call(['git', 'pull', '-Xours', 'origin', 'master']))
+    rv += repo.pull()
 else:
     log('No remote repository configured.\n')
-    sys.exit(0)
+sys.exit(rv)
+
