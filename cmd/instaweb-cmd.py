@@ -24,7 +24,8 @@ def get_sched(integrate_slips=False):
                 if n.endswith('~') or n.startswith('.'):
                     continue
                 #log('reading: %r\n' % n)
-                g = re.split(r'\n--=--\n', open(os.path.join(dir, n)).read())
+                g = re.split(r'\n--=---{0,2}\n',
+                             open(os.path.join(dir, n)).read())
                 if g:
                     top = g[0].strip()
                     g2 = re.search(re.compile(r'^Subject: (.*)$', re.M), top)
