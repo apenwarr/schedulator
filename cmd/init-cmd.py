@@ -24,6 +24,8 @@ subprocess.call(['git', 'init'])
 open('.bogroot', 'wb').close()
 if not os.path.exists('.gitignore'):
     open('.gitignore', 'wb').write("*~\n")
+if not os.path.exists('.gitattributes'):
+    open('.gitattributes', 'wb').write('*  merge=union\n')
 mkdirp('Undecided/cur')
 mkdirp('Undecided/new')
 mkdirp('Undecided/tmp')
