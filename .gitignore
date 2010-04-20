@@ -2,4 +2,4 @@
 *.pyc
 .schedid
 /cmd/bog-*
-bog
+/bog
