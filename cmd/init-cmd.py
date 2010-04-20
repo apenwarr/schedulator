@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, os, subprocess
-from bog import options
+from bog import options, repo
 from bog.helpers import *
 
 optspec = """
@@ -15,7 +15,7 @@ if extra:
 if os.path.exists('.bogroot'):
     log('.bogroot already exists in this directory.\n')
 
-oldd = get_bog_dir()
+oldd = repo.get_dir()
 if oldd and os.path.abspath(oldd) != os.path.abspath('.'):
     fatal('BOG_DIR already initialized: %r' % oldd)
 

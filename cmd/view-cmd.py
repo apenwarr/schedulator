@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, os, glob
-from bog import options
+from bog import options, repo
 from bog.helpers import *
 
 optspec = """
@@ -9,7 +9,7 @@ bog view [bugid]
 o = options.Options('bog init', optspec)
 (opt, flags, extra) = o.parse(sys.argv[1:])
 
-bogdir = check_bog_dir()
+bogdir = repo.check_dir()
 (exedir,junk) = os.path.split(sys.argv[0])
 
 if len(extra) > 1:

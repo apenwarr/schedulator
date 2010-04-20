@@ -5,7 +5,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.escape
 from tornado.web import HTTPError
-from bog import options, schedulator
+from bog import options, schedulator, repo
 from bog.helpers import *
 
 
@@ -267,7 +267,7 @@ o = options.Options('bog instaweb', optspec)
 
 (exedir,junk) = os.path.split(sys.argv[0])
 pwd = os.path.abspath(os.path.join(exedir, '..'))
-bogdir = check_bog_dir()
+bogdir = repo.check_dir()
 mainpath = os.path.join(bogdir, 'main.sched')
 
 if not os.path.exists(mainpath):

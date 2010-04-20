@@ -41,24 +41,6 @@ class BogError(Exception):
     pass
 
 
-def get_bog_dir():
-    bd = os.environ.get('BOG_DIR')
-    if bd:
-        return os.path.join(bd, '')  # ensure terminating /
-
-
-def check_bog_dir():
-    d = get_bog_dir()
-    try:
-        if not d:
-            raise BogError('BOG_DIR not set.  Try "bog init"')
-        if not os.path.exists(os.path.join(d, '.')):
-            raise BogError('BOG_DIR %r does not exist' % d)
-    except BogError, e:
-        fatal(e)
-    return d
-
-
 def fatal(s):
     log('error: %s\n' % s)
     sys.exit(90)
