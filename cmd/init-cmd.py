@@ -18,6 +18,7 @@ if os.path.exists('.bogroot'):
 oldd = repo.get_dir()
 if oldd and os.path.abspath(oldd) != os.path.abspath('.'):
     fatal('BOG_DIR already initialized: %r' % oldd)
+os.environ['BOG_DIR'] = os.path.abspath('.')
 
 subprocess.call(['git', 'init'])
 open('.bogroot', 'wb').close()
@@ -26,4 +27,6 @@ if not os.path.exists('.gitignore'):
 mkdirp('Undecided/cur')
 mkdirp('Undecided/new')
 mkdirp('Undecided/tmp')
+if not os.path.exists('.git/index'):
+    repo.commit(msg='Initial commit')
 log('Initialized Bog repository.\n')
