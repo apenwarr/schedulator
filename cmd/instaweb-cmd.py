@@ -10,6 +10,8 @@ from bog.helpers import *
 
 
 def get_sched(integrate_slips=False):
+    repo.commit()
+    repo.resolve()
     # FIXME: this is terrible.  Make a real module for reading email
     # contents...
     lines = []
@@ -153,6 +155,7 @@ class EditHandler(SchedHandler):
         t = str(self.request.body)
         open(mainpath, 'wb').write(t)
         self.write('ok')
+        repo.commit('Edited (web)')
         print 'Updated schedule (%s).' % repr(t[:40])
 
 
