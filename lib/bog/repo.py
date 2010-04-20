@@ -33,7 +33,7 @@ def remote_url():
 def commit(msg='Checkpoint'):
     bogdir = check_dir()
     os.environ['GIT_DIR'] = os.path.join(bogdir, '.git')
-    subprocess.call(['git', 'add', bogdir])
+    subprocess.call(['git', 'add', '-A', bogdir])
     rv = subprocess.call(['git', 'commit', '-m', msg])
     subprocess.call(['git', 'branch', 'merge-me'],
                     stderr=open('/dev/null', 'w'))
