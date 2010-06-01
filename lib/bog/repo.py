@@ -1,4 +1,4 @@
-import os, subprocess
+import os, subprocess, glob
 from bog.helpers import *
 
 
@@ -17,6 +17,10 @@ def check_dir():
             raise BogError('BOG_DIR %r does not exist' % d)
     except BogError, e:
         fatal(e)
+    for folder in glob.glob('%s/*/.' % d):
+        if os.path.exists('%s/cur' % folder):
+            mkdirp('%s/new' % folder)
+            mkdirp('%s/tmp' % folder)
     return d
 
 
