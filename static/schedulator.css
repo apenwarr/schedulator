@@ -107,3 +107,5 @@
 #schedule .p14 { background: #4cc; color: white; }
 #schedule .p15 { background: #c44; color: white; }
 #schedule .p16 { background: #c4c; color: white; }
+
+.schedgrid th.username { white-space: nowrap; }
