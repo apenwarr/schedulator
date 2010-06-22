@@ -1,5 +1,6 @@
 #schedule ul li.task {
     list-style-type: none;
+    clear: right;
 }
 #schedule ul {
     margin-top: 0;
@@ -58,7 +59,7 @@
 #schedule .duedate {
     color: green;
 }
-#schedule .late .duedate {
+#schedule .late > * > .duedate {
     color: red;
 }
 #schedule .done .duedate {
@@ -72,10 +73,13 @@
     white-space: pre-wrap;
     line-height: 150%;
 }
-#schedule .summary {
+#schedule .summaryhide {
     font-size: 80%;
 }
-#schedule .expanded > * > .summary {
+#schedule .rightcol {
+    float: right;
+}
+#schedule .expanded > * > .summaryhide, .expanded > .summaryhide {
     display: none;
 }
 #schedule .precollapsed > ul {

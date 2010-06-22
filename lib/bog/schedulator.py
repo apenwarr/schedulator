@@ -251,6 +251,14 @@ class Task:
         return (self.duedate and (self.duedate.date < today)
                 and not self.donedate)
 
+    def any_late(self, user):
+        if (not user or self.owner == user) and self.late():
+            return True
+        for t in self.subtasks:
+            if t.any_late(user):
+                return True
+        return False
+
     def contains_user(self, user):
         if not user:
             return 1
