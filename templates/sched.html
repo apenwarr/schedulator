@@ -27,11 +27,11 @@ $('#schedule li').click(function() {
 	    .addClass('collapsed')
 	    .removeClass('expanded');
         $(p).addClass('expanded').removeClass('collapsed');
-	$(p).children('ul').slideDown('fast');
+	$(p).children('ul').slideDown(75);
         $(p).removeClass("precollapsed");
     } else if ($(p).hasClass("expanded")) {
         $(p).addClass('collapsed').removeClass('expanded');
-        $(p).children('ul').slideUp('fast');
+        $(p).children('ul').slideUp(75);
     }
     return false;
 });
