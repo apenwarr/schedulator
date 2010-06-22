@@ -81,7 +81,7 @@
     {% if project.task.commitdate %}
     <b>{{project.task.commitdate}}</b>
     <span style='padding-left: 2em;'>Committed</span>
-    {% else %}
+    {% elif not project.task.donedate %}
     <b>{{project.task.duedate}}</b>
     <span style='color: red; padding-left: 2em;'>ESTIMATED</span>
     {% end %}
