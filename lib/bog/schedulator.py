@@ -29,7 +29,7 @@ def render_est(e):
         return ''
     if e >= 60:
         return _pl(e/40.0, "week")
-    if e >= 16:
+    if e >= 8:
         return _pl(e/8.0, "day")
     else:
         return _pl(e, "hour")
