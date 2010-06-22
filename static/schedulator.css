@@ -37,7 +37,7 @@
 #schedule .title,
 #schedule .note {
     font-size: 10pt;
-    font-family: Andale Mono, Courier New, monospace;
+    font-family: Verdana, Andale Mono, Courier New, monospace;
     font-weight: bold;
 }
 #schedule .done .title,
@@ -83,7 +83,13 @@
 }
 
 #schedule .person {
-    padding: 2px;
+    padding: 1px 5px 1px 5px;
+    margin: 0px;
+    font-size: 80%;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    font-family: Verdana, Andale Mono, Courier New, monospace;
+    color: #000;
 }
 #schedule .done .person {
     background: inherit;

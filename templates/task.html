@@ -4,6 +4,11 @@
         <span class="ui-icon"></span>
     {% end %}
     <div class="text">
+	{% if not user %}
+	  <span class="owners summary">
+	    {% for o in t.all_owners() %}<span class="person p{{o.id}}">{{escape(o.name)}}</span>{% end %}
+	  </span>
+	{% end %}
 	<span class="title">{{escape(t.title)}}</span>
 	<span class="summary">
 	<span class="remain">
@@ -12,13 +17,7 @@
 	{% if not t.done_for_user(user) %}
 	<span class="duedate">{% if t.donedate %}done{% else %}due{% end %} <b>{{t.duedate}}</b></span>
 	{% end %}
-	{% if not user %}
-	  <span class="owners">
-	    {% for o in t.all_owners() %}
-	        <span class="person p{{o.id}}">{{escape(o.name)}}</span>
-	    {% end %}
-	  </span>
-	{% end %}
+	</span>
 	{% if t.note %}
 	  <span class="note">{{escape(t.note)}}</span>
 	{% end %}
