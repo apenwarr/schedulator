@@ -212,25 +212,32 @@ class Task:
             if parent_after_children:
                 yield t
 
-    def remain(self):
-        return (self.estimate or 0) - self.elapsed
+    def remain(self, user):
+        if not user or self.owner == user:
+            return (self.estimate or 0) - self.elapsed
+        else:
+            return 0
 
-    def total_estimate(self):
-        tt = self.estimate or 0
+    def total_estimate(self, user):
+        tt = 0
+        if (not user or self.owner == user) and self.estimate:
+            tt = self.estimate
         for t in self.subtasks:
-            tt += t.total_estimate()
+            tt += t.total_estimate(user)
         return tt
 
-    def total_elapsed(self):
-        tt = self.elapsed or 0
+    def total_elapsed(self, user):
+        tt = 0
+        if (not user or self.owner == user) and self.elapsed:
+            tt = self.elapsed
         for t in self.subtasks:
             tt += t.total_elapsed()
         return tt
 
-    def total_remain(self):
-        tt = self.remain()
+    def total_remain(self, user):
+        tt = self.remain(user)
         for t in self.subtasks:
-            tt += t.total_remain()
+            tt += t.total_remain(user)
         return tt
 
     def calc_duedate(self):
@@ -274,6 +281,13 @@ class Task:
         self._all_sub_owners(s)
         return filter(None, s)
 
+    def done_for_user(self, user):
+        if not user or self.owner == user:
+            return self.donedate and True or False
+        for t in self.subtasks:
+            if not t.done_for_user(user):
+                return False
+        return True
 
 def _expand(tabtext):
     out = ''
@@ -492,7 +506,8 @@ class Schedule(Task):
                 if t.owner and t.elapsed:
                     t.owner.add_elapsed(t.elapsed)
                 # FIXME: it would be smarter to record the *actual*
-                # completion date, but we don't yet.
+                # completion date, but we don't yet, because I have no idea
+                # where to store that.
                 t.donedate = t.duedate = t.calc_duedate()
 
         # allocate time for all elapsed-but-incomplete tasks
