@@ -59,4 +59,6 @@ def push():
 
 def pull():
     os.environ['GIT_DIR'] = os.path.join(check_dir(), '.git')
-    return subprocess.call(['git', 'pull', 'origin', 'master'])
+    rv = subprocess.call(['git', 'pull', 'origin', 'master'])
+    rv += subprocess.call(['git', 'pull', 'origin', 'merge-me'])
+    return rv
