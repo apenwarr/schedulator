@@ -64,8 +64,11 @@ class SDate:
 
     def add(self, days):
         # print 'adding %g days to %s' % (days, self)
+        if days > 999:
+            days = 999
         assert(days < 10000)
-        assert(days >= 0)
+        if days < 0:  # elapsed > estimated; oh well
+            days = 0
         self._fixdate()
         #while days > 40:  # fast forward a week at a time
         #    self.date += WEEK
