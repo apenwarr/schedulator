@@ -23,7 +23,7 @@ os.environ['BOG_DIR'] = os.path.abspath('.')
 subprocess.call(['git', 'init'])
 open('.bogroot', 'wb').close()
 if not os.path.exists('.gitignore'):
-    open('.gitignore', 'wb').write("*~\n")
+    open('.gitignore', 'wb').write("*~\nnohup.out\n*.swp\n*.bak\n")
 if not os.path.exists('.gitattributes'):
     open('.gitattributes', 'wb').write('*  merge=union\n')
 mkdirp('Undecided/cur')
