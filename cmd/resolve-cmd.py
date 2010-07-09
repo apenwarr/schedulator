@@ -14,5 +14,4 @@ if extra:
 
 repo.check_dir()
 repo.commit('Commit (resolve)')
-sys.exit(repo.resolve())
-
+repo.resolve()

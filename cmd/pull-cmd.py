@@ -13,11 +13,10 @@ if extra:
     o.fatal('no arguments expected')
 
 repo.check_dir()
-rv = repo.commit('Commit (pull)')
-rv += repo.resolve()
+repo.commit('Commit (pull)')
+repo.resolve()
 if repo.remote_url():
-    rv += repo.pull()
+    repo.pull()
 else:
     log('No remote repository configured.\n')
-sys.exit(rv)
 

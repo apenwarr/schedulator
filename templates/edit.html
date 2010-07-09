@@ -69,7 +69,7 @@ var oldtext = '';
 sched_post = function() {
     var v = $('#schedtext').val();
     if (v != oldtext) {
-        $.post('/sched/edit', v);
+        $.post('/sched/edit?commitid={{commitid}}', v);
 	oldtext = v;
     }
 };

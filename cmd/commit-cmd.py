@@ -14,4 +14,5 @@ o = options.Options('bog commit', optspec)
 if extra:
     o.fatal('no arguments expected')
 
-sys.exit(repo.commit(msg = opt.message or 'Commit'))
+repo.commit(msg = opt.message or 'Commit')
+

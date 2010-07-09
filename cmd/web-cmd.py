@@ -149,13 +149,17 @@ class EditHandler(SchedHandler):
         self.render('edit.html', subpage='/sched/edit',
                     title = 'Edit Schedule',
                     tasks = get_sched(),
-                    text = open(mainpath).read())
+                    text = open(mainpath).read(),
+                    commitid = repo.head_commitid())
 
     def post(self):
+        repo.commit()
         t = str(self.request.body)
         open(mainpath, 'wb').write(t)
         self.write('ok')
-        repo.commit('Edited (web)')
+        
+        cid = repo.vcommit('Edited (web)', self.get_argument('commitid'))
+        repo.resolve(cid)
         print 'Updated schedule (%s).' % repr(t[:40])
 
 

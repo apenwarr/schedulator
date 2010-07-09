@@ -13,7 +13,6 @@ if extra:
     o.fatal('no arguments expected')
 
 repo.check_dir()
-rv = repo.commit('Commit (push)')
-rv += repo.resolve()
-rv += repo.push()
-sys.exit(rv)
+repo.commit('Commit (push)')
+repo.resolve()
+repo.push()
