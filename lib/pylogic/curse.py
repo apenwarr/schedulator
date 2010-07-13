@@ -3,6 +3,7 @@ import curses, time
 
 BOLD = curses.A_BOLD
 UNDERLINE = curses.A_UNDERLINE
+REVERSE = curses.A_REVERSE
 
 BLACK    = (0x10, curses.COLOR_BLACK,    (0,0,0),       0)
 RED      = (0x11, curses.COLOR_RED,      (600,0,0),     0)
@@ -46,7 +47,10 @@ def color(fg, bg, *attrs):
                     curses.init_pair(pairid, fg[1], bg[1])
                 pv = curses.color_pair(pairid)
             else:
+                # terrible black-and-white terminal like vt100
                 av = fg[3]
+                if bg[0] >= xRED[0] or bg[0] == WHITE[0]:
+                    av |= REVERSE
                 pv = 0
             _colorcache[fg,bg] = pv,av
         else:
@@ -63,7 +67,7 @@ try:
         for (c,nc,(r,g,b),a) in _all_colors:
             curses.init_color(c, r,g,b)
     
-    w.bkgd('.', color(RED, xCYAN))
+    w.bkgd('.', color(BLACK,xBLUE))
     w.addstr("\n\n   wonko the sane  \n\nbane", color(RED, xBLACK))
     w.addstr("\n\n   wonko the sane  \n\nbane", color(xRED, BLUE, UNDERLINE))
     w.border()
