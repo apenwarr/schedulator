@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import with_statement
-import sys, os, curses, time, weakref, select
+import sys, os, curses, time, weakref, select, signal
 
 BOLD = curses.A_BOLD
 UNDERLINE = curses.A_UNDERLINE
@@ -307,6 +307,7 @@ class Screen(View):
         self.root = None
         self.w = None
         self.cursorpos = None
+        self.oldhandler = None
     
     def __enter__(self):
         self.root = curses.initscr()
@@ -317,10 +318,20 @@ class Screen(View):
         if curses.can_change_color():
             for (c,nc,(r,g,b),a) in _all_colors:
                 curses.init_color(c, r,g,b)
+        def resize_handler(sig, frame):
+            self.resize()
+        self.oldhandler = signal.signal(signal.SIGWINCH, resize_handler)
         return self
 
     def __exit__(self, type,value,traceback):
+        signal.signal(signal.SIGWINCH, self.oldhandler)
         curses.endwin()
+
+    def resize(self):
+        self.__exit__(None,None,None)
+        self.__enter__()
+        self.layout()
+        self.refresh()
 
     def setcursor(self, pos):
         self.cursorpos = pos
@@ -343,8 +354,11 @@ class Screen(View):
 
     def select(self, timeout=None):
         self.refresh()
-        (r,w,x) = select.select([sys.stdin.fileno()], [], [], timeout)
-        if r:
+        try:
+            (r,w,x) = select.select([sys.stdin.fileno()], [], [], timeout)
+        except select.error:
+            return None
+        else:
             return r
 
     def runonce(self, timeout=None):
@@ -356,6 +370,7 @@ class Screen(View):
 
 if 1:
     print 'test 1'
+    sys.stdout.flush()
     with Screen() as s:
         w = s.add(View(), size=s.size, pos=Pos(0,0))
         w.fill('.', color(BLACK,xBLUE))
@@ -407,9 +422,11 @@ if 1:
     print n
     print nn
     print ccc
+    sys.stdout.flush()
 
 if 1:
     print 'test 2'
+    sys.stdout.flush()
     with Screen() as s:
         topbar = s.add(View(minsize=Size(3,1)), 'ne')
         topbar2 = s.add(View(minsize=Size(3,1)), 'nw')
