@@ -186,7 +186,8 @@ class View:
             self._needs_layout = True
 
     def area(self):
-        assert(self.pos, self.size)
+        assert(self.pos)
+        assert(self.size)
         return Area(self.pos, self.size)
 
     def gpos(self):
