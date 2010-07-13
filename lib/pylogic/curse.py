@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import with_statement
-import curses, time, weakref
+import sys, os, curses, time, weakref, select
 
 BOLD = curses.A_BOLD
 UNDERLINE = curses.A_UNDERLINE
@@ -64,17 +64,20 @@ def color(fg, bg, *attrs):
 
 class Pos(object):
     __slots__ = ['x','y']
+    
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
     def __repr__(self):
         return 'Pos(%d,%d)' % (self.x, self.y)
+        
     def __str__(self):
         return '(%d,%d)' % (self.x, self.y)
 
     def __add__(self, pos):
         return Pos(self.x+pos.x, self.y+pos.y)
+        
     def __sub__(self, pos):
         return Pos(self.x-pos.x, self.y-pos.y)
         
@@ -82,6 +85,7 @@ class Pos(object):
         self.x += pos.x
         self.y += pos.y
         return self
+        
     def __isub__(self, pos):
         self.x -= pos.x
         self.y -= pos.y
@@ -91,12 +95,15 @@ Size = Pos
 
 
 class View:
-    def __init__(self, parent):
+    def __init__(self):
+        self.parent = None
+        self.w = self.pos = self.size = None
+
+    def _setparent(self, parent):
         if parent:
             self.parent = weakref.ref(parent)
         else:
             self.parent = None
-        self.w = self.pos = self.size = None
 
     def _setpos(self, pos):
         self.pos = pos
@@ -123,7 +130,6 @@ class View:
             size.x = psize.x - self.pos.x
         if self.pos.y + size.y > self.size.y:
             size.y = psize.y - self.pos.y
-        #raise Exception(repr((ipos,gpos,size)))
         self.w.noutrefresh(ipos.y, ipos.x,
                            gpos.y, gpos.x, gpos.y+size.y-1, gpos.x+size.x-1)
 
@@ -132,15 +138,16 @@ class View:
         self.w.border()
 
     def setcursor(self, pos):
-        if pos:
-            self.parent().setcursor(self.pos + pos)
-        else:
-            self.parent().setcursor(None)
+        if self.parent:
+            if pos:
+                self.parent().setcursor(self.pos + pos)
+            else:
+                self.parent().setcursor(None)
 
 
 class Screen(View):
     def __init__(self):
-        View.__init__(self, None)
+        View.__init__(self)
         self.w = None
         self.cursorpos = None
     
@@ -158,17 +165,37 @@ class Screen(View):
     def __exit__(self, type,value,traceback):
         curses.endwin()
 
+    def __iter__(self):
+        return self
+
     def setcursor(self, pos):
         self.cursorpos = pos
 
     def refresh(self):
         if self.cursorpos:
             curses.setsyx(max(0, self.cursorpos.y), max(0, self.cursorpos.x))
-            curses.curs_set(1)
+            try:
+                curses.curs_set(1)
+            except curses.error:
+                pass
         else:
-            curses.setsyx(-1,-1)
-            curses.curs_set(0)
+            curses.setsyx(self.size.y-1, self.size.x-1)
+            try:
+                curses.curs_set(0)
+            except curses.error:
+                pass
         curses.doupdate()
+
+    def select(self, timeout=None):
+        self.refresh()
+        (r,w,x) = select.select([sys.stdin.fileno()], [], [], timeout)
+        if r:
+            return r
+
+    def runonce(self, timeout=None):
+        r = self.select(timeout)
+        if r:
+            os.read(sys.stdin.fileno(), 4096)  # *up to* 4096 bytes
 
 
 with Screen() as s:
@@ -183,22 +210,20 @@ with Screen() as s:
     w.noutrefresh(0,0, 0,0,s.size.y-1,s.size.x-1)
     p.noutrefresh(0,0, 10,20,10+10-1,20+10-1)
 
-    v = View(s)
+    v = View()
+    v._setparent(s)
     v._setpos(Pos(-5,6))
     v._setsize(Size(30,600))
     v.fill('Q', color(xYELLOW,BLACK))
     v._render()
 
-    s.refresh()
-    time.sleep(1)
+    s.runonce()
     
     v.setcursor(Pos(1,1))
-    s.refresh()
-    time.sleep(1)
+    s.runonce()
     
     v.setcursor(None)
-    s.refresh()
-    time.sleep(1)
+    s.runonce()
     
     n = curses.COLOR_PAIRS
     nn = curses.COLORS
