@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import with_statement
 import curses, time
 
 BOLD = curses.A_BOLD
@@ -60,24 +61,95 @@ def color(fg, bg, *attrs):
         _colorcache[fg,bg,attrs] = av | pv
         return av | pv
 
-w = curses.initscr()
-try:
-    curses.start_color()
-    if curses.can_change_color():
-        for (c,nc,(r,g,b),a) in _all_colors:
-            curses.init_color(c, r,g,b)
-    
+
+class Pos(object):
+    __slots__ = ['x','y']
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __add__(self, pos):
+        return Pos(self.x+pos.x, self.y+pos.y)
+    def __sub__(self, pos):
+        return Pos(self.x-pos.x, self.y-pos.y)
+        
+    def __iadd__(self, pos):
+        self.x += pos.x
+        self.y += pos.y
+        return self
+    def __isub__(self, pos):
+        self.x -= pos.x
+        self.y -= pos.y
+        return self
+        
+Size = Pos
+
+
+class View:
+    def __init__(self):
+        self.w = None
+
+    def setsize(self, size):
+        self.size = size
+        self.w = curses.newpad(size.y, size.x)
+
+    def render(self, pos, size):
+        ipos = Pos(0,0)
+        ipos = Pos(-min(pos.x, 0), -min(pos.y, 0))
+        pos += ipos
+        size -= ipos
+        if size.x > self.size.x:
+            size.x = self.size.x
+        if size.y > self.size.y:
+            size.y = self.size.y
+        self.w.noutrefresh(ipos.y, ipos.x,
+                           pos.y, pos.x, pos.y+size.y-1, pos.x+size.x-1)
+
+    def fill(self, c, at):
+        self.w.bkgd(c, at)
+        self.w.border()
+
+
+class Screen:
+    def __enter__(self):
+        self.w = curses.initscr()
+        (ys,xs) = self.w.getmaxyx()
+        self.pos = Pos(0,0)
+        self.size = Size(xs,ys)
+        curses.start_color()
+        if curses.can_change_color():
+            for (c,nc,(r,g,b),a) in _all_colors:
+                curses.init_color(c, r,g,b)
+        return self
+
+    def __exit__(self, type,value,traceback):
+        curses.endwin()
+
+
+with Screen() as s:
+    w = curses.newpad(s.size.y, s.size.x)
     w.bkgd('.', color(BLACK,xBLUE))
     w.addstr("\n\n   wonko the sane  \n\nbane", color(RED, xBLACK))
     w.addstr("\n\n   wonko the sane  \n\nbane", color(xRED, BLUE, UNDERLINE))
     w.border()
-    w.refresh()
-    n= curses.COLOR_PAIRS
-    nn = curses.COLORS
-    ccc=curses.can_change_color()
+
+    p = curses.newpad(10,10)
+    p.bkgd('!', color(RED, YELLOW))
+    w.noutrefresh(0,0, 0,0,s.size.y-1,s.size.x-1)
+    p.noutrefresh(0,0, 10,20,10+10-1,20+10-1)
+
+    v = View()
+    v.setsize(Size(20,5))
+    v.fill('Q', color(xYELLOW,BLACK))
+    v.render(Pos(40,2), Size(500,500))
+
+    curses.doupdate()
+    
     time.sleep(1)
-finally:
-    curses.endwin()
+    
+    n = curses.COLOR_PAIRS
+    nn = curses.COLORS
+    ccc = curses.can_change_color()
 
 print n
 print nn
