@@ -311,7 +311,21 @@ class Screen(View):
         self.oldhandler = None
     
     def __enter__(self):
-        self.root = curses.initscr()
+        # avoid a bug in python 2.6's curses implementation when
+        # curses.initscr() is called more than once.  The workaround is to
+        # use _curses.initscr() instead, although this makes the ACS_*
+        # constants unavailable in curses, only in _curses.  But that's ok.
+        #
+        # See: http://bugs.python.org/issue7567
+        #
+        # Once it's clear which versions of python do/don't have this bug,
+        # it might make sense to adjust the hack to only affect those
+        # versions.
+        if 1:
+            import _curses
+            self.root = _curses.initscr()
+        else:
+            self.root = curses.initscr()
         (ys,xs) = self.root.getmaxyx()
         self._setsize(Size(xs,ys))
         self._setpos(Pos(0,0))
