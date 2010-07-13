@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import with_statement
-import curses, time
+import curses, time, weakref
 
 BOLD = curses.A_BOLD
 UNDERLINE = curses.A_UNDERLINE
@@ -68,6 +68,11 @@ class Pos(object):
         self.x = x
         self.y = y
 
+    def __repr__(self):
+        return 'Pos(%d,%d)' % (self.x, self.y)
+    def __str__(self):
+        return '(%d,%d)' % (self.x, self.y)
+
     def __add__(self, pos):
         return Pos(self.x+pos.x, self.y+pos.y)
     def __sub__(self, pos):
@@ -86,31 +91,59 @@ Size = Pos
 
 
 class View:
-    def __init__(self):
-        self.w = None
+    def __init__(self, parent):
+        if parent:
+            self.parent = weakref.ref(parent)
+        else:
+            self.parent = None
+        self.w = self.pos = self.size = None
 
-    def setsize(self, size):
+    def _setpos(self, pos):
+        self.pos = pos
+
+    def _setsize(self, size):
         self.size = size
         self.w = curses.newpad(size.y, size.x)
 
-    def render(self, pos, size):
-        ipos = Pos(0,0)
-        ipos = Pos(-min(pos.x, 0), -min(pos.y, 0))
-        pos += ipos
-        size -= ipos
-        if size.x > self.size.x:
-            size.x = self.size.x
-        if size.y > self.size.y:
-            size.y = self.size.y
+    def gpos(self):
+        if self.parent:
+            return self.parent().gpos() + self.pos
+        else:
+            return self.pos
+
+    def _render(self):
+        ipos = Pos(-min(self.pos.x, 0), -min(self.pos.y, 0))
+        gpos = self.gpos() + ipos
+        size = self.size - ipos
+        if self.parent:
+            psize = self.parent().size
+        else:
+            psize = size
+        if self.pos.x + size.x > psize.x:
+            size.x = psize.x - self.pos.x
+        if self.pos.y + size.y > self.size.y:
+            size.y = psize.y - self.pos.y
+        #raise Exception(repr((ipos,gpos,size)))
         self.w.noutrefresh(ipos.y, ipos.x,
-                           pos.y, pos.x, pos.y+size.y-1, pos.x+size.x-1)
+                           gpos.y, gpos.x, gpos.y+size.y-1, gpos.x+size.x-1)
 
     def fill(self, c, at):
         self.w.bkgd(c, at)
         self.w.border()
 
+    def setcursor(self, pos):
+        if pos:
+            self.parent().setcursor(self.pos + pos)
+        else:
+            self.parent().setcursor(None)
 
-class Screen:
+
+class Screen(View):
+    def __init__(self):
+        View.__init__(self, None)
+        self.w = None
+        self.cursorpos = None
+    
     def __enter__(self):
         self.w = curses.initscr()
         (ys,xs) = self.w.getmaxyx()
@@ -125,6 +158,18 @@ class Screen:
     def __exit__(self, type,value,traceback):
         curses.endwin()
 
+    def setcursor(self, pos):
+        self.cursorpos = pos
+
+    def refresh(self):
+        if self.cursorpos:
+            curses.setsyx(max(0, self.cursorpos.y), max(0, self.cursorpos.x))
+            curses.curs_set(1)
+        else:
+            curses.setsyx(-1,-1)
+            curses.curs_set(0)
+        curses.doupdate()
+
 
 with Screen() as s:
     w = curses.newpad(s.size.y, s.size.x)
@@ -138,13 +183,21 @@ with Screen() as s:
     w.noutrefresh(0,0, 0,0,s.size.y-1,s.size.x-1)
     p.noutrefresh(0,0, 10,20,10+10-1,20+10-1)
 
-    v = View()
-    v.setsize(Size(20,5))
+    v = View(s)
+    v._setpos(Pos(-5,6))
+    v._setsize(Size(30,600))
     v.fill('Q', color(xYELLOW,BLACK))
-    v.render(Pos(40,2), Size(500,500))
+    v._render()
 
-    curses.doupdate()
+    s.refresh()
+    time.sleep(1)
     
+    v.setcursor(Pos(1,1))
+    s.refresh()
+    time.sleep(1)
+    
+    v.setcursor(None)
+    s.refresh()
     time.sleep(1)
     
     n = curses.COLOR_PAIRS
