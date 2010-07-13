@@ -90,9 +90,19 @@ class Pos(object):
         self.x -= pos.x
         self.y -= pos.y
         return self
-        
-Size = Pos
 
+    def __cmp__(self, pos):
+        if not pos:
+            return 1
+        return cmp((self.x,self.y), (pos.x,pos.y))
+
+
+class Size(Pos):
+    __slots__ = ['x','y']
+        
+    def __repr__(self):
+        return 'Size(%d,%d)' % (self.x, self.y)
+        
 
 class Area(object):
     __slots__ = ['x1', 'y1', 'x2', 'y2']
@@ -124,23 +134,20 @@ class _Child(object):
     def __repr__(self):
         return 'C(%r,%r,%r,%r)' % (self.child, self.anchor, self.pos, self.size)
 
-
 class View:
-    def __init__(self):
+    def __init__(self, minsize=Size(0,0)):
         self.parent = None
         self.children = []
-        self.w = self.pos = self.size = None
+        self.w = self.pos = self.size = self._autofiller = None
+        self.minsize = minsize
         self._needs_layout = True
 
     def add(self, child, anchor=None, pos=None, size=None):
+        anchor = anchor or ''
         if anchor:
             assert(not pos)
-        if not anchor:
-            if not pos:
-                pos = child.pos
-            if not size:
-                size = child.size
-            assert(pos)
+            assert(not size)
+        if pos:
             assert(size)
         child._setparent(self)
         self.children.append(_Child(child, anchor, pos, size))
@@ -151,11 +158,12 @@ class View:
         return child
 
     def remove(self, child):
+        self._needs_layout = True
         for i,c in enumerate(self.children):
             if c.child == child:
                 del self.children[i]
                 c.child._setparent(None)
-                break
+                return child
 
     def _setparent(self, parent):
         p = self.parent and self.parent() or None
@@ -164,7 +172,6 @@ class View:
                 self.parent = weakref.ref(parent)
             else:
                 self.parent = None
-            self._needs_layout = True
 
     def _setpos(self, pos):
         if self.pos != pos:
@@ -173,33 +180,92 @@ class View:
     def _setsize(self, size):
         if self.size != size:
             self.size = size
-            self.w = curses.newpad(size.y, size.x)
+            self.w = curses.newpad(max(size.y, 1), max(size.x, 1))
+            if self._autofiller:
+                self._autofiller()
             self._needs_layout = True
 
     def area(self):
+        assert(self.pos, self.size)
         return Area(self.pos, self.size)
 
     def gpos(self):
+        assert(self.pos)
         if self.parent:
             return self.parent().gpos() + self.pos
         else:
             return self.pos
 
     def garea(self):
+        assert(self.pos)
+        assert(self.size)
         if self.parent:
             return Area(self.gpos(), self.size)
         else:
             return Area(self.pos, self.size)
 
     def _do_layout(self):
+        remain = Area(Pos(0,0), self.size)
         for c in self.children:
-            c.child._setsize(c.size)
-            c.child._setpos(c.pos)
+            if c.pos:
+                assert(c.size)
+                size = c.size
+                pos = c.pos
+            else:
+                a = c.anchor
+                wantsize = c.child.minsize
+                stretch_x = 'w' in c.anchor and 'e' in c.anchor
+                stretch_y = 'n' in c.anchor and 's' in c.anchor
+                uses_x = not stretch_x and ('w' in c.anchor or 'e' in c.anchor)
+                uses_y = not stretch_y and ('n' in c.anchor or 's' in c.anchor)
+
+                if stretch_x:
+                    x1 = remain.x1
+                    x2 = remain.x2
+                elif 'w' in c.anchor:
+                    x1 = remain.x1
+                    x2 = remain.x1 + wantsize.x - 1
+                    if not uses_y:
+                        remain.x1 += wantsize.x
+                elif 'e' in c.anchor:
+                    x2 = remain.x2
+                    x1 = remain.x2 - wantsize.x + 1
+                    if not uses_y:
+                        remain.x2 -= wantsize.x
+                else:
+                    x1 = remain.x1 + (remain.x2 - remain.x1 + 1 - wantsize.x)/2
+                    x2 = x1 + wantsize.x - 1
+
+                if stretch_y:
+                    y1 = remain.y1
+                    y2 = remain.y2
+                elif 'n' in c.anchor:
+                    y1 = remain.y1
+                    y2 = remain.y1 + wantsize.y - 1
+                    remain.y1 += wantsize.y
+                elif 's' in c.anchor:
+                    y2 = remain.y2
+                    y1 = remain.y2 - wantsize.y + 1
+                    remain.y2 -= wantsize.y
+                else:
+                    y1 = remain.y1 + (remain.y2 - remain.y1 + 1 - wantsize.y)/2
+                    y2 = y1 + wantsize.y - 1
+
+                size = Size(x2-x1+1, y2-y1+1)
+                pos = Pos(x1, y1)
+
+            c.child._setsize(size)
+            c.child._setpos(pos)
         self._needs_layout = False
+
+    def layout(self):
+        self._do_layout()
+        for c in self.children:
+            c.child.layout()
 
     def _render_me(self):
         area = self.garea()
-        parea = self.parent().garea()
+        parea = self.parent and self.parent().garea() or area
         remain = area.intersect(parea)
         if remain.size().x and remain.size().y:
             offset = Pos(remain.x1 - area.x1, remain.y1 - area.y1)
@@ -213,7 +279,6 @@ class View:
     def _render(self):
         if self._needs_layout:
             self._do_layout()
-
         self._render_me()
 
         # do this *after* our own display, because the children should be
@@ -222,7 +287,10 @@ class View:
             c.child._render()
         
     def fill(self, c, at):
-        self.w.bkgd(c, at)
+        self._autofiller = lambda: self.w.bkgd(c, at)
+        self._autofiller()
+
+    def border(self):
         self.w.border()
 
     def setcursor(self, pos):
@@ -236,14 +304,15 @@ class View:
 class Screen(View):
     def __init__(self):
         View.__init__(self)
+        self.root = None
         self.w = None
         self.cursorpos = None
     
     def __enter__(self):
-        self.w = curses.initscr()
-        (ys,xs) = self.w.getmaxyx()
-        self.pos = Pos(0,0)
-        self.size = Size(xs,ys)
+        self.root = curses.initscr()
+        (ys,xs) = self.root.getmaxyx()
+        self._setsize(Size(xs,ys))
+        self._setpos(Pos(0,0))
         curses.start_color()
         if curses.can_change_color():
             for (c,nc,(r,g,b),a) in _all_colors:
@@ -252,11 +321,6 @@ class Screen(View):
 
     def __exit__(self, type,value,traceback):
         curses.endwin()
-
-    def _render_me(self):
-        self.w.redrawwin()
-        self.w.noutrefresh()
-        pass
 
     def setcursor(self, pos):
         self.cursorpos = pos
@@ -287,9 +351,11 @@ class Screen(View):
         r = self.select(timeout)
         if r:
             os.read(sys.stdin.fileno(), 4096)  # *up to* 4096 bytes
+        return r and True or False
 
 
 if 1:
+    print 'test 1'
     with Screen() as s:
         w = s.add(View(), size=s.size, pos=Pos(0,0))
         w.fill('.', color(BLACK,xBLUE))
@@ -297,43 +363,78 @@ if 1:
                    color(RED, xBLACK))
         w.w.addstr("\n\n   wonko the sane  \n\nbane",
                    color(xRED, BLUE, UNDERLINE))
+        w.border()
 
         p = s.add(View(), size=Size(10,10), pos=Pos(20,10))
         p.fill('!', color(RED, YELLOW))
+        p.border()
 
         v = s.add(View(), pos=Pos(-5,6), size=Size(30,600))
         v.fill('Q', color(xYELLOW,BLACK))
+        v.border()
 
         v4 = s.add(View(), pos=Pos(10,8), size=Size(30,5))
         v4.fill('R', color(xBLUE,BLACK))
+        v4.border()
 
-        s.runonce()
+        s.runonce(0.125)
 
         v.setcursor(Pos(1,1))
-        s.runonce()
+        s.runonce(0.125)
 
         v.setcursor(None)
-        s.runonce()
+        s.runonce(0.125)
 
         s.remove(v)
-        s.runonce()
+        s.runonce(0.25)
 
-        s.add(v)
-        s.runonce()
+        s.add(v, size=Size(30,600), pos=Pos(-5,6))
+        s.runonce(0.25)
+
+        while not s.runonce(0.025):
+            s.remove(v)
+            s.add(v, size=Size(30,600), pos=Pos(10,6))
 
         for i in range(s.size.y):
             s.remove(v)
-            s.add(v, pos=Pos(i*10,i))
-            s.runonce(0.05)
+            s.add(v, size=Size(30,600), pos=Pos(i*2,i))
+            s.runonce(0.025)
 
-            n = curses.COLOR_PAIRS
-            nn = curses.COLORS
-            ccc = curses.can_change_color()
+        n = curses.COLOR_PAIRS
+        nn = curses.COLORS
+        ccc = curses.can_change_color()
 
-            print n
-            print nn
-            print ccc
+    print n
+    print nn
+    print ccc
 
 if 1:
+    print 'test 2'
     with Screen() as s:
-        pass
+        topbar = s.add(View(minsize=Size(3,1)), 'ne')
+        topbar2 = s.add(View(minsize=Size(3,1)), 'nw')
+        botbar = s.add(View(minsize=Size(3,2)), 'swe')
+        leftbar = s.add(View(minsize=Size(10,3)), 'wns')
+        rightbar = s.add(View(minsize=Size(5,3)), 'e')
+        content = s.add(View(), 'nsew')
+        centre = s.add(View(minsize=Size(8,2)), '')
+        s.layout()
+
+        topbar.fill(' ', color(xWHITE, CYAN))
+        topbar2.fill(' ', color(xWHITE, xCYAN))
+        botbar.fill(' ', color(xWHITE, BLUE))
+        leftbar.fill('x', color(RED, BLACK))
+        rightbar.fill('y', color(RED, BLACK))
+        centre.fill('C', color(xYELLOW, BLUE))
+        content.fill(':', color(WHITE, BLACK))
+
+        while not s.runonce(1):
+            pass
+
+        topbar2.minsize.x += 10
+        botbar.minsize.y = 0
+        leftbar.minsize.x *= 2
+        s.layout()
+
+        while not s.runonce(1):
+            pass
