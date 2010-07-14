@@ -1,69 +1,5 @@
-#!/usr/bin/env python
-from __future__ import with_statement
-import sys, os, curses, time, weakref, select, signal
-
-BOLD = curses.A_BOLD
-UNDERLINE = curses.A_UNDERLINE
-REVERSE = curses.A_REVERSE
-
-BLACK    = (0x10, curses.COLOR_BLACK,    (0,0,0),       0)
-RED      = (0x11, curses.COLOR_RED,      (600,0,0),     0)
-GREEN    = (0x12, curses.COLOR_GREEN,    (0,600,0),     0)
-YELLOW   = (0x13, curses.COLOR_YELLOW,   (600,600,0),   0)
-BLUE     = (0x14, curses.COLOR_BLUE,     (250,0,900),   0)
-MAGENTA  = (0x15, curses.COLOR_MAGENTA,  (600,0,600),   0)
-CYAN     = (0x16, curses.COLOR_CYAN,     (0,600,600),   0)
-WHITE    = (0x17, curses.COLOR_WHITE,    (600,600,600), 0)
-
-xBLACK   = (0x18, curses.COLOR_BLACK,    (200,200,200),    BOLD)
-xRED     = (0x19, curses.COLOR_RED,      (1000,0,350),     BOLD)
-xGREEN   = (0x1a, curses.COLOR_GREEN,    (0,1000,350),     BOLD)
-xYELLOW  = (0x1b, curses.COLOR_YELLOW,   (1000,1000,350),  BOLD)
-xBLUE    = (0x1c, curses.COLOR_BLUE,     (375,0,1000),     BOLD)
-xMAGENTA = (0x1d, curses.COLOR_MAGENTA,  (1000,0,1000),    BOLD)
-xCYAN    = (0x1e, curses.COLOR_CYAN,     (0,1000,1000),    BOLD)
-xWHITE   = (0x1f, curses.COLOR_WHITE,    (1000,1000,1000), BOLD)
-
-_all_colors = [BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
-               xBLACK, xRED, xGREEN, xYELLOW, xBLUE, xMAGENTA, xCYAN, xWHITE]
-
-def _can_change_color():
-    return curses.can_change_color() and curses.COLORS >= 32
-
-_colorcache = {}
-_colornext = 1
-def color(fg, bg, *attrs):
-    try:
-        # fast path
-        return _colorcache[fg,bg,attrs]
-    except KeyError:
-        ccv = _colorcache.get((fg,bg))
-        if ccv == None:
-            global _colornext
-            pairid = _colornext
-            _colornext += 1
-            if curses.has_colors():
-                if _can_change_color():
-                    av = 0
-                    curses.init_pair(pairid, fg[0], bg[0])
-                else:
-                    av = fg[3]
-                    curses.init_pair(pairid, fg[1], bg[1])
-                pv = curses.color_pair(pairid)
-            else:
-                # terrible black-and-white terminal like vt100
-                av = fg[3]
-                if bg[0] >= xRED[0] or bg[0] == WHITE[0]:
-                    av |= REVERSE
-                pv = 0
-            _colorcache[fg,bg] = pv,av
-        else:
-            (pv,av) = ccv
-        for a in attrs:
-            av |= a
-        _colorcache[fg,bg,attrs] = av | pv
-        return av | pv
-
+import sys, os, curses, weakref, select, signal
+import colors
 
 class Pos(object):
     __slots__ = ['x','y']
@@ -334,8 +270,8 @@ class Screen(View):
             self._setsize(Size(xs,ys))
             self._setpos(Pos(0,0))
             curses.start_color()
-            if _can_change_color():
-                for (c,nc,(r,g,b),a) in _all_colors:
+            if colors._can_change_color():
+                for (c,nc,(r,g,b),a) in colors._all_colors:
                     curses.init_color(c, r,g,b)
             def resize_handler(sig, frame):
                 self.resize()
@@ -347,7 +283,15 @@ class Screen(View):
 
     def __exit__(self, type,value,traceback):
         signal.signal(signal.SIGWINCH, self.oldhandler)
-        curses.endwin()
+        try:
+            curses.endwin()
+        except:
+            # this pointlessly returns ERR (but initscr doesn't??) if stdout
+            # is not a tty.  Surely there's no way to recover if we can't
+            # *stop* curses, so let's just ignore the exception and pray for
+            # the best.  (In the case of 'make test', where there is no tty,
+            # that seems to be fine.)
+            pass
 
     def resize(self):
         self.__exit__(None,None,None)
@@ -390,90 +334,50 @@ class Screen(View):
         return r and True or False
 
 
-if 1:
-    print 'test 1'
-    sys.stdout.flush()
-    with Screen() as s:
-        w = s.add(View(), size=s.size, pos=Pos(0,0))
-        w.fill('.', color(BLACK,xBLUE))
-        w.w.addstr("\n\n   wonko the sane  \n\nbane",
-                   color(RED, xBLACK))
-        w.w.addstr("\n\n   wonko the sane  \n\nbane",
-                   color(xRED, BLUE, UNDERLINE))
-        w.border()
+class FakeScreen(Screen):
+    """A viewscreen that redirects to /dev/null.  Useful for testing.
+    Theoretically curses.setupterm() could let you do this, but it doesn't
+    seem to work at all.
+    """
+    
+    def __enter__(self):
+        # the default stdin/out/err objects refer to fd 0,1,2.  curses doesn't
+        # use those - it uses 0,1,2 directly.  So we'll change 0,1,2 to point
+        # at /dev/null, and stdin/stdout/stderr to point at a new set of fds.
+        # That way python's I/O will continue to work as expected.
+        self._oldterm = os.environ.get('TERM')
+        os.environ['TERM'] = 'xterm'  # should exist on all systems
+        self._newfiles = (os.fdopen(os.dup(0), 'rb'),
+                          os.fdopen(os.dup(1), 'wb'),
+                          os.fdopen(os.dup(2), 'wb'))
+        self._oldfiles = (sys.stdin, sys.stdout, sys.stderr)
+        (sys.stdin, sys.stdout, sys.stderr) = self._newfiles
 
-        p = s.add(View(), size=Size(10,10), pos=Pos(20,10))
-        p.fill('!', color(RED, YELLOW))
-        p.border()
+        nullf = open('/dev/null', 'w+b')
+        os.dup2(nullf.fileno(), 0)
+        os.dup2(nullf.fileno(), 1)
+        os.dup2(nullf.fileno(), 2)
+        try:
+            return Screen.__enter__(self)
+        except:
+            self._restore()
+            raise
 
-        v = s.add(View(), pos=Pos(-5,6), size=Size(30,600))
-        v.fill('Q', color(xYELLOW,BLACK))
-        v.border()
+    def _restore(self):
+        os.environ['TERM'] = self._oldterm
+        os.dup2(self._newfiles[0].fileno(), 0)
+        os.dup2(self._newfiles[1].fileno(), 1)
+        os.dup2(self._newfiles[2].fileno(), 2)
+        (sys.stdin, sys.stdout, sys.stderr) = self._oldfiles
+        self._newfiles[0].close()
+        self._newfiles[1].close()
+        self._newfiles[2].close()
+        del self._newfiles
+        del self._oldfiles
+        del self._oldterm
 
-        v4 = s.add(View(), pos=Pos(10,8), size=Size(30,5))
-        v4.fill('R', color(xBLUE,BLACK))
-        v4.border()
-
-        s.runonce(0.125)
-
-        v.setcursor(Pos(1,1))
-        s.runonce(0.125)
-
-        v.setcursor(None)
-        s.runonce(0.125)
-
-        s.remove(v)
-        s.runonce(0.25)
-
-        s.add(v, size=Size(30,600), pos=Pos(-5,6))
-        s.runonce(0.25)
-
-        while not s.runonce(0.025):
-            s.remove(v)
-            s.add(v, size=Size(30,600), pos=Pos(10,6))
-
-        for i in range(s.size.y):
-            s.remove(v)
-            s.add(v, size=Size(30,600), pos=Pos(i*2,i))
-            s.runonce(0.025)
-
-        n = curses.COLOR_PAIRS
-        nn = curses.COLORS
-        ccc = _can_change_color()
-
-    print n
-    print nn
-    print ccc
-    sys.stdout.flush()
-
-if 1:
-    print 'test 2'
-    sys.stdout.flush()
-    with Screen() as s:
-        topbar = s.add(View(minsize=Size(3,1)), 'ne')
-        topbar2 = s.add(View(minsize=Size(3,1)), 'nw')
-        botbar = s.add(View(minsize=Size(3,2)), 'swe')
-        leftbar = s.add(View(minsize=Size(10,3)), 'wns')
-        rightbar = s.add(View(minsize=Size(5,3)), 'e')
-        content = s.add(View(), 'nsew')
-        centre = s.add(View(minsize=Size(8,2)), '')
-        s.layout()
-
-        topbar.fill(' ', color(xWHITE, CYAN))
-        topbar2.fill(' ', color(xWHITE, xCYAN))
-        botbar.fill(' ', color(xWHITE, BLUE))
-        leftbar.fill('x', color(RED, BLACK))
-        rightbar.fill('y', color(RED, BLACK))
-        centre.fill('C', color(xYELLOW, BLUE))
-        content.fill(':', color(WHITE, BLACK))
-
-        while not s.runonce(1):
-            pass
-
-        topbar2.minsize.x += 10
-        botbar.minsize.y = 0
-        leftbar.minsize.x *= 2
-        s.layout()
-
-        while not s.runonce(1):
-            pass
+    def __exit__(self, type,value,traceback):
+        try:
+            Screen.__exit__(self, type,value,traceback)
+        finally:
+            self._restore()
