@@ -27,6 +27,9 @@ xWHITE   = (0x1f, curses.COLOR_WHITE,    (1000,1000,1000), BOLD)
 _all_colors = [BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
                xBLACK, xRED, xGREEN, xYELLOW, xBLUE, xMAGENTA, xCYAN, xWHITE]
 
+def _can_change_color():
+    return curses.can_change_color() and curses.COLORS >= 32
+
 _colorcache = {}
 _colornext = 1
 def color(fg, bg, *attrs):
@@ -40,7 +43,7 @@ def color(fg, bg, *attrs):
             pairid = _colornext
             _colornext += 1
             if curses.has_colors():
-                if curses.can_change_color():
+                if _can_change_color():
                     av = 0
                     curses.init_pair(pairid, fg[0], bg[0])
                 else:
@@ -331,7 +334,7 @@ class Screen(View):
             self._setsize(Size(xs,ys))
             self._setpos(Pos(0,0))
             curses.start_color()
-            if curses.can_change_color():
+            if _can_change_color():
                 for (c,nc,(r,g,b),a) in _all_colors:
                     curses.init_color(c, r,g,b)
             def resize_handler(sig, frame):
@@ -436,7 +439,7 @@ if 1:
 
         n = curses.COLOR_PAIRS
         nn = curses.COLORS
-        ccc = curses.can_change_color()
+        ccc = _can_change_color()
 
     print n
     print nn
