@@ -52,15 +52,23 @@ class Area(object):
         (self.x2, self.y2) = (pos.x + size.x - 1, pos.y + size.y - 1)
 
     def __repr__(self):
-        return 'Area(%d,%d,%d,%d)' % (self.x1, self.y1, self.x2, self.y2)
+        return 'Area(%d,%d,%d,%d)' % self.coords()
 
     def size(self):
         return Size(self.x2 - self.x1 + 1, self.y2 - self.y1 + 1)
+
+    def coords(self):
+        return (self.x1, self.y1, self.x2, self.y2)
 
     def intersect(self, area):
         topleft = Pos(max(self.x1, area.x1), max(self.y1, area.y1))
         botright = Pos(min(self.x2, area.x2), min(self.y2, area.y2))
         return Area(topleft, botright - topleft + Pos(1,1))
+
+    def __cmp__(self, area):
+        if not area:
+            return 1
+        return cmp(self.coords(), area.coords())
 
 
 class _Child(object):
@@ -72,6 +80,7 @@ class _Child(object):
 
     def __repr__(self):
         return 'C(%r,%r,%r,%r)' % (self.child, self.anchor, self.pos, self.size)
+
 
 class View:
     def __init__(self, minsize=Size(0,0)):
