@@ -326,17 +326,21 @@ class Screen(View):
             self.root = _curses.initscr()
         else:
             self.root = curses.initscr()
-        (ys,xs) = self.root.getmaxyx()
-        self._setsize(Size(xs,ys))
-        self._setpos(Pos(0,0))
-        curses.start_color()
-        if curses.can_change_color():
-            for (c,nc,(r,g,b),a) in _all_colors:
-                curses.init_color(c, r,g,b)
-        def resize_handler(sig, frame):
-            self.resize()
-        self.oldhandler = signal.signal(signal.SIGWINCH, resize_handler)
-        return self
+        try:
+            (ys,xs) = self.root.getmaxyx()
+            self._setsize(Size(xs,ys))
+            self._setpos(Pos(0,0))
+            curses.start_color()
+            if curses.can_change_color():
+                for (c,nc,(r,g,b),a) in _all_colors:
+                    curses.init_color(c, r,g,b)
+            def resize_handler(sig, frame):
+                self.resize()
+            self.oldhandler = signal.signal(signal.SIGWINCH, resize_handler)
+            return self
+        except:
+            curses.endwin()
+            raise
 
     def __exit__(self, type,value,traceback):
         signal.signal(signal.SIGWINCH, self.oldhandler)
