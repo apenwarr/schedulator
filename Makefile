@@ -9,13 +9,8 @@ all: cmds bog # Documentation/all
 %/clean:
 	$(MAKE) -C $* clean
 
-runtests: all runtests-python runtests-cmdline
-
-runtests-python:
-	./wvtest.py $(wildcard t/t*.py)
-	
-runtests-cmdline: all
-	t/test.sh
+runtests: all
+	./wvtest.py $(wildcard t/t*.py lib/*/t/t*.py)
 	
 stupid:
 	PATH=/bin:/usr/bin $(MAKE) test
