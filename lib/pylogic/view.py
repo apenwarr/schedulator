@@ -83,11 +83,11 @@ class _Child(object):
 
 
 class View:
-    def __init__(self, minsize=Size(0,0)):
+    def __init__(self, minsize=None):
         self.parent = None
         self.children = []
         self.w = self.pos = self.size = self._autofiller = None
-        self.minsize = minsize
+        self.minsize = minsize or Size(0,0)
         self._needs_layout = True
 
     def add(self, child, anchor=None, pos=None, size=None):
@@ -125,12 +125,16 @@ class View:
         if self.pos != pos:
             self.pos = pos
 
+    def draw(self):
+        pass
+
     def _setsize(self, size):
         if self.size != size:
             self.size = size
             self.w = curses.newpad(max(size.y, 1), max(size.x, 1))
             if self._autofiller:
                 self._autofiller()
+            self.draw()
             self._needs_layout = True
 
     def area(self):
@@ -237,7 +241,8 @@ class View:
         
     def fill(self, c, at):
         self._autofiller = lambda: self.w.bkgd(c, at)
-        self._autofiller()
+        if self.w:
+            self._autofiller()
 
     def border(self):
         self.w.border()
