@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import with_statement
-import sys, re
+import sys, os, re, time
 sys.path[:0] = ['../..']
 from pylogic import *
 
@@ -31,6 +31,14 @@ class TextView(View):
 
     def draw(self):
         self.w.erase()
+        if self.curline < 0:
+            self.curline = 0
+        if self.curline >= len(self.lines):
+            self.curline = len(self.lines) - 1
+        if self.curline < self.topline:
+            self.topline = self.curline
+        if self.curline >= self.topline + self.size.y:
+            self.topline = self.curline - self.size.y + 1
         for y in range(self.size.y):
             try:
                 line = self.lines[self.topline + y].replace('\n', ' ')
@@ -64,18 +72,41 @@ with Screen() as s:
     
     s.layout()
 
-    while 1:
-        if s.select():
-            k = sys.stdin.read(1)
-            if k == chr(27):
-                break
-            elif k == '+':
+    p = keys.Processor()
+    done = 0
+    while not done:
+        if s.select(0.25):
+            p.add(os.read(sys.stdin.fileno(), 4096), time.time())
+        for k in p.iter(time.time()):
+            if k == keys.ESC or k == 'q':
+                done = 1
+            elif k == keys.RIGHT:
                 textview.minsize.x += 1
                 s.layout()
-            elif k == '-':
+            elif k == keys.LEFT:
                 textview.minsize.x -= 1
                 s.layout()
-            else:
-                #textview.topline += 1
+            elif k == keys.DOWN:
                 textview.curline += 1
+                textview.draw()
+            elif k == keys.UP:
+                textview.curline -= 1
+                textview.draw()
+            elif k == keys.PGDN:
+                if textview.curline < textview.topline + textview.size.y - 1:
+                    textview.curline = textview.topline + textview.size.y - 1
+                else:
+                    textview.curline += textview.size.y
+                textview.draw()
+            elif k == keys.PGUP:
+                if textview.curline > textview.topline:
+                    textview.curline = textview.topline
+                else:
+                    textview.curline -= textview.size.y
+                textview.draw()
+            elif k == keys.HOME:
+                textview.curline = 0
+                textview.draw()
+            elif k == keys.END:
+                textview.curline = len(textview.lines)-1
                 textview.draw()
