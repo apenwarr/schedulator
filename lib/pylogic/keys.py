@@ -2,6 +2,7 @@ TAB = 9
 SHIFT_TAB = -999
 ESC = 27
 BACKSPACE = 127
+ENTER = 10
 
 UP = -1
 DOWN = -2
@@ -86,6 +87,8 @@ _codes = [
     ('\x1b', ESC),
     (chr(9), TAB),
     ('\x1b[Z', SHIFT_TAB),
+    (chr(10), ENTER),
+    (chr(13), ENTER),
 
     # Some terminals, like Windows cmd.exe, map the Delete key to 127.  That's
     # just unforgivably retarded and we won't try to save people like that

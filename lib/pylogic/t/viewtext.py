@@ -9,7 +9,12 @@ class TextView(View):
         self.topline = 0
         self.curline = 0
         self.lines = lines
+        self.search_regex = None
         View.__init__(self, minsize=minsize)
+
+    def search(self, regex):
+        self.search_regex = regex
+        self.draw()
 
     def do_line(self, y, chunks, at):
         x = 0
@@ -48,13 +53,47 @@ class TextView(View):
                 if self.topline + y == self.curline:
                     at = color(BLACK, xYELLOW)
                     nat = color(BLACK, xYELLOW, BOLD)
+                    rat = color(GREEN, xYELLOW, BOLD, UNDERLINE)
                 else:
                     at = color(xWHITE, BLACK)
                     nat = color(xWHITE, BLACK, BOLD)
+                    rat = color(BLACK, GREEN, BOLD, UNDERLINE)
                 s = "%d: %s" % (self.topline+y, line)
-                self.do_line(y, [('%d: ' % (self.topline+y), nat),
-                                 (line, at)],
-                             at)
+                chunks = []
+                chunks.append(('%d: ' % (self.topline+y), nat))
+                ss = 0
+                if self.search_regex:
+                    try:
+                        it = re.finditer(self.search_regex, line, re.I)
+                    except:
+                        # don't die if the user enters an invalid regex
+                        chunks.append((line, at))
+                    else:
+                        for i in it:
+                            s,e = i.span()
+                            chunks.append((line[ss:s], at))
+                            chunks.append((line[s:e], rat))
+                            ss = e
+                        chunks.append((line[ss:], at))
+                else:
+                    chunks.append((line, at))
+                self.do_line(y, chunks, at)
+
+
+def draw_searchbar(s, searchbar, searchtext):
+    searchbar.minsize.x = 8 + len(searchtext) + 5
+    if searchtext:
+        searchbar.minsize.y = 1
+        s.layout()
+        searchbar.w.erase()
+        searchbar.w.insstr(0,0, "Search: ", color(xWHITE, BLACK))
+        searchbar.w.insstr(0,8, searchtext)
+        searchbar.setcursor(Pos(8+len(searchtext), 0))
+    else:
+        searchbar.setcursor(None)
+        searchbar.minsize.y = 0
+        s.layout()
+    textview.search(searchtext)
 
 
 with Screen() as s:
@@ -66,6 +105,9 @@ with Screen() as s:
     botbar = s.add(View(minsize=Size(0,1)), 'swe')
     botbar.fill('-', color(xWHITE, CYAN))
 
+    searchbar = s.add(View(minsize=Size(0,0)), 'swe')
+    searchbar.fill(' ', color(WHITE, BLACK))
+
     textview = s.add(TextView(open('/etc/profile').readlines()*20,
                               minsize=Size(30,5)),
                      'ns')
@@ -74,12 +116,17 @@ with Screen() as s:
 
     p = keys.Processor()
     done = 0
+    searchtext = ''
     while not done:
-        if s.select(0.25):
+        if s.select(0.26):
             p.add(os.read(sys.stdin.fileno(), 4096), time.time())
         for k in p.iter(time.time()):
-            if k == keys.ESC or k == 'q':
-                done = 1
+            if k == keys.ESC:
+                if searchtext:
+                    searchtext = ''
+                    draw_searchbar(s, searchbar, searchtext)
+                else:
+                    done = 1
             elif k == keys.RIGHT:
                 textview.minsize.x += 1
                 s.layout()
@@ -110,3 +157,23 @@ with Screen() as s:
             elif k == keys.END:
                 textview.curline = len(textview.lines)-1
                 textview.draw()
+            elif k == keys.BACKSPACE:
+                if searchtext:
+                    searchtext = searchtext[:-1]
+                draw_searchbar(s, searchbar, searchtext)
+            elif k == keys.ENTER:
+                if searchtext:
+                    for y in xrange(textview.curline+1, len(textview.lines)):
+                        if re.search(searchtext, textview.lines[y], re.I):
+                            textview.curline = y
+                            break
+                    else:
+                        for y in xrange(0, textview.curline):
+                            if re.search(searchtext, textview.lines[y], re.I):
+                                textview.curline = y
+                                break
+                    textview.draw()
+            else:
+                if isinstance(k, basestring):
+                    searchtext += k
+                draw_searchbar(s, searchbar, searchtext)

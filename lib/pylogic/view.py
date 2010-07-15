@@ -319,7 +319,8 @@ class Screen(View):
     def refresh(self):
         self._render()
         if self.cursorpos:
-            curses.setsyx(max(0, self.cursorpos.y), max(0, self.cursorpos.x))
+            curses.setsyx(min(max(0, self.cursorpos.y), self.size.y-1),
+                          min(max(0, self.cursorpos.x), self.size.x-1))
             try:
                 curses.curs_set(1)
             except curses.error:
