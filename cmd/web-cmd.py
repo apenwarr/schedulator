@@ -156,11 +156,11 @@ class EditHandler(SchedHandler):
         repo.commit()
         t = str(self.request.body)
         open(mainpath, 'wb').write(t)
-        self.write('ok')
         
         cid = repo.vcommit('Edited (web)', self.get_argument('commitid'))
         repo.resolve(cid)
         print 'Updated schedule (%s).' % repr(t[:40])
+        self.write(cid)
 
 
 class Project:

@@ -65,25 +65,22 @@ function fix_tabs(evt, control)
 }
 
 var oldtext = '';
-
+var commitid = '{{commitid}}';
+    
 sched_post = function() {
     var v = $('#schedtext').val();
     if (v != oldtext) {
-        $.post('/sched/edit?commitid={{commitid}}', v);
+        $.post('/sched/edit?commitid=' + commitid, v, function(data) {
+	    commitid = data;
+	});
 	oldtext = v;
     }
-};
-
-sched_post_timer = function() {
-    sched_post();
-    setTimeout(sched_post_timer, 5000);
 };
 
 $(function() {
     $('#schededit').height($(window).height()*.8);
     
     oldtext = $('#schedtext').val();
-    setTimeout(sched_post_timer, 5000);
     $('#schedtext').blur(function() {
         sched_post();
     });
